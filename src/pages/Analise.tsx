@@ -144,9 +144,8 @@ export default function Analise() {
                 ))}
               </div>
             </div>
-              </div>
-            )}
-          </CardContent>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Client Report */}

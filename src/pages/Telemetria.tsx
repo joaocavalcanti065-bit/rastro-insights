@@ -138,11 +138,10 @@ export default function Telemetria() {
                   <TableCell>{new Date(tire.dataColeta).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(tire.status)}</TableCell>
                 </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
       </Card>
 
       {/* Critical Alerts */}

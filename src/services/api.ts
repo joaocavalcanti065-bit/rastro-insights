@@ -105,6 +105,12 @@ export async function postTelemetriaData(data: any) {
 // S&OP (Serviço de Diagnóstico) API
 // ============================================================================
 
+interface SopData {
+  tarefas: any[];
+  tecnicos: any[];
+  contratos: any[];
+}
+
 /**
  * GET /api/sop
  * 
@@ -136,8 +142,8 @@ export async function postTelemetriaData(data: any) {
  *   }]
  * }
  */
-export async function getSopData() {
-  return apiRequest('/sop');
+export async function getSopData(): Promise<SopData> {
+  return apiRequest<SopData>('/sop');
 }
 
 /**

@@ -125,11 +125,10 @@ export default function Circular() {
                     R$ {parceiro.comissaoDevida.toLocaleString()}
                   </TableCell>
                 </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
       </Card>
 
       {/* Tire Lifecycle */}
