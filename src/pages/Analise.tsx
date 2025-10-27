@@ -136,7 +136,7 @@ export default function Analise() {
               <div className="space-y-2">
                 {pneusCriticos.map(tire => (
                   <div key={tire.id} className="flex justify-between items-center">
-                    <span className="font-medium">{tire.id} - {tire.frota}</span>
+                    <span className="font-medium">{tire.id} - {tire.veiculo}</span>
                     <span className="text-sm text-muted-foreground">
                       Banda: {tire.profundidadeBanda}mm | Pressão: {tire.pressao} PSI
                     </span>

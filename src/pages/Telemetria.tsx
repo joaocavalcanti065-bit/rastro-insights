@@ -117,6 +117,7 @@ export default function Telemetria() {
             <TableHeader>
               <TableRow>
                 <TableHead>ID Pneu</TableHead>
+                <TableHead>Veículo</TableHead>
                 <TableHead>Frota</TableHead>
                 <TableHead>Quilometragem</TableHead>
                 <TableHead>Pressão (PSI)</TableHead>
@@ -129,6 +130,7 @@ export default function Telemetria() {
               {filteredData.map((tire) => (
                 <TableRow key={tire.id}>
                   <TableCell className="font-medium">{tire.id}</TableCell>
+                  <TableCell>{tire.veiculo}</TableCell>
                   <TableCell>{tire.frota}</TableCell>
                   <TableCell>{tire.quilometragem.toLocaleString()} km</TableCell>
                   <TableCell>{tire.pressao}</TableCell>
@@ -153,7 +155,7 @@ export default function Telemetria() {
             {telemetryData.filter(t => t.status === 'critical').map(tire => (
               <div key={tire.id} className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg">
                 <div>
-                  <p className="font-medium">{tire.id} - {tire.frota}</p>
+                  <p className="font-medium">{tire.id} - {tire.veiculo}</p>
                   <p className="text-sm text-muted-foreground">
                     {tire.pressao < 90 && 'Pressão abaixo de 90 PSI. '}
                     {tire.profundidadeBanda < 4 && 'Banda com menos de 4mm. '}
