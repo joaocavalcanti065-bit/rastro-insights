@@ -1,5 +1,6 @@
 import { LayoutDashboard, Radio, ClipboardList, TrendingUp, Recycle } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import logoRastro from "@/assets/logo-rastro.jpg";
 import {
   Sidebar,
   SidebarContent,
@@ -29,9 +30,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-6">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <span className="text-white font-bold text-sm">R</span>
-              </div>
+              <img src={logoRastro} alt="Logo Rastro" className="h-10 w-auto" />
               {open && <span className="font-semibold text-lg">Rastro</span>}
             </div>
           </SidebarGroupLabel>
