@@ -19,6 +19,41 @@ export default function Circular() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const calcularVidaUtil = (profundidadeBanda: number) => {
+    // Profundidade nova: 14mm = 100%
+    // Profundidade mínima: 2mm = 0%
+    const profundidadeNova = 14;
+    const profundidadeMinima = 2;
+    const percentual = ((profundidadeBanda - profundidadeMinima) / (profundidadeNova - profundidadeMinima)) * 100;
+    return Math.max(0, Math.min(100, Math.round(percentual)));
+  };
+
+  const getVidaUtilBadge = (percentual: number) => {
+    let bgColor = '';
+    let textColor = 'text-white';
+    let label = '';
+
+    if (percentual >= 70) {
+      bgColor = 'bg-success';
+      label = 'Bom';
+    } else if (percentual >= 40) {
+      bgColor = 'bg-warning';
+      label = 'Moderado';
+    } else {
+      bgColor = 'bg-destructive';
+      label = 'Crítico';
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <div className={`${bgColor} ${textColor} px-3 py-1 rounded-full font-medium text-sm`}>
+          {percentual}%
+        </div>
+        <span className="text-sm text-muted-foreground">{label}</span>
+      </div>
+    );
+  };
+
   const renderParceiroIcon = (nome: string, tipo: string) => {
     if (nome === 'Vipal') {
       return <img src={logoVipal} alt="Vipal" className="h-6 w-auto inline-block mr-2" />;
@@ -161,12 +196,14 @@ export default function Circular() {
                 <TableHead>Data Instalação</TableHead>
                 <TableHead>Histórico de Reformas</TableHead>
                 <TableHead>Quilometragem Atual</TableHead>
+                <TableHead>Vida Útil</TableHead>
                 <TableHead>Status Final</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {cicloVidaPneus.map((pneu) => {
                 const telemetria = telemetryData.find(t => t.id === pneu.id);
+                const vidaUtil = telemetria ? calcularVidaUtil(telemetria.profundidadeBanda) : 0;
                 return (
                   <TableRow key={pneu.id}>
                     <TableCell className="font-medium">{pneu.id}</TableCell>
@@ -177,6 +214,7 @@ export default function Circular() {
                     <TableCell>
                       {telemetria ? `${telemetria.quilometragem.toLocaleString()} km` : 'N/A'}
                     </TableCell>
+                    <TableCell>{getVidaUtilBadge(vidaUtil)}</TableCell>
                     <TableCell>{getStatusBadge(pneu.statusFinal)}</TableCell>
                   </TableRow>
                 );
