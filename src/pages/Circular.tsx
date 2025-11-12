@@ -5,6 +5,7 @@ import { parceiros, cicloVidaPneus, telemetryData } from "@/data/mockData";
 import { Recycle, Award, TrendingUp, Package } from "lucide-react";
 import logoVipal from "@/assets/logo-vipal.png";
 import logoMarangoni from "@/assets/logo-marangoni.png";
+import logoPneucargo from "@/assets/logo-pneucargo.png";
 
 export default function Circular() {
   const getStatusBadge = (status: string) => {
@@ -24,6 +25,9 @@ export default function Circular() {
     }
     if (nome === 'Marangoni') {
       return <img src={logoMarangoni} alt="Marangoni" className="h-6 w-auto inline-block mr-2" />;
+    }
+    if (nome === 'Pneucargo') {
+      return <img src={logoPneucargo} alt="Pneucargo" className="h-6 w-auto inline-block mr-2" />;
     }
     return tipo === 'reformadora' ? '🔧 ' : '📦 ';
   };
