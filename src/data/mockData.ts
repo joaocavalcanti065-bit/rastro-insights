@@ -154,7 +154,7 @@ export const tarefas: Tarefa[] = [
 
 export const parceiros: Parceiro[] = [
   { id: 'PAR001', nome: 'Vipal', tipo: 'reformadora', seloQualidade: true, volumeVendas: 125000, comissaoDevida: 6250 },
-  { id: 'PAR002', nome: 'Pneus Gigantes', tipo: 'fornecedor', seloQualidade: true, volumeVendas: 180000, comissaoDevida: 9000 },
+  { id: 'PAR002', nome: 'Marangoni', tipo: 'fornecedor', seloQualidade: true, volumeVendas: 180000, comissaoDevida: 9000 },
   { id: 'PAR003', nome: 'Pneu Veloz', tipo: 'reformadora', seloQualidade: false, volumeVendas: 45000, comissaoDevida: 2250 },
 ];
 

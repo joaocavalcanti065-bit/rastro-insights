@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { parceiros, cicloVidaPneus, telemetryData } from "@/data/mockData";
 import { Recycle, Award, TrendingUp, Package } from "lucide-react";
 import logoVipal from "@/assets/logo-vipal.png";
+import logoMarangoni from "@/assets/logo-marangoni.png";
 
 export default function Circular() {
   const getStatusBadge = (status: string) => {
@@ -20,6 +21,9 @@ export default function Circular() {
   const renderParceiroIcon = (nome: string, tipo: string) => {
     if (nome === 'Vipal') {
       return <img src={logoVipal} alt="Vipal" className="h-6 w-auto inline-block mr-2" />;
+    }
+    if (nome === 'Marangoni') {
+      return <img src={logoMarangoni} alt="Marangoni" className="h-6 w-auto inline-block mr-2" />;
     }
     return tipo === 'reformadora' ? '🔧 ' : '📦 ';
   };
