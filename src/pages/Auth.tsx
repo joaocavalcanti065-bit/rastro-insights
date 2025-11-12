@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import logoRastro from "@/assets/logo-rastro.jpg";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -40,9 +41,7 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <span className="text-white font-bold text-xl">R</span>
-            </div>
+            <img src={logoRastro} alt="Logo Rastro" className="h-20 w-auto" />
           </div>
           <CardTitle className="text-2xl text-center">Portal Rastro</CardTitle>
           <CardDescription className="text-center">
