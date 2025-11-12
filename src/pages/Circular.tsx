@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { parceiros, cicloVidaPneus, telemetryData } from "@/data/mockData";
 import { Recycle, Award, TrendingUp, Package } from "lucide-react";
+import logoVipal from "@/assets/logo-vipal.png";
 
 export default function Circular() {
   const getStatusBadge = (status: string) => {
@@ -16,8 +17,11 @@ export default function Circular() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getTipoIcon = (tipo: string) => {
-    return tipo === 'reformadora' ? '🔧' : '📦';
+  const renderParceiroIcon = (nome: string, tipo: string) => {
+    if (nome === 'Vipal') {
+      return <img src={logoVipal} alt="Vipal" className="h-6 w-auto inline-block mr-2" />;
+    }
+    return tipo === 'reformadora' ? '🔧 ' : '📦 ';
   };
 
   return (
@@ -107,8 +111,9 @@ export default function Circular() {
             <TableBody>
               {parceiros.map((parceiro) => (
                 <TableRow key={parceiro.id}>
-                  <TableCell className="font-medium">
-                    {getTipoIcon(parceiro.tipo)} {parceiro.nome}
+                  <TableCell className="font-medium flex items-center">
+                    {renderParceiroIcon(parceiro.nome, parceiro.tipo)}
+                    {parceiro.nome}
                   </TableCell>
                   <TableCell className="capitalize">{parceiro.tipo}</TableCell>
                   <TableCell>
