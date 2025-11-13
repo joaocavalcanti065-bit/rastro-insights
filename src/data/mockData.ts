@@ -6,6 +6,7 @@ export interface TelemetryData {
   veiculo: string;
   quilometragem: number;
   pressao: number;
+  temperatura: number;
   profundidadeBanda: number;
   dataColeta: string;
   status: 'normal' | 'warning' | 'critical';
@@ -83,6 +84,7 @@ const generateTelemetryData = (): TelemetryData[] => {
       let status: 'normal' | 'warning' | 'critical';
       let quilometragem: number;
       let pressao: number;
+      let temperatura: number;
       let profundidadeBanda: number;
 
       // 10% críticos (9 pneus)
@@ -90,6 +92,7 @@ const generateTelemetryData = (): TelemetryData[] => {
         status = 'critical';
         quilometragem = veiculo.quilometragemInicial + 35000 + Math.floor(Math.random() * 10000);
         pressao = 82 + Math.floor(Math.random() * 8); // 82-89 PSI
+        temperatura = 75 + Math.floor(Math.random() * 10); // 75-85°C (crítico)
         profundidadeBanda = 2.0 + Math.random() * 0.9; // 2.0-2.9 mm
       }
       // 20% alerta (18 pneus)
@@ -97,6 +100,7 @@ const generateTelemetryData = (): TelemetryData[] => {
         status = 'warning';
         quilometragem = veiculo.quilometragemInicial + 20000 + Math.floor(Math.random() * 10000);
         pressao = 95 + Math.floor(Math.random() * 6); // 95-100 PSI
+        temperatura = 68 + Math.floor(Math.random() * 8); // 68-76°C (alerta)
         profundidadeBanda = 4.0 + Math.random() * 2.0; // 4.0-6.0 mm
       }
       // 70% normais (63 pneus)
@@ -104,6 +108,7 @@ const generateTelemetryData = (): TelemetryData[] => {
         status = 'normal';
         quilometragem = veiculo.quilometragemInicial + 5000 + Math.floor(Math.random() * 5000);
         pressao = 105 + Math.floor(Math.random() * 6); // 105-110 PSI
+        temperatura = 60 + Math.floor(Math.random() * 8); // 60-68°C (normal)
         profundidadeBanda = 10.0 + Math.random() * 4.0; // 10.0-14.0 mm
       }
 
@@ -113,6 +118,7 @@ const generateTelemetryData = (): TelemetryData[] => {
         veiculo: `${veiculo.modelo} (${veiculo.id})`,
         quilometragem: Math.round(quilometragem),
         pressao: Math.round(pressao),
+        temperatura: Math.round(temperatura),
         profundidadeBanda: Math.round(profundidadeBanda * 10) / 10,
         dataColeta: '2025-01-20',
         status,

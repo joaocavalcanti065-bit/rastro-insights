@@ -109,7 +109,7 @@ export default function Dashboard() {
               value={`R$ ${(kpiData.economiaEstimada || 0).toLocaleString()}`}
               icon={DollarSign}
               variant="success"
-              trend={{ value: 12, positive: true }}
+              trend={{ value: 18, positive: true }}
             />
             <StatCard
               title="Parceiros Ativos"

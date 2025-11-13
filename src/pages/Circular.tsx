@@ -70,8 +70,8 @@ export default function Circular() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Economia Circular e Parcerias</h1>
-        <p className="text-muted-foreground">Gestão do ciclo de vida e rede de parceiros certificados</p>
+        <h1 className="text-3xl font-bold text-foreground">Economia Circular</h1>
+        <p className="text-muted-foreground">Recapagem, parceiros e gestão sustentável de pneus</p>
       </div>
 
       {/* KPI Cards */}
