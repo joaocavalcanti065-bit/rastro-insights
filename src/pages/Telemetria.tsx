@@ -119,26 +119,33 @@ export default function Telemetria() {
                 <TableHead>ID Pneu</TableHead>
                 <TableHead>Veículo</TableHead>
                 <TableHead>Frota</TableHead>
-                <TableHead>Quilometragem</TableHead>
                 <TableHead>Pressão (PSI)</TableHead>
+                <TableHead>Temperatura (°C)</TableHead>
+                <TableHead>Quilometragem</TableHead>
+                <TableHead>Horas Rodadas</TableHead>
                 <TableHead>Banda (mm)</TableHead>
                 <TableHead>Data Coleta</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map((tire) => (
-                <TableRow key={tire.id}>
-                  <TableCell className="font-medium">{tire.id}</TableCell>
-                  <TableCell>{tire.veiculo}</TableCell>
-                  <TableCell>{tire.frota}</TableCell>
-                  <TableCell>{tire.quilometragem.toLocaleString()} km</TableCell>
-                  <TableCell>{tire.pressao}</TableCell>
-                  <TableCell>{tire.profundidadeBanda}</TableCell>
-                  <TableCell>{new Date(tire.dataColeta).toLocaleDateString()}</TableCell>
-                  <TableCell>{getStatusBadge(tire.status)}</TableCell>
-                </TableRow>
-              ))}
+              {filteredData.map((tire) => {
+                const horasRodadas = Math.round(tire.quilometragem / 60);
+                return (
+                  <TableRow key={tire.id}>
+                    <TableCell className="font-medium">{tire.id}</TableCell>
+                    <TableCell>{tire.veiculo}</TableCell>
+                    <TableCell>{tire.frota}</TableCell>
+                    <TableCell className="font-semibold text-lg">{tire.pressao} PSI</TableCell>
+                    <TableCell className="font-semibold text-lg">{tire.temperatura}°C</TableCell>
+                    <TableCell>{tire.quilometragem.toLocaleString()} km</TableCell>
+                    <TableCell>{horasRodadas.toLocaleString()}h</TableCell>
+                    <TableCell>{tire.profundidadeBanda} mm</TableCell>
+                    <TableCell>{new Date(tire.dataColeta).toLocaleDateString()}</TableCell>
+                    <TableCell>{getStatusBadge(tire.status)}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

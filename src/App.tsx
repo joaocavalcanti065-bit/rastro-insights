@@ -8,8 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Telemetria from "./pages/Telemetria";
-import Sop from "./pages/Sop";
-import Analise from "./pages/Analise";
+import Diagnostico from "./pages/Diagnostico";
 import Circular from "./pages/Circular";
 import NotFound from "./pages/NotFound";
 
@@ -45,8 +44,7 @@ const App = () => (
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
           <Route path="/telemetria" element={<ProtectedLayout><Telemetria /></ProtectedLayout>} />
-          <Route path="/sop" element={<ProtectedLayout><Sop /></ProtectedLayout>} />
-          <Route path="/analise" element={<ProtectedLayout><Analise /></ProtectedLayout>} />
+          <Route path="/diagnostico" element={<ProtectedLayout><Diagnostico /></ProtectedLayout>} />
           <Route path="/circular" element={<ProtectedLayout><Circular /></ProtectedLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>

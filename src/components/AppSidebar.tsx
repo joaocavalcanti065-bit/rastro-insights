@@ -16,8 +16,7 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Telemetria", url: "/telemetria", icon: Radio },
-  { title: "S&OP", url: "/sop", icon: ClipboardList },
-  { title: "Análise Financeira", url: "/analise", icon: TrendingUp },
+  { title: "Diagnóstico", url: "/diagnostico", icon: ClipboardList },
   { title: "Economia Circular", url: "/circular", icon: Recycle },
 ];
 
