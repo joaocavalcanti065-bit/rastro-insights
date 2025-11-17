@@ -95,7 +95,7 @@ export default function Dashboard() {
   // Cálculos realistas
   const totalPneus = kpiData?.totalPneus || 90;
   const vidaUtilMedia = kpiData?.vidaUtilMedia || 60; // 60% de vida útil média
-  const custoKm = kpiData?.custoKm || 0.25; // R$ 0.25 por km
+  const custoKm = kpiData?.custoKm || 0.053; // R$ 0.053 por km
   const eficiencia = kpiData?.eficiencia || 90; // 90% de eficiência
 
   // Dados para o gauge de vida útil
@@ -122,7 +122,7 @@ export default function Dashboard() {
   }
   return <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">TIRE INTELLIGENCE</h1>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground">Monitoramento inteligente da frota</p>
       </div>
 
@@ -165,23 +165,22 @@ export default function Dashboard() {
 
         {/* Right Column - Metrics */}
         <div className="space-y-6">
-          {/* Cost per Kilometer */}
+          {/* Custo por Quilômetro */}
           <Card className="shadow-card">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Cost per Kilometer</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Custo por Quilômetro</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold">{custoKm.toFixed(2)}</span>
-                <span className="text-muted-foreground">USD</span>
+                <span className="text-4xl font-bold">R$ {custoKm.toFixed(3)}</span>
               </div>
             </CardContent>
           </Card>
 
-          {/* Tire Lifespan Gauge */}
+          {/* Vida Útil dos Pneus */}
           <Card className="shadow-card">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Tire Lifespan</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Vida Útil dos Pneus</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center">
               <div className="relative">
@@ -199,10 +198,10 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Efficiency */}
+          {/* Eficiência */}
           <Card className="shadow-card">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Efficiency</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Eficiência</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-1">
@@ -214,12 +213,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Alerts Section */}
+      {/* Seção de Alertas */}
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-warning" />
-            Alerts
+            Alertas
           </CardTitle>
           <CardDescription>Monitoramento em tempo real</CardDescription>
         </CardHeader>
@@ -229,29 +228,29 @@ export default function Dashboard() {
               <p>Sistema operando normalmente</p>
               <p className="text-sm mt-2">Nenhum alerta ativo no momento</p>
             </div> : <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {/* Low Pressure Alerts */}
+              {/* Alertas de Baixa Pressão */}
               {telemetryData.filter(t => t.pressao < 100).slice(0, 3).map(tire => <div key={`pressure-${tire.id}`} className="flex items-start gap-3 p-3 bg-warning/10 rounded-lg border border-warning/20">
                   <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-sm">Low pressure detected</p>
+                    <p className="font-medium text-sm">Baixa pressão detectada</p>
                     <p className="text-xs text-muted-foreground">{tire.id} - {tire.pressao} PSI</p>
                   </div>
                 </div>)}
               
-              {/* High Temperature Alerts */}
+              {/* Alertas de Alta Temperatura */}
               {telemetryData.filter(t => t.temperatura > 70).slice(0, 3).map(tire => <div key={`temp-${tire.id}`} className="flex items-start gap-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                   <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-sm">High temperature detected</p>
+                    <p className="font-medium text-sm">Alta temperatura detectada</p>
                     <p className="text-xs text-muted-foreground">{tire.id} - {tire.temperatura}°C</p>
                   </div>
                 </div>)}
 
-              {/* Critical Tire Alerts */}
+              {/* Alertas de Pneus Críticos */}
               {criticalTires.slice(0, 2).map(tire => <div key={`critical-${tire.id}`} className="flex items-start gap-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                   <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-sm">Critical tire condition</p>
+                    <p className="font-medium text-sm">Condição crítica do pneu</p>
                     <p className="text-xs text-muted-foreground">{tire.id} - Banda: {tire.profundidadeBanda}mm</p>
                   </div>
                 </div>)}
