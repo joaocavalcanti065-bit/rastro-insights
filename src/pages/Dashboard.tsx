@@ -126,7 +126,8 @@ export default function Dashboard() {
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
                   style={{ fontSize: '12px' }}
-                  domain={[0, 100]}
+                  domain={[60, 100]}
+                  ticks={[60, 70, 80, 90, 100]}
                 />
                 <Tooltip 
                   contentStyle={{ 
