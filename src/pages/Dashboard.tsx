@@ -18,30 +18,63 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
  */
 
 // Dados fictícios de performance ao longo do tempo
-const performanceData = [
-  { mes: 'Jan', veiculo1: 95, veiculo2: 92, veiculo3: 88, veiculo4: 90, veiculo5: 93 },
-  { mes: 'Fev', veiculo1: 93, veiculo2: 90, veiculo3: 85, veiculo4: 88, veiculo5: 91 },
-  { mes: 'Mar', veiculo1: 90, veiculo2: 87, veiculo3: 82, veiculo4: 85, veiculo5: 88 },
-  { mes: 'Abr', veiculo1: 87, veiculo2: 84, veiculo3: 78, veiculo4: 82, veiculo5: 85 },
-  { mes: 'Mai', veiculo1: 84, veiculo2: 81, veiculo3: 75, veiculo4: 79, veiculo5: 82 },
-  { mes: 'Jun', veiculo1: 81, veiculo2: 78, veiculo3: 71, veiculo4: 76, veiculo5: 79 },
-];
-
+const performanceData = [{
+  mes: 'Jan',
+  veiculo1: 95,
+  veiculo2: 92,
+  veiculo3: 88,
+  veiculo4: 90,
+  veiculo5: 93
+}, {
+  mes: 'Fev',
+  veiculo1: 93,
+  veiculo2: 90,
+  veiculo3: 85,
+  veiculo4: 88,
+  veiculo5: 91
+}, {
+  mes: 'Mar',
+  veiculo1: 90,
+  veiculo2: 87,
+  veiculo3: 82,
+  veiculo4: 85,
+  veiculo5: 88
+}, {
+  mes: 'Abr',
+  veiculo1: 87,
+  veiculo2: 84,
+  veiculo3: 78,
+  veiculo4: 82,
+  veiculo5: 85
+}, {
+  mes: 'Mai',
+  veiculo1: 84,
+  veiculo2: 81,
+  veiculo3: 75,
+  veiculo4: 79,
+  veiculo5: 82
+}, {
+  mes: 'Jun',
+  veiculo1: 81,
+  veiculo2: 78,
+  veiculo3: 71,
+  veiculo4: 76,
+  veiculo5: 79
+}];
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [kpiData, setKpiData] = useState<any>(null);
   const [telemetryData, setTelemetryData] = useState<any[]>([]);
-
   useEffect(() => {
     // INTEGRAÇÃO N8N: Esta função busca dados via API
     async function fetchData() {
       try {
         setLoading(true);
-        
+
         // Busca KPIs do dashboard
         const dashboard = await getDashboardData();
         setKpiData(dashboard);
-        
+
         // Busca dados de telemetria para os alertas
         const telemetry = await getTelemetriaData();
         setTelemetryData(Array.isArray(telemetry) ? telemetry : []);
@@ -54,10 +87,8 @@ export default function Dashboard() {
         setLoading(false);
       }
     }
-
     fetchData();
   }, []);
-
   const criticalTires = telemetryData.filter(t => t.status === 'critical');
   const warningTires = telemetryData.filter(t => t.status === 'warning');
 
@@ -68,36 +99,28 @@ export default function Dashboard() {
   const eficiencia = kpiData?.eficiencia || 90; // 90% de eficiência
 
   // Dados para o gauge de vida útil
-  const gaugeData = [
-    {
-      name: 'Vida Útil',
-      value: vidaUtilMedia,
-      fill: vidaUtilMedia >= 70 ? '#22c55e' : vidaUtilMedia >= 40 ? '#eab308' : '#ef4444',
-    },
-  ];
-
+  const gaugeData = [{
+    name: 'Vida Útil',
+    value: vidaUtilMedia,
+    fill: vidaUtilMedia >= 70 ? '#22c55e' : vidaUtilMedia >= 40 ? '#eab308' : '#ef4444'
+  }];
   if (loading) {
-    return (
-      <div className="space-y-6">
+    return <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard
+        </h1>
           <p className="text-muted-foreground">Carregando dados via API...</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map(i => (
-            <Card key={i}>
+          {[1, 2, 3, 4].map(i => <Card key={i}>
               <CardContent className="pt-6">
                 <Skeleton className="h-20 w-full" />
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">TIRE INTELLIGENCE</h1>
         <p className="text-muted-foreground">Monitoramento inteligente da frota</p>
@@ -118,24 +141,17 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="mes" 
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: '12px' }}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: '12px' }}
-                  domain={[60, 100]}
-                  ticks={[60, 70, 80, 90, 100]}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                />
+                <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" style={{
+                fontSize: '12px'
+              }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" style={{
+                fontSize: '12px'
+              }} domain={[60, 100]} ticks={[60, 70, 80, 90, 100]} />
+                <Tooltip contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }} />
                 <Legend />
                 <Line type="monotone" dataKey="veiculo1" stroke="#3b82f6" strokeWidth={2} name="V001" />
                 <Line type="monotone" dataKey="veiculo2" stroke="#10b981" strokeWidth={2} name="V002" />
@@ -170,20 +186,10 @@ export default function Dashboard() {
             <CardContent className="flex justify-center">
               <div className="relative">
                 <ResponsiveContainer width={120} height={120}>
-                  <RadialBarChart 
-                    cx="50%" 
-                    cy="50%" 
-                    innerRadius="70%" 
-                    outerRadius="100%" 
-                    data={gaugeData}
-                    startAngle={90}
-                    endAngle={-270}
-                  >
-                    <RadialBar
-                      background={{ fill: 'hsl(var(--muted))' }}
-                      dataKey="value"
-                      cornerRadius={10}
-                    />
+                  <RadialBarChart cx="50%" cy="50%" innerRadius="70%" outerRadius="100%" data={gaugeData} startAngle={90} endAngle={-270}>
+                    <RadialBar background={{
+                    fill: 'hsl(var(--muted))'
+                  }} dataKey="value" cornerRadius={10} />
                   </RadialBarChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -218,79 +224,50 @@ export default function Dashboard() {
           <CardDescription>Monitoramento em tempo real</CardDescription>
         </CardHeader>
         <CardContent>
-          {criticalTires.length === 0 && warningTires.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+          {criticalTires.length === 0 && warningTires.length === 0 ? <div className="text-center py-8 text-muted-foreground">
               <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-20" />
               <p>Sistema operando normalmente</p>
               <p className="text-sm mt-2">Nenhum alerta ativo no momento</p>
-            </div>
-          ) : (
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            </div> : <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {/* Low Pressure Alerts */}
-              {telemetryData.filter(t => t.pressao < 100).slice(0, 3).map(tire => (
-                <div key={`pressure-${tire.id}`} className="flex items-start gap-3 p-3 bg-warning/10 rounded-lg border border-warning/20">
+              {telemetryData.filter(t => t.pressao < 100).slice(0, 3).map(tire => <div key={`pressure-${tire.id}`} className="flex items-start gap-3 p-3 bg-warning/10 rounded-lg border border-warning/20">
                   <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium text-sm">Low pressure detected</p>
                     <p className="text-xs text-muted-foreground">{tire.id} - {tire.pressao} PSI</p>
                   </div>
-                </div>
-              ))}
+                </div>)}
               
               {/* High Temperature Alerts */}
-              {telemetryData.filter(t => t.temperatura > 70).slice(0, 3).map(tire => (
-                <div key={`temp-${tire.id}`} className="flex items-start gap-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+              {telemetryData.filter(t => t.temperatura > 70).slice(0, 3).map(tire => <div key={`temp-${tire.id}`} className="flex items-start gap-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                   <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium text-sm">High temperature detected</p>
                     <p className="text-xs text-muted-foreground">{tire.id} - {tire.temperatura}°C</p>
                   </div>
-                </div>
-              ))}
+                </div>)}
 
               {/* Critical Tire Alerts */}
-              {criticalTires.slice(0, 2).map(tire => (
-                <div key={`critical-${tire.id}`} className="flex items-start gap-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+              {criticalTires.slice(0, 2).map(tire => <div key={`critical-${tire.id}`} className="flex items-start gap-3 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
                   <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium text-sm">Critical tire condition</p>
                     <p className="text-xs text-muted-foreground">{tire.id} - Banda: {tire.profundidadeBanda}mm</p>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                </div>)}
+            </div>}
         </CardContent>
       </Card>
 
       {/* KPI Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total de Pneus"
-          value={totalPneus}
-          icon={Activity}
-          variant="info"
-        />
-        <StatCard
-          title="Pneus Críticos"
-          value={kpiData?.pneusCriticos || criticalTires.length}
-          icon={AlertTriangle}
-          variant="warning"
-        />
-        <StatCard
-          title="Economia Estimada"
-          value={`R$ ${(kpiData?.economiaEstimada || 15300).toLocaleString()}`}
-          icon={DollarSign}
-          variant="success"
-          trend={{ value: 18, positive: true }}
-        />
-        <StatCard
-          title="Parceiros Ativos"
-          value={kpiData?.parceirosAtivos || 2}
-          icon={Users}
-          variant="default"
-        />
+        <StatCard title="Total de Pneus" value={totalPneus} icon={Activity} variant="info" />
+        <StatCard title="Pneus Críticos" value={kpiData?.pneusCriticos || criticalTires.length} icon={AlertTriangle} variant="warning" />
+        <StatCard title="Economia Estimada" value={`R$ ${(kpiData?.economiaEstimada || 15300).toLocaleString()}`} icon={DollarSign} variant="success" trend={{
+        value: 18,
+        positive: true
+      }} />
+        <StatCard title="Parceiros Ativos" value={kpiData?.parceirosAtivos || 2} icon={Users} variant="default" />
       </div>
-    </div>
-  );
+    </div>;
 }
