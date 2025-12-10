@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Plus, TrendingDown, Gauge, DollarSign, AlertTriangle, Download, AlertCircle, XCircle, Fuel } from "lucide-react";
+import { Plus, TrendingDown, Gauge, DollarSign, AlertTriangle, Download, AlertCircle, XCircle, Fuel, Filter, X } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 
 interface Cliente {
   id: string;
@@ -67,6 +68,11 @@ export default function MvpManual() {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
+
+  // Dashboard filters
+  const [filterCliente, setFilterCliente] = useState<string>("");
+  const [filterDataInicio, setFilterDataInicio] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [filterDataFim, setFilterDataFim] = useState<string>(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
 
   // Form state
   const [selectedCliente, setSelectedCliente] = useState("");
@@ -233,23 +239,40 @@ export default function MvpManual() {
     }
   };
 
-  // KPIs calculations
-  const desgasteMedio = coletas.length > 0
-    ? (coletas.reduce((acc, c) => acc + (c.sulco_variacao || 0), 0) / coletas.filter(c => c.sulco_variacao).length || 0).toFixed(2)
+  // Filtered coletas for dashboard
+  const coletasFiltradas = coletas.filter(c => {
+    const matchCliente = !filterCliente || c.cliente_id === filterCliente;
+    const dataColeta = parseISO(c.data_medicao);
+    const matchPeriodo = isWithinInterval(dataColeta, {
+      start: parseISO(filterDataInicio),
+      end: parseISO(filterDataFim),
+    });
+    return matchCliente && matchPeriodo;
+  });
+
+  const clearFilters = () => {
+    setFilterCliente("");
+    setFilterDataInicio(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+    setFilterDataFim(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+  };
+
+  // KPIs calculations (using filtered data)
+  const desgasteMedio = coletasFiltradas.length > 0
+    ? (coletasFiltradas.reduce((acc, c) => acc + (c.sulco_variacao || 0), 0) / coletasFiltradas.filter(c => c.sulco_variacao).length || 0).toFixed(2)
     : "0";
 
-  const kmPorMmMedio = coletas.length > 0
-    ? (coletas.reduce((acc, c) => acc + (c.km_por_mm || 0), 0) / coletas.filter(c => c.km_por_mm).length || 0).toFixed(0)
+  const kmPorMmMedio = coletasFiltradas.length > 0
+    ? (coletasFiltradas.reduce((acc, c) => acc + (c.km_por_mm || 0), 0) / coletasFiltradas.filter(c => c.km_por_mm).length || 0).toFixed(0)
     : "0";
 
-  const pressaoForaPadrao = coletas.length > 0
-    ? ((coletas.filter(c => Math.abs(c.pressao_diferenca || 0) > 10).length / coletas.length) * 100).toFixed(1)
+  const pressaoForaPadrao = coletasFiltradas.length > 0
+    ? ((coletasFiltradas.filter(c => Math.abs(c.pressao_diferenca || 0) > 10).length / coletasFiltradas.length) * 100).toFixed(1)
     : "0";
 
   const kmPorMmIdeal = 1000;
   const valorPneu = 1500;
-  const economiaEstimada = coletas.length > 0
-    ? coletas.reduce((acc, c) => {
+  const economiaEstimada = coletasFiltradas.length > 0
+    ? coletasFiltradas.reduce((acc, c) => {
         if (c.km_por_mm && c.km_por_mm < kmPorMmIdeal) {
           return acc + ((kmPorMmIdeal - c.km_por_mm) / kmPorMmIdeal) * valorPneu;
         }
@@ -257,21 +280,21 @@ export default function MvpManual() {
       }, 0).toFixed(2)
     : "0";
 
-  // Chart data
-  const sulcoChartData = coletas.slice(0, 20).reverse().map(c => ({
+  // Chart data (using filtered data)
+  const sulcoChartData = coletasFiltradas.slice(0, 20).reverse().map(c => ({
     data: new Date(c.data_medicao).toLocaleDateString("pt-BR"),
     veiculo: c.veiculos?.placa || "",
     sulco: c.sulco_atual,
   }));
 
-  const pressaoChartData = coletas.slice(0, 10).map(c => ({
+  const pressaoChartData = coletasFiltradas.slice(0, 10).map(c => ({
     veiculo: `${c.veiculos?.placa} - ${c.posicao_pneu}`,
     atual: c.pressao_atual,
     recomendada: c.pressao_recomendada,
   }));
 
-  // Alertas
-  const alertas = coletas.reduce((acc: { tipo: string; nivel: 'critico' | 'atencao'; mensagem: string; veiculo: string; posicao: string; valor: number; data: string }[], c) => {
+  // Alertas (using filtered data)
+  const alertas = coletasFiltradas.reduce((acc: { tipo: string; nivel: 'critico' | 'atencao'; mensagem: string; veiculo: string; posicao: string; valor: number; data: string }[], c) => {
     // Alerta de desgaste crítico (sulco < 3mm)
     if (c.sulco_atual < 3) {
       acc.push({
@@ -523,13 +546,56 @@ export default function MvpManual() {
 
       {/* Dashboard MVP */}
       <div ref={dashboardRef} className="bg-background p-4 rounded-lg">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <h2 className="text-2xl font-bold text-foreground">Dashboard MVP</h2>
-          <Button onClick={handleExportPDF} disabled={exporting} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            {exporting ? "Exportando..." : "Exportar PDF"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={filterCliente} onValueChange={setFilterCliente}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Todos os clientes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os clientes</SelectItem>
+                  {clientes.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={filterDataInicio}
+                onChange={e => setFilterDataInicio(e.target.value)}
+                className="w-[140px]"
+              />
+              <span className="text-muted-foreground">até</span>
+              <Input
+                type="date"
+                value={filterDataFim}
+                onChange={e => setFilterDataFim(e.target.value)}
+                className="w-[140px]"
+              />
+            </div>
+            {(filterCliente || filterDataInicio !== format(startOfMonth(new Date()), 'yyyy-MM-dd') || filterDataFim !== format(endOfMonth(new Date()), 'yyyy-MM-dd')) && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" />
+                Limpar
+              </Button>
+            )}
+            <Button onClick={handleExportPDF} disabled={exporting} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              {exporting ? "Exportando..." : "Exportar PDF"}
+            </Button>
+          </div>
         </div>
+
+        {coletasFiltradas.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground mb-6">
+            <p>Nenhum dado encontrado para os filtros selecionados.</p>
+          </div>
+        )}
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -719,7 +785,7 @@ export default function MvpManual() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {coletas.slice(0, 20).map(c => (
+                {coletasFiltradas.slice(0, 20).map(c => (
                   <TableRow key={c.id}>
                     <TableCell>{c.clientes?.nome}</TableCell>
                     <TableCell>{c.veiculos?.placa}</TableCell>
