@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Plus, TrendingDown, Gauge, DollarSign, AlertTriangle, Download } from "lucide-react";
+import { Plus, TrendingDown, Gauge, DollarSign, AlertTriangle, Download, AlertCircle, XCircle, Fuel } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Cliente {
   id: string;
@@ -269,6 +270,74 @@ export default function MvpManual() {
     recomendada: c.pressao_recomendada,
   }));
 
+  // Alertas
+  const alertas = coletas.reduce((acc: { tipo: string; nivel: 'critico' | 'atencao'; mensagem: string; veiculo: string; posicao: string; valor: number; data: string }[], c) => {
+    // Alerta de desgaste crítico (sulco < 3mm)
+    if (c.sulco_atual < 3) {
+      acc.push({
+        tipo: 'desgaste',
+        nivel: 'critico',
+        mensagem: `Sulco crítico: ${c.sulco_atual}mm (mín. 3mm)`,
+        veiculo: c.veiculos?.placa || '',
+        posicao: c.posicao_pneu,
+        valor: c.sulco_atual,
+        data: new Date(c.data_medicao).toLocaleDateString('pt-BR'),
+      });
+    } else if (c.sulco_atual < 5) {
+      acc.push({
+        tipo: 'desgaste',
+        nivel: 'atencao',
+        mensagem: `Sulco baixo: ${c.sulco_atual}mm (recomendado > 5mm)`,
+        veiculo: c.veiculos?.placa || '',
+        posicao: c.posicao_pneu,
+        valor: c.sulco_atual,
+        data: new Date(c.data_medicao).toLocaleDateString('pt-BR'),
+      });
+    }
+
+    // Alerta de pressão fora do padrão (> 10% de diferença)
+    const diferencaPercentual = Math.abs((c.pressao_diferenca || 0) / c.pressao_recomendada) * 100;
+    if (diferencaPercentual > 15) {
+      acc.push({
+        tipo: 'pressao',
+        nivel: 'critico',
+        mensagem: `Pressão ${c.pressao_atual > c.pressao_recomendada ? 'alta' : 'baixa'}: ${c.pressao_atual}psi (rec: ${c.pressao_recomendada}psi)`,
+        veiculo: c.veiculos?.placa || '',
+        posicao: c.posicao_pneu,
+        valor: c.pressao_atual,
+        data: new Date(c.data_medicao).toLocaleDateString('pt-BR'),
+      });
+    } else if (diferencaPercentual > 10) {
+      acc.push({
+        tipo: 'pressao',
+        nivel: 'atencao',
+        mensagem: `Pressão fora do padrão: ${c.pressao_atual}psi (rec: ${c.pressao_recomendada}psi)`,
+        veiculo: c.veiculos?.placa || '',
+        posicao: c.posicao_pneu,
+        valor: c.pressao_atual,
+        data: new Date(c.data_medicao).toLocaleDateString('pt-BR'),
+      });
+    }
+
+    // Alerta de km/mm baixo (< 500)
+    if (c.km_por_mm && c.km_por_mm < 500) {
+      acc.push({
+        tipo: 'eficiencia',
+        nivel: 'critico',
+        mensagem: `Eficiência crítica: ${c.km_por_mm?.toFixed(0)} km/mm`,
+        veiculo: c.veiculos?.placa || '',
+        posicao: c.posicao_pneu,
+        valor: c.km_por_mm,
+        data: new Date(c.data_medicao).toLocaleDateString('pt-BR'),
+      });
+    }
+
+    return acc;
+  }, []);
+
+  const alertasCriticos = alertas.filter(a => a.nivel === 'critico');
+  const alertasAtencao = alertas.filter(a => a.nivel === 'atencao');
+
   const getStatusBadge = (kmPorMm: number | null) => {
     if (!kmPorMm) return <Badge variant="outline">N/A</Badge>;
     if (kmPorMm < 500) return <Badge variant="destructive">Crítico</Badge>;
@@ -512,6 +581,83 @@ export default function MvpManual() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Painel de Alertas */}
+        {alertas.length > 0 && (
+          <Card className="mb-6 border-l-4 border-l-destructive">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+                Relatório de Alertas ({alertas.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Alertas Críticos */}
+                <div>
+                  <h4 className="font-semibold text-destructive flex items-center gap-2 mb-3">
+                    <XCircle className="h-4 w-4" />
+                    Críticos ({alertasCriticos.length})
+                  </h4>
+                  <ScrollArea className="h-[200px]">
+                    <div className="space-y-2 pr-4">
+                      {alertasCriticos.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nenhum alerta crítico</p>
+                      ) : (
+                        alertasCriticos.map((alerta, idx) => (
+                          <div key={idx} className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-2">
+                                {alerta.tipo === 'desgaste' && <TrendingDown className="h-4 w-4 text-destructive" />}
+                                {alerta.tipo === 'pressao' && <Gauge className="h-4 w-4 text-destructive" />}
+                                {alerta.tipo === 'eficiencia' && <Fuel className="h-4 w-4 text-destructive" />}
+                                <span className="font-medium text-sm">{alerta.veiculo}</span>
+                              </div>
+                              <Badge variant="outline" className="text-xs">{alerta.posicao}</Badge>
+                            </div>
+                            <p className="text-sm mt-1">{alerta.mensagem}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{alerta.data}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                {/* Alertas de Atenção */}
+                <div>
+                  <h4 className="font-semibold text-yellow-600 flex items-center gap-2 mb-3">
+                    <AlertTriangle className="h-4 w-4" />
+                    Atenção ({alertasAtencao.length})
+                  </h4>
+                  <ScrollArea className="h-[200px]">
+                    <div className="space-y-2 pr-4">
+                      {alertasAtencao.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nenhum alerta de atenção</p>
+                      ) : (
+                        alertasAtencao.map((alerta, idx) => (
+                          <div key={idx} className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-2">
+                                {alerta.tipo === 'desgaste' && <TrendingDown className="h-4 w-4 text-yellow-600" />}
+                                {alerta.tipo === 'pressao' && <Gauge className="h-4 w-4 text-yellow-600" />}
+                                {alerta.tipo === 'eficiencia' && <Fuel className="h-4 w-4 text-yellow-600" />}
+                                <span className="font-medium text-sm">{alerta.veiculo}</span>
+                              </div>
+                              <Badge variant="outline" className="text-xs">{alerta.posicao}</Badge>
+                            </div>
+                            <p className="text-sm mt-1">{alerta.mensagem}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{alerta.data}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
