@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Plus, TrendingDown, Gauge, DollarSign, AlertTriangle } from "lucide-react";
+import { Plus, TrendingDown, Gauge, DollarSign, AlertTriangle, Download } from "lucide-react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface Cliente {
   id: string;
@@ -62,6 +64,8 @@ export default function MvpManual() {
   const [coletas, setColetas] = useState<Coleta[]>([]);
   const [filteredVeiculos, setFilteredVeiculos] = useState<Veiculo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [selectedCliente, setSelectedCliente] = useState("");
@@ -272,6 +276,51 @@ export default function MvpManual() {
     return <Badge className="bg-green-500">Bom</Badge>;
   };
 
+  const handleExportPDF = async () => {
+    if (!dashboardRef.current) return;
+    
+    setExporting(true);
+    toast({ title: "Gerando PDF...", description: "Aguarde enquanto o relatório é preparado." });
+
+    try {
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 10;
+
+      pdf.setFontSize(18);
+      pdf.text("Relatório MVP Manual Rastro", pdfWidth / 2, 8, { align: "center" });
+      pdf.setFontSize(10);
+      pdf.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, pdfWidth / 2, 14, { align: "center" });
+
+      pdf.addImage(imgData, "PNG", imgX, imgY + 10, imgWidth * ratio, imgHeight * ratio);
+      pdf.save(`relatorio-rastro-${new Date().toISOString().split("T")[0]}.pdf`);
+
+      toast({ title: "PDF exportado com sucesso!" });
+    } catch (error) {
+      toast({ title: "Erro ao exportar PDF", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -404,8 +453,14 @@ export default function MvpManual() {
       </Card>
 
       {/* Dashboard MVP */}
-      <div>
-        <h2 className="text-2xl font-bold text-foreground mb-4">Dashboard MVP</h2>
+      <div ref={dashboardRef} className="bg-background p-4 rounded-lg">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-foreground">Dashboard MVP</h2>
+          <Button onClick={handleExportPDF} disabled={exporting} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            {exporting ? "Exportando..." : "Exportar PDF"}
+          </Button>
+        </div>
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
