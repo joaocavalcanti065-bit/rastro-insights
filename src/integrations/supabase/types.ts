@@ -14,7 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clientes: {
+        Row: {
+          contato: string | null
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          contato?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          contato?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      coleta_manual_pneus: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_medicao: string
+          id: string
+          km_anterior: number | null
+          km_atual: number
+          km_periodo: number | null
+          km_por_mm: number | null
+          observacoes: string | null
+          posicao_pneu: string
+          pressao_atual: number
+          pressao_diferenca: number | null
+          pressao_recomendada: number
+          sulco_anterior: number | null
+          sulco_atual: number
+          sulco_variacao: number | null
+          veiculo_id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_medicao?: string
+          id?: string
+          km_anterior?: number | null
+          km_atual: number
+          km_periodo?: number | null
+          km_por_mm?: number | null
+          observacoes?: string | null
+          posicao_pneu: string
+          pressao_atual: number
+          pressao_diferenca?: number | null
+          pressao_recomendada?: number
+          sulco_anterior?: number | null
+          sulco_atual: number
+          sulco_variacao?: number | null
+          veiculo_id: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_medicao?: string
+          id?: string
+          km_anterior?: number | null
+          km_atual?: number
+          km_periodo?: number | null
+          km_por_mm?: number | null
+          observacoes?: string | null
+          posicao_pneu?: string
+          pressao_atual?: number
+          pressao_diferenca?: number | null
+          pressao_recomendada?: number
+          sulco_anterior?: number | null
+          sulco_atual?: number
+          sulco_variacao?: number | null
+          veiculo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coleta_manual_pneus_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coleta_manual_pneus_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      veiculos: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          id: string
+          modelo: string | null
+          placa: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          id?: string
+          modelo?: string | null
+          placa: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          modelo?: string | null
+          placa?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "veiculos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
