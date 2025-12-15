@@ -439,7 +439,7 @@ export default function MvpManual() {
                     <SelectValue placeholder="Selecione o cliente" />
                   </SelectTrigger>
                   <SelectContent>
-                    {clientes.map(c => (
+                    {clientes.filter(c => c.id).map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                     ))}
                   </SelectContent>
@@ -461,7 +461,7 @@ export default function MvpManual() {
                     <SelectValue placeholder="Selecione o veículo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredVeiculos.map(v => (
+                    {filteredVeiculos.filter(v => v.id).map(v => (
                       <SelectItem key={v.id} value={v.id}>{v.placa} - {v.modelo}</SelectItem>
                     ))}
                   </SelectContent>
@@ -557,7 +557,7 @@ export default function MvpManual() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os clientes</SelectItem>
-                  {clientes.map(c => (
+                  {clientes.filter(c => c.id).map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                   ))}
                 </SelectContent>
