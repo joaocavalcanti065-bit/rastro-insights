@@ -551,12 +551,12 @@ export default function MvpManual() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={filterCliente} onValueChange={setFilterCliente}>
+              <Select value={filterCliente || "all"} onValueChange={(value) => setFilterCliente(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Todos os clientes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os clientes</SelectItem>
+                  <SelectItem value="all">Todos os clientes</SelectItem>
                   {clientes.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
                   ))}
