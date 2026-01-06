@@ -1,4 +1,4 @@
-import { LayoutDashboard, Radio, ClipboardList, TrendingUp, Recycle, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, Radio, ClipboardList, TrendingUp, Recycle, ClipboardCheck, Fuel } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import logoRastro from "@/assets/logo-rastro.jpg";
 import {
@@ -19,6 +19,7 @@ const navItems = [
   { title: "Diagnóstico", url: "/diagnostico", icon: ClipboardList },
   { title: "Economia Circular", url: "/circular", icon: Recycle },
   { title: "MVP Manual Rastro", url: "/mvp-manual", icon: ClipboardCheck },
+  { title: "Combustível", url: "/combustivel", icon: Fuel },
 ];
 
 export function AppSidebar() {

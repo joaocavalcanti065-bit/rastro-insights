@@ -35,6 +35,66 @@ export type Database = {
         }
         Relationships: []
       }
+      coleta_manual_combustivel: {
+        Row: {
+          cliente_id: string
+          consumo_km_por_litro: number | null
+          created_at: string
+          custo_por_km: number | null
+          data_abastecimento: string
+          id: string
+          km_anterior: number | null
+          km_atual: number
+          km_rodado: number | null
+          litros_abastecidos: number
+          observacoes: string | null
+          posto: string | null
+          preco_litro: number | null
+          status_eficiencia: string | null
+          tipo_combustivel: string
+          valor_total_pago: number
+          veiculo_id: string
+        }
+        Insert: {
+          cliente_id: string
+          consumo_km_por_litro?: number | null
+          created_at?: string
+          custo_por_km?: number | null
+          data_abastecimento?: string
+          id?: string
+          km_anterior?: number | null
+          km_atual: number
+          km_rodado?: number | null
+          litros_abastecidos: number
+          observacoes?: string | null
+          posto?: string | null
+          preco_litro?: number | null
+          status_eficiencia?: string | null
+          tipo_combustivel?: string
+          valor_total_pago: number
+          veiculo_id: string
+        }
+        Update: {
+          cliente_id?: string
+          consumo_km_por_litro?: number | null
+          created_at?: string
+          custo_por_km?: number | null
+          data_abastecimento?: string
+          id?: string
+          km_anterior?: number | null
+          km_atual?: number
+          km_rodado?: number | null
+          litros_abastecidos?: number
+          observacoes?: string | null
+          posto?: string | null
+          preco_litro?: number | null
+          status_eficiencia?: string | null
+          tipo_combustivel?: string
+          valor_total_pago?: number
+          veiculo_id?: string
+        }
+        Relationships: []
+      }
       coleta_manual_pneus: {
         Row: {
           cliente_id: string
