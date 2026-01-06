@@ -11,6 +11,7 @@ import Telemetria from "./pages/Telemetria";
 import Diagnostico from "./pages/Diagnostico";
 import Circular from "./pages/Circular";
 import MvpManual from "./pages/MvpManual";
+import Combustivel from "./pages/Combustivel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/diagnostico" element={<ProtectedLayout><Diagnostico /></ProtectedLayout>} />
           <Route path="/circular" element={<ProtectedLayout><Circular /></ProtectedLayout>} />
           <Route path="/mvp-manual" element={<ProtectedLayout><MvpManual /></ProtectedLayout>} />
+          <Route path="/combustivel" element={<ProtectedLayout><Combustivel /></ProtectedLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
