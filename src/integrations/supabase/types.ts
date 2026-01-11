@@ -172,25 +172,49 @@ export type Database = {
       }
       veiculos: {
         Row: {
+          categoria: string | null
           cliente_id: string
           created_at: string
           id: string
+          km_medio_mensal: number | null
           modelo: string | null
           placa: string
+          possui_estepe: boolean | null
+          quantidade_eixos: number | null
+          quantidade_estepes: number | null
+          tipo_veiculo: string | null
+          total_pneus: number | null
+          total_pneus_rodantes: number | null
         }
         Insert: {
+          categoria?: string | null
           cliente_id: string
           created_at?: string
           id?: string
+          km_medio_mensal?: number | null
           modelo?: string | null
           placa: string
+          possui_estepe?: boolean | null
+          quantidade_eixos?: number | null
+          quantidade_estepes?: number | null
+          tipo_veiculo?: string | null
+          total_pneus?: number | null
+          total_pneus_rodantes?: number | null
         }
         Update: {
+          categoria?: string | null
           cliente_id?: string
           created_at?: string
           id?: string
+          km_medio_mensal?: number | null
           modelo?: string | null
           placa?: string
+          possui_estepe?: boolean | null
+          quantidade_eixos?: number | null
+          quantidade_estepes?: number | null
+          tipo_veiculo?: string | null
+          total_pneus?: number | null
+          total_pneus_rodantes?: number | null
         }
         Relationships: [
           {
