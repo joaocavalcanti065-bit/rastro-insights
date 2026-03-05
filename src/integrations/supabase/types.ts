@@ -170,6 +170,145 @@ export type Database = {
           },
         ]
       }
+      movimentacoes_pneus: {
+        Row: {
+          created_at: string
+          data_movimentacao: string
+          destino: string | null
+          id: string
+          observacoes: string | null
+          origem: string | null
+          pneu_id: string
+          posicao_destino: string | null
+          tipo_movimentacao: string
+          veiculo_destino_id: string | null
+          veiculo_origem_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_movimentacao?: string
+          destino?: string | null
+          id?: string
+          observacoes?: string | null
+          origem?: string | null
+          pneu_id: string
+          posicao_destino?: string | null
+          tipo_movimentacao: string
+          veiculo_destino_id?: string | null
+          veiculo_origem_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_movimentacao?: string
+          destino?: string | null
+          id?: string
+          observacoes?: string | null
+          origem?: string | null
+          pneu_id?: string
+          posicao_destino?: string | null
+          tipo_movimentacao?: string
+          veiculo_destino_id?: string | null
+          veiculo_origem_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_pneus_pneu_id_fkey"
+            columns: ["pneu_id"]
+            isOneToOne: false
+            referencedRelation: "pneus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_pneus_veiculo_destino_id_fkey"
+            columns: ["veiculo_destino_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_pneus_veiculo_origem_id_fkey"
+            columns: ["veiculo_origem_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pneus: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          data_aquisicao: string | null
+          id: string
+          id_unico: string
+          localizacao: string
+          marca: string
+          medida: string | null
+          modelo_pneu: string | null
+          numero_recapagens: number | null
+          observacoes: string | null
+          posicao_atual: string | null
+          status: string
+          sulco_inicial: number | null
+          valor_aquisicao: number | null
+          veiculo_id: string | null
+          vida_atual: number | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          data_aquisicao?: string | null
+          id?: string
+          id_unico: string
+          localizacao?: string
+          marca?: string
+          medida?: string | null
+          modelo_pneu?: string | null
+          numero_recapagens?: number | null
+          observacoes?: string | null
+          posicao_atual?: string | null
+          status?: string
+          sulco_inicial?: number | null
+          valor_aquisicao?: number | null
+          veiculo_id?: string | null
+          vida_atual?: number | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          data_aquisicao?: string | null
+          id?: string
+          id_unico?: string
+          localizacao?: string
+          marca?: string
+          medida?: string | null
+          modelo_pneu?: string | null
+          numero_recapagens?: number | null
+          observacoes?: string | null
+          posicao_atual?: string | null
+          status?: string
+          sulco_inicial?: number | null
+          valor_aquisicao?: number | null
+          veiculo_id?: string | null
+          vida_atual?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pneus_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pneus_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       veiculos: {
         Row: {
           categoria: string | null
