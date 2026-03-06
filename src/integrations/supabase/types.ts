@@ -610,6 +610,7 @@ export type Database = {
           qr_code: string | null
           qtd_recapagens: number | null
           status: string
+          sulco_atual: number | null
           sulco_inicial: number | null
           tipo_aplicacao: string | null
           tipo_eixo: string | null
@@ -649,6 +650,7 @@ export type Database = {
           qr_code?: string | null
           qtd_recapagens?: number | null
           status?: string
+          sulco_atual?: number | null
           sulco_inicial?: number | null
           tipo_aplicacao?: string | null
           tipo_eixo?: string | null
@@ -688,6 +690,7 @@ export type Database = {
           qr_code?: string | null
           qtd_recapagens?: number | null
           status?: string
+          sulco_atual?: number | null
           sulco_inicial?: number | null
           tipo_aplicacao?: string | null
           tipo_eixo?: string | null
