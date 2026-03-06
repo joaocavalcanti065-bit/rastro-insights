@@ -76,6 +76,12 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="p-3">
+        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive" onClick={handleLogout}>
+          <LogOut className="h-4 w-4" />
+          {open && <span>Sair</span>}
+        </Button>
+      </SidebarFooter>
     </Sidebar>
   );
 }
