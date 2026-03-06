@@ -1,25 +1,26 @@
-import { LayoutDashboard, Radio, ClipboardList, TrendingUp, Recycle, ClipboardCheck, Fuel } from "lucide-react";
+import {
+  LayoutDashboard, Truck, Circle, Package, RefreshCw,
+  Wrench, Bell, FileText, Settings, Link2, Cog
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 import logoRastro from "@/assets/logo-rastro.jpg";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Telemetria", url: "/telemetria", icon: Radio },
-  { title: "Diagnóstico", url: "/diagnostico", icon: ClipboardList },
-  { title: "Economia Circular", url: "/circular", icon: Recycle },
-  { title: "MVP Manual Rastro", url: "/mvp-manual", icon: ClipboardCheck },
-  { title: "Combustível", url: "/combustivel", icon: Fuel },
+  { title: "Frota", url: "/frota", icon: Truck },
+  { title: "Pneus", url: "/pneus", icon: Circle },
+  { title: "Estoque", url: "/estoque", icon: Package },
+  { title: "Recapagem", url: "/recapagem", icon: RefreshCw },
+  { title: "Manutenção", url: "/manutencao", icon: Wrench },
+  { title: "Alertas", url: "/alertas", icon: Bell },
+  { title: "Relatórios", url: "/relatorios", icon: FileText },
+  { title: "Cadastros", url: "/cadastros", icon: Settings },
+  { title: "Integrações", url: "/integracoes", icon: Link2 },
+  { title: "Configurações", url: "/configuracoes", icon: Cog },
 ];
 
 export function AppSidebar() {
@@ -31,8 +32,13 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-6">
             <div className="flex items-center gap-2">
-              <img src={logoRastro} alt="Logo Rastro" className="h-10 w-auto" />
-              {open && <span className="font-semibold text-lg">Rastro</span>}
+              <img src={logoRastro} alt="Logo Rastro" className="h-10 w-auto rounded" />
+              {open && (
+                <div className="flex flex-col">
+                  <span className="font-bold text-base leading-tight">Rastro</span>
+                  <span className="text-[10px] text-sidebar-foreground/60 leading-tight">Pneus, Estoque e Recapagem</span>
+                </div>
+              )}
             </div>
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -43,14 +49,14 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        `flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm ${
                           isActive
                             ? "bg-sidebar-accent text-sidebar-primary font-medium"
                             : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                         }`
                       }
                     >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-4 w-4 shrink-0" />
                       {open && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
