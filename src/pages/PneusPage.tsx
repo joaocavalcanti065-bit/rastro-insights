@@ -240,6 +240,13 @@ export default function PneusPage() {
         }}
       />
 
+      <ExcelImport
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["pneus"] })}
+        existingIds={pneus?.map(p => p.id_unico) ?? []}
+      />
+
       {!filtered?.length ? (
         <EmptyState icon={Circle} title="Nenhum pneu cadastrado" description="Cadastre seus pneus com ID único e QR Code para rastreamento completo do ciclo de vida." actionLabel="Cadastrar Pneu" onAction={() => setOpen(true)} />
       ) : (
