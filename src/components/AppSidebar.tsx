@@ -28,6 +28,13 @@ const navItems = [
 
 export function AppSidebar() {
   const { open } = useSidebar();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Sessão encerrada.");
+    navigate("/auth");
+  };
 
   return (
     <Sidebar className="border-r border-sidebar-border">
