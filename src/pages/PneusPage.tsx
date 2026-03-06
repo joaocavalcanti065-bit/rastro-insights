@@ -12,9 +12,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
-import { Camera, Circle, Plus, QrCode, Search } from "lucide-react";
+import { Camera, Circle, FileSpreadsheet, Plus, QrCode, Search } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { QrScanner } from "@/components/QrScanner";
+import { ExcelImport } from "@/components/ExcelImport";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -32,6 +33,7 @@ export default function PneusPage() {
   const [search, setSearch] = useState("");
   const [qrModal, setQrModal] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     id_unico: "", marca: "Michelin", modelo_pneu: "", medida: "295/80 R22.5",
@@ -108,6 +110,9 @@ export default function PneusPage() {
           </div>
           <Button variant="outline" onClick={() => setScannerOpen(true)}>
             <Camera className="h-4 w-4 mr-2" />Ler QR Code
+          </Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4 mr-2" />Importar Excel
           </Button>
           <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setStep(1); }}>
             <DialogTrigger asChild>
@@ -233,6 +238,13 @@ export default function PneusPage() {
             toast.error("Pneu não encontrado no sistema");
           }
         }}
+      />
+
+      <ExcelImport
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["pneus"] })}
+        existingIds={pneus?.map(p => p.id_unico) ?? []}
       />
 
       {!filtered?.length ? (
