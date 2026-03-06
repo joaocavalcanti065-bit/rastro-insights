@@ -146,7 +146,7 @@ export function ExcelImport({ open, onClose, onSuccess, existingIds }: ExcelImpo
     if (!parsed?.valid.length) return;
     setImporting(true);
     try {
-      const { error } = await supabase.from("pneus").insert(parsed.valid);
+      const { error } = await supabase.from("pneus").insert(parsed.valid as any);
       if (error) throw error;
       toast.success(`${parsed.valid.length} pneus importados com sucesso!`);
       onSuccess();
