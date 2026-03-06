@@ -6,7 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { PageHeader } from "@/components/PageHeader";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Frota from "./pages/Frota";
@@ -23,9 +25,8 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  if (!isAuthenticated) return <Navigate to="/auth" replace />;
+const ProtectedLayout = ({ children, session }: { children: React.ReactNode; session: Session | null }) => {
+  if (!session) return <Navigate to="/auth" replace />;
 
   return (
     <SidebarProvider>
@@ -47,6 +48,52 @@ function AppInit() {
   return null;
 }
 
+const AppRoutes = () => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/auth" element={session ? <Navigate to="/dashboard" replace /> : <Auth />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={<ProtectedLayout session={session}><Dashboard /></ProtectedLayout>} />
+      <Route path="/frota" element={<ProtectedLayout session={session}><Frota /></ProtectedLayout>} />
+      <Route path="/pneus" element={<ProtectedLayout session={session}><PneusPage /></ProtectedLayout>} />
+      <Route path="/estoque" element={<ProtectedLayout session={session}><EstoquePage /></ProtectedLayout>} />
+      <Route path="/recapagem" element={<ProtectedLayout session={session}><RecapagemPage /></ProtectedLayout>} />
+      <Route path="/manutencao" element={<ProtectedLayout session={session}><ManutencaoPage /></ProtectedLayout>} />
+      <Route path="/alertas" element={<ProtectedLayout session={session}><AlertasPage /></ProtectedLayout>} />
+      <Route path="/relatorios" element={<ProtectedLayout session={session}><RelatoriosPage /></ProtectedLayout>} />
+      <Route path="/cadastros" element={<ProtectedLayout session={session}><CadastrosPage /></ProtectedLayout>} />
+      <Route path="/integracoes" element={<ProtectedLayout session={session}><IntegracoesPage /></ProtectedLayout>} />
+      <Route path="/configuracoes" element={<ProtectedLayout session={session}><ConfiguracoesPage /></ProtectedLayout>} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -54,22 +101,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
-          <Route path="/frota" element={<ProtectedLayout><Frota /></ProtectedLayout>} />
-          <Route path="/pneus" element={<ProtectedLayout><PneusPage /></ProtectedLayout>} />
-          <Route path="/estoque" element={<ProtectedLayout><EstoquePage /></ProtectedLayout>} />
-          <Route path="/recapagem" element={<ProtectedLayout><RecapagemPage /></ProtectedLayout>} />
-          <Route path="/manutencao" element={<ProtectedLayout><ManutencaoPage /></ProtectedLayout>} />
-          <Route path="/alertas" element={<ProtectedLayout><AlertasPage /></ProtectedLayout>} />
-          <Route path="/relatorios" element={<ProtectedLayout><RelatoriosPage /></ProtectedLayout>} />
-          <Route path="/cadastros" element={<ProtectedLayout><CadastrosPage /></ProtectedLayout>} />
-          <Route path="/integracoes" element={<ProtectedLayout><IntegracoesPage /></ProtectedLayout>} />
-          <Route path="/configuracoes" element={<ProtectedLayout><ConfiguracoesPage /></ProtectedLayout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
