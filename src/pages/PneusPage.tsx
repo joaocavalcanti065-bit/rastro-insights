@@ -12,8 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
-import { Circle, Plus, QrCode, Search } from "lucide-react";
+import { Camera, Circle, Plus, QrCode, Search } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { QrScanner } from "@/components/QrScanner";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -30,6 +31,7 @@ export default function PneusPage() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [qrModal, setQrModal] = useState<string | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     id_unico: "", marca: "Michelin", modelo_pneu: "", medida: "295/80 R22.5",
@@ -104,6 +106,9 @@ export default function PneusPage() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar por ID, marca, medida..." className="pl-9 w-64" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
+          <Button variant="outline" onClick={() => setScannerOpen(true)}>
+            <Camera className="h-4 w-4 mr-2" />Ler QR Code
+          </Button>
           <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setStep(1); }}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" />Cadastrar Pneu</Button>
@@ -215,6 +220,20 @@ export default function PneusPage() {
           <p className="text-sm text-muted-foreground">{qrModal}</p>
         </DialogContent>
       </Dialog>
+
+      <QrScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={(value) => {
+          const found = pneus?.find(p => p.qr_code === value || p.id_unico === value);
+          if (found) {
+            setSearch(found.id_unico);
+            toast.success(`Pneu ${found.id_unico} encontrado!`);
+          } else {
+            toast.error("Pneu não encontrado no sistema");
+          }
+        }}
+      />
 
       {!filtered?.length ? (
         <EmptyState icon={Circle} title="Nenhum pneu cadastrado" description="Cadastre seus pneus com ID único e QR Code para rastreamento completo do ciclo de vida." actionLabel="Cadastrar Pneu" onAction={() => setOpen(true)} />
