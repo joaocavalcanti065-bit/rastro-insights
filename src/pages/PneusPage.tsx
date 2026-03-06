@@ -12,9 +12,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { toast } from "sonner";
-import { Camera, Circle, Plus, QrCode, Search } from "lucide-react";
+import { Camera, Circle, FileSpreadsheet, Plus, QrCode, Search } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { QrScanner } from "@/components/QrScanner";
+import { ExcelImport } from "@/components/ExcelImport";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
