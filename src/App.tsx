@@ -21,6 +21,7 @@ import RelatoriosPage from "./pages/RelatoriosPage";
 import CadastrosPage from "./pages/CadastrosPage";
 import IntegracoesPage from "./pages/IntegracoesPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
