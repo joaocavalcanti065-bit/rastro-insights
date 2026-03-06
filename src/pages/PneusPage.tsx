@@ -106,6 +106,9 @@ export default function PneusPage() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar por ID, marca, medida..." className="pl-9 w-64" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
+          <Button variant="outline" onClick={() => setScannerOpen(true)}>
+            <Camera className="h-4 w-4 mr-2" />Ler QR Code
+          </Button>
           <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setStep(1); }}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" />Cadastrar Pneu</Button>
