@@ -111,6 +111,9 @@ export default function PneusPage() {
           <Button variant="outline" onClick={() => setScannerOpen(true)}>
             <Camera className="h-4 w-4 mr-2" />Ler QR Code
           </Button>
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4 mr-2" />Importar Excel
+          </Button>
           <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setStep(1); }}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" />Cadastrar Pneu</Button>
