@@ -33,6 +33,7 @@ export default function PneusPage() {
   const [search, setSearch] = useState("");
   const [qrModal, setQrModal] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     id_unico: "", marca: "Michelin", modelo_pneu: "", medida: "295/80 R22.5",
