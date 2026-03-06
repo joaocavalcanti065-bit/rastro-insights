@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { toast } from "sonner";
-import { Truck, Plus, AlertTriangle } from "lucide-react";
+import { Truck, Plus, AlertTriangle, Eye, X } from "lucide-react";
 
 const TIPOS_VEICULO = [
   { label: "Carro / SUV / Van", value: "Carro", pneus: 4 },
@@ -30,6 +31,7 @@ const TIPOS_VEICULO = [
 export default function Frota() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [selectedVeiculo, setSelectedVeiculo] = useState<string | null>(null);
   const [form, setForm] = useState({ placa: "", tipo_veiculo: "", modelo: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
 
   const { data: veiculos, isLoading } = useQuery({
@@ -44,7 +46,7 @@ export default function Frota() {
   const { data: pneus } = useQuery({
     queryKey: ["pneus-frota"],
     queryFn: async () => {
-      const { data } = await supabase.from("pneus").select("veiculo_id, status");
+      const { data } = await supabase.from("pneus").select("id, id_unico, veiculo_id, posicao_atual, sulco_atual, sulco_inicial, pressao_atual, pressao_ideal, marca, medida, status");
       return data || [];
     },
   });
@@ -76,6 +78,9 @@ export default function Frota() {
     onError: () => toast.error("Erro ao cadastrar veículo"),
   });
 
+  const selectedV = veiculos?.find(v => v.id === selectedVeiculo);
+  const selectedPneus = pneus?.filter(p => p.veiculo_id === selectedVeiculo) || [];
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -99,24 +104,14 @@ export default function Frota() {
             <DialogHeader><DialogTitle>Novo Veículo</DialogTitle></DialogHeader>
             <div className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Placa</Label>
-                  <Input placeholder="ABC-1234" value={form.placa} onChange={e => setForm({ ...form, placa: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Modelo</Label>
-                  <Input placeholder="Scania P310" value={form.modelo} onChange={e => setForm({ ...form, modelo: e.target.value })} />
-                </div>
+                <div><Label>Placa</Label><Input placeholder="ABC-1234" value={form.placa} onChange={e => setForm({ ...form, placa: e.target.value })} /></div>
+                <div><Label>Modelo</Label><Input placeholder="Scania P310" value={form.modelo} onChange={e => setForm({ ...form, modelo: e.target.value })} /></div>
               </div>
               <div>
                 <Label>Tipo de Veículo</Label>
                 <Select value={form.tipo_veiculo} onValueChange={v => setForm({ ...form, tipo_veiculo: v })}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {TIPOS_VEICULO.map(t => (
-                      <SelectItem key={t.value} value={t.value}>{t.label} ({t.pneus} pneus)</SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectContent>{TIPOS_VEICULO.map(t => <SelectItem key={t.value} value={t.value}>{t.label} ({t.pneus} pneus)</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -131,10 +126,7 @@ export default function Frota() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Qtd. Eixos</Label>
-                  <Input type="number" value={form.quantidade_eixos} onChange={e => setForm({ ...form, quantidade_eixos: Number(e.target.value) })} />
-                </div>
+                <div><Label>Qtd. Eixos</Label><Input type="number" value={form.quantidade_eixos} onChange={e => setForm({ ...form, quantidade_eixos: Number(e.target.value) })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
@@ -142,10 +134,7 @@ export default function Frota() {
                   <Label>Possui estepe?</Label>
                 </div>
                 {form.possui_estepe && (
-                  <div>
-                    <Label>Qtd. Estepes</Label>
-                    <Input type="number" value={form.quantidade_estepes} onChange={e => setForm({ ...form, quantidade_estepes: Number(e.target.value) })} />
-                  </div>
+                  <div><Label>Qtd. Estepes</Label><Input type="number" value={form.quantidade_estepes} onChange={e => setForm({ ...form, quantidade_estepes: Number(e.target.value) })} /></div>
                 )}
               </div>
               <Button onClick={() => createMutation.mutate()} disabled={!form.placa || !form.tipo_veiculo || createMutation.isPending}>
@@ -156,6 +145,53 @@ export default function Frota() {
         </Dialog>
       </div>
 
+      {/* Vehicle detail modal */}
+      <Dialog open={!!selectedVeiculo} onOpenChange={() => setSelectedVeiculo(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedV && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-3">
+                  <Truck className="h-5 w-5 text-primary" />
+                  {selectedV.placa} — {selectedV.tipo_veiculo}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <span className="text-muted-foreground text-xs">Modelo</span>
+                    <p className="font-medium">{selectedV.modelo || "—"}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <span className="text-muted-foreground text-xs">Categoria</span>
+                    <p className="font-medium">{selectedV.categoria}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <span className="text-muted-foreground text-xs">Eixos</span>
+                    <p className="font-medium">{selectedV.quantidade_eixos}</p>
+                  </div>
+                </div>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Mapa de Pneus</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <VehicleTireLayout
+                      tipoVeiculo={selectedV.tipo_veiculo || "Truck"}
+                      quantidadeEixos={selectedV.quantidade_eixos || 3}
+                      possuiEstepe={selectedV.possui_estepe || false}
+                      quantidadeEstepes={selectedV.quantidade_estepes || 0}
+                      pneus={selectedPneus}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {!veiculos?.length ? (
         <EmptyState icon={Truck} title="Nenhum veículo cadastrado" description="Cadastre o primeiro veículo da sua frota para começar a gestão dos pneus." actionLabel="Cadastrar Veículo" onAction={() => setOpen(true)} />
       ) : (
@@ -164,11 +200,14 @@ export default function Frota() {
             const pneusVeiculo = pneus?.filter(p => p.veiculo_id === v.id) || [];
             const alertasVeiculo = pneusVeiculo.filter(p => p.status === "em_inspecao" || p.status === "aguardando_manutencao");
             return (
-              <Card key={v.id} className="hover:border-primary/50 transition-colors">
+              <Card key={v.id} className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => setSelectedVeiculo(v.id)}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg">{v.placa}</CardTitle>
-                    <Badge variant={v.status === "ativo" ? "default" : "secondary"}>{v.status || "ativo"}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={v.status === "ativo" ? "default" : "secondary"}>{v.status || "ativo"}</Badge>
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
