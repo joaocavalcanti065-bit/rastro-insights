@@ -221,6 +221,20 @@ export default function PneusPage() {
         </DialogContent>
       </Dialog>
 
+      <QrScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={(value) => {
+          const found = pneus?.find(p => p.qr_code === value || p.id_unico === value);
+          if (found) {
+            setSearch(found.id_unico);
+            toast.success(`Pneu ${found.id_unico} encontrado!`);
+          } else {
+            toast.error("Pneu não encontrado no sistema");
+          }
+        }}
+      />
+
       {!filtered?.length ? (
         <EmptyState icon={Circle} title="Nenhum pneu cadastrado" description="Cadastre seus pneus com ID único e QR Code para rastreamento completo do ciclo de vida." actionLabel="Cadastrar Pneu" onAction={() => setOpen(true)} />
       ) : (
