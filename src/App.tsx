@@ -78,6 +78,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/auth" element={session ? <Navigate to="/dashboard" replace /> : <Auth />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<ProtectedLayout session={session}><Dashboard /></ProtectedLayout>} />
       <Route path="/frota" element={<ProtectedLayout session={session}><Frota /></ProtectedLayout>} />
