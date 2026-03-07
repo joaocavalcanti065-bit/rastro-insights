@@ -706,6 +706,114 @@ export default function Dashboard() {
           </div>
         );
 
+      case "combustivel": {
+        const fuelByType = fCombustivel.reduce((acc, c) => {
+          const t = c.tipo_combustivel || "Diesel S10";
+          if (!acc[t]) acc[t] = { litros: 0, gasto: 0, count: 0 };
+          acc[t].litros += Number(c.litros_abastecidos || 0);
+          acc[t].gasto += Number(c.valor_total_pago || 0);
+          acc[t].count++;
+          return acc;
+        }, {} as Record<string, { litros: number; gasto: number; count: number }>);
+        const fuelTypeData = Object.entries(fuelByType).map(([name, v]) => ({ name, litros: Math.round(v.litros), gasto: Math.round(v.gasto), count: v.count }));
+
+        const fTotalLitros = fCombustivel.reduce((a, c) => a + Number(c.litros_abastecidos || 0), 0);
+        const fTotalGasto = fCombustivel.reduce((a, c) => a + Number(c.valor_total_pago || 0), 0);
+        const fAvgConsumo = fCombustivel.filter(c => c.consumo_km_por_litro && c.consumo_km_por_litro > 0);
+        const fMediaKmL = fAvgConsumo.length > 0 ? fAvgConsumo.reduce((a, c) => a + Number(c.consumo_km_por_litro), 0) / fAvgConsumo.length : 0;
+        const fAvgPrecoLitro = fCombustivel.length > 0 ? fCombustivel.reduce((a, c) => a + Number(c.preco_litro || 0), 0) / fCombustivel.length : 0;
+        const fTotalKm = fCombustivel.reduce((a, c) => a + Number(c.km_rodado || 0), 0);
+        const fCustoKm = fTotalKm > 0 ? fTotalGasto / fTotalKm : 0;
+
+        // Efficiency by vehicle
+        const byVehicle = fCombustivel.reduce((acc, c) => {
+          const vid = c.veiculo_id;
+          const placa = veiculos?.find(v => v.id === vid)?.placa || vid;
+          if (!acc[placa]) acc[placa] = { litros: 0, km: 0, gasto: 0 };
+          acc[placa].litros += Number(c.litros_abastecidos || 0);
+          acc[placa].km += Number(c.km_rodado || 0);
+          acc[placa].gasto += Number(c.valor_total_pago || 0);
+          return acc;
+        }, {} as Record<string, { litros: number; km: number; gasto: number }>);
+        const vehicleEffData = Object.entries(byVehicle).map(([name, v]) => ({
+          name,
+          kmPorLitro: v.litros > 0 ? Number((v.km / v.litros).toFixed(2)) : 0,
+          custoPorKm: v.km > 0 ? Number((v.gasto / v.km).toFixed(2)) : 0,
+        }));
+
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Abastecimentos</span><p className="text-xl font-bold">{fCombustivel.length}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total Litros</span><p className="text-xl font-bold">{fTotalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Gasto Total</span><p className="text-xl font-bold">R$ {fTotalGasto.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Média km/L</span><p className="text-xl font-bold">{fMediaKmL > 0 ? fMediaKmL.toFixed(2) : "—"}</p></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Preço Médio/L</span><p className="text-xl font-bold">R$ {fAvgPrecoLitro > 0 ? fAvgPrecoLitro.toFixed(2) : "—"}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo/km</span><p className="text-xl font-bold">R$ {fCustoKm > 0 ? fCustoKm.toFixed(2) : "—"}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">KM Rodados</span><p className="text-xl font-bold">{fTotalKm.toLocaleString("pt-BR")}</p></div>
+            </div>
+
+            <TimelineChart data={combustivelTimeline} label="Evolução — Gasto com Combustível (6 meses)" color="hsl(38,92%,50%)" />
+
+            {fuelTypeData.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-muted-foreground">Consumo por Tipo de Combustível</h4>
+                <div className="h-52">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={fuelTypeData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="name" className="text-xs" />
+                      <YAxis />
+                      <Tooltip formatter={(v: number, name: string) => [name === "litros" ? `${v} L` : name === "gasto" ? `R$ ${v.toLocaleString("pt-BR")}` : v, name === "litros" ? "Litros" : name === "gasto" ? "Gasto" : "Abastecimentos"]} />
+                      <Bar dataKey="litros" fill="hsl(239,84%,67%)" radius={[4,4,0,0]} name="Litros" />
+                      <Bar dataKey="gasto" fill="hsl(38,92%,50%)" radius={[4,4,0,0]} name="Gasto" />
+                      <Legend />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {vehicleEffData.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-muted-foreground">Eficiência por Veículo (km/L)</h4>
+                <div className="h-52">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={vehicleEffData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="name" className="text-xs" angle={-20} textAnchor="end" height={60} />
+                      <YAxis />
+                      <Tooltip formatter={(v: number, name: string) => [name === "kmPorLitro" ? `${v} km/L` : `R$ ${v}/km`, name === "kmPorLitro" ? "km/L" : "Custo/km"]} />
+                      <Bar dataKey="kmPorLitro" fill="hsl(142,76%,36%)" radius={[4,4,0,0]} name="km/L" />
+                      <Legend />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            <DetailTable
+              headers={["Data", "Veículo", "Combustível", "Litros", "KM", "Preço/L", "Total", "km/L"]}
+              rows={fCombustivel.slice(0, 30).map(c => {
+                const placa = veiculos?.find(v => v.id === c.veiculo_id)?.placa || "-";
+                return [
+                  format(new Date(c.data_abastecimento), "dd/MM/yyyy"),
+                  placa,
+                  c.tipo_combustivel || "-",
+                  `${Number(c.litros_abastecidos).toFixed(1)} L`,
+                  c.km_atual?.toLocaleString("pt-BR") || "-",
+                  c.preco_litro ? `R$ ${Number(c.preco_litro).toFixed(2)}` : "-",
+                  `R$ ${Number(c.valor_total_pago).toFixed(2)}`,
+                  c.consumo_km_por_litro ? `${Number(c.consumo_km_por_litro).toFixed(2)}` : "—",
+                ];
+              })}
+            />
+          </div>
+        );
+      }
+
       default:
         return null;
     }
