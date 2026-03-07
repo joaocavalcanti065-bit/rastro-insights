@@ -15,6 +15,7 @@ import { EstoqueSaidaModal } from "@/components/estoque/EstoqueSaidaModal";
 import { EstoqueReservaModal } from "@/components/estoque/EstoqueReservaModal";
 import { EstoqueCurvaABC } from "@/components/estoque/EstoqueCurvaABC";
 import { EstoqueIAPanel } from "@/components/estoque/EstoqueIAPanel";
+import { EstoqueInventarioModal } from "@/components/estoque/EstoqueInventarioModal";
 import { QrScanner } from "@/components/QrScanner";
 
 export default function EstoquePage() {
