@@ -231,7 +231,7 @@ function TimelineChart({ data, label, color = "hsl(var(--primary))" }: { data: {
 
 const COLORS = ["hsl(239,84%,67%)", "hsl(142,76%,36%)", "hsl(38,92%,50%)", "hsl(0,84%,60%)", "hsl(280,60%,50%)"];
 
-type DetailType = "veiculos" | "pneus" | "operacao" | "estoque" | "recapagem" | "sucata" | "alertas" | "custo" | null;
+type DetailType = "veiculos" | "pneus" | "operacao" | "estoque" | "recapagem" | "sucata" | "alertas" | "custo" | "combustivel" | null;
 
 function StatCard({ title, value, icon: Icon, color, onClick }: { title: string; value: string | number; icon: any; color: string; onClick?: () => void }) {
   return (
