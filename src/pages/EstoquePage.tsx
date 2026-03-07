@@ -135,6 +135,7 @@ export default function EstoquePage() {
       <EstoqueSaidaModal open={saidaOpen} onClose={() => setSaidaOpen(false)} onSuccess={refetch} pneus={pneus || []} veiculos={veiculos || []} />
       <EstoqueReservaModal open={reservaOpen} onClose={() => setReservaOpen(false)} onSuccess={refetch} pneus={pneus || []} reservedIds={reservedIds} veiculos={veiculos || []} />
       <EstoqueCurvaABC open={abcOpen} onClose={() => setAbcOpen(false)} pneus={pneus || []} />
+      <EstoqueInventarioModal open={inventarioOpen} onClose={() => setInventarioOpen(false)} pneus={pneus || []} onSuccess={refetch} />
 
       <QrScanner
         open={scannerOpen}
