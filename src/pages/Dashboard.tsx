@@ -300,6 +300,14 @@ export default function Dashboard() {
     },
   });
 
+  const { data: combustivel } = useQuery({
+    queryKey: ["combustivel-dash"],
+    queryFn: async () => {
+      const { data } = await supabase.from("coleta_manual_combustivel").select("*");
+      return data || [];
+    },
+  });
+
   const isLoading = loadingV || loadingP;
   const totalVeiculos = veiculos?.length || 0;
   const totalPneus = pneus?.length || 0;
