@@ -96,6 +96,9 @@ export default function EstoquePage() {
       {/* KPIs */}
       <EstoqueKPIs pneus={pneus || []} reservedIds={reservedIds} />
 
+      {/* AI Panel */}
+      {(pneus?.length ?? 0) > 0 && <EstoqueIAPanel pneus={pneus || []} />}
+
       {!pneus?.length ? (
         <EmptyState
           icon={Package}
