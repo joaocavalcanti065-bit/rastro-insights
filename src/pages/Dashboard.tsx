@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, TrendingUp, BarChart3, CalendarIcon, ShieldAlert, Lightbulb, ArrowUp, ArrowDown, Fuel, Droplets } from "lucide-react";
@@ -251,6 +252,7 @@ function StatCard({ title, value, icon: Icon, color, onClick }: { title: string;
 
 export default function Dashboard() {
   const [openDetail, setOpenDetail] = useState<DetailType>(null);
+  const [fuelVehicleFilter, setFuelVehicleFilter] = useState<string>("all");
 
   const { data: veiculos, isLoading: loadingV } = useQuery({
     queryKey: ["veiculos-dash"],
@@ -337,6 +339,7 @@ export default function Dashboard() {
       setDateFilter("all");
       setDateFrom(undefined);
       setDateTo(undefined);
+      setFuelVehicleFilter("all");
     }
   };
 
@@ -707,7 +710,19 @@ export default function Dashboard() {
         );
 
       case "combustivel": {
-        const fuelByType = fCombustivel.reduce((acc, c) => {
+        // Get unique vehicles from fuel data
+        const fuelVehicleIds = [...new Set(fCombustivel.map(c => c.veiculo_id))];
+        const fuelVehicleOptions = fuelVehicleIds.map(vid => {
+          const v = veiculos?.find(v => v.id === vid);
+          return { id: vid, placa: v?.placa || vid };
+        });
+
+        // Filter by selected vehicle
+        const displayData = fuelVehicleFilter === "all"
+          ? fCombustivel
+          : fCombustivel.filter(c => c.veiculo_id === fuelVehicleFilter);
+
+        const fuelByType = displayData.reduce((acc, c) => {
           const t = c.tipo_combustivel || "Diesel S10";
           if (!acc[t]) acc[t] = { litros: 0, gasto: 0, count: 0 };
           acc[t].litros += Number(c.litros_abastecidos || 0);
@@ -717,16 +732,39 @@ export default function Dashboard() {
         }, {} as Record<string, { litros: number; gasto: number; count: number }>);
         const fuelTypeData = Object.entries(fuelByType).map(([name, v]) => ({ name, litros: Math.round(v.litros), gasto: Math.round(v.gasto), count: v.count }));
 
-        const fTotalLitros = fCombustivel.reduce((a, c) => a + Number(c.litros_abastecidos || 0), 0);
-        const fTotalGasto = fCombustivel.reduce((a, c) => a + Number(c.valor_total_pago || 0), 0);
-        const fAvgConsumo = fCombustivel.filter(c => c.consumo_km_por_litro && c.consumo_km_por_litro > 0);
-        const fMediaKmL = fAvgConsumo.length > 0 ? fAvgConsumo.reduce((a, c) => a + Number(c.consumo_km_por_litro), 0) / fAvgConsumo.length : 0;
-        const fAvgPrecoLitro = fCombustivel.length > 0 ? fCombustivel.reduce((a, c) => a + Number(c.preco_litro || 0), 0) / fCombustivel.length : 0;
-        const fTotalKm = fCombustivel.reduce((a, c) => a + Number(c.km_rodado || 0), 0);
+        const fTotalLitros = displayData.reduce((a, c) => a + Number(c.litros_abastecidos || 0), 0);
+        const fTotalGasto = displayData.reduce((a, c) => a + Number(c.valor_total_pago || 0), 0);
+        const fWithConsumo = displayData.filter(c => c.consumo_km_por_litro && c.consumo_km_por_litro > 0);
+        const fMediaKmL = fWithConsumo.length > 0 ? fWithConsumo.reduce((a, c) => a + Number(c.consumo_km_por_litro), 0) / fWithConsumo.length : 0;
+        const fAvgPrecoLitro = displayData.length > 0 ? displayData.reduce((a, c) => a + Number(c.preco_litro || 0), 0) / displayData.length : 0;
+        const fTotalKm = displayData.reduce((a, c) => a + Number(c.km_rodado || 0), 0);
         const fCustoKm = fTotalKm > 0 ? fTotalGasto / fTotalKm : 0;
 
-        // Efficiency by vehicle
-        const byVehicle = fCombustivel.reduce((acc, c) => {
+        // --- Savings calculation ---
+        // Compare first half avg vs second half avg consumption
+        // If consumption improved, calculate how much fuel was saved
+        const sorted = [...fWithConsumo].sort((a, b) => new Date(a.data_abastecimento).getTime() - new Date(b.data_abastecimento).getTime());
+        let economiaLitros = 0;
+        let economiaReais = 0;
+        let melhoriaPercent = 0;
+        if (sorted.length >= 4) {
+          const half = Math.floor(sorted.length / 2);
+          const firstHalf = sorted.slice(0, half);
+          const secondHalf = sorted.slice(half);
+          const avgFirst = firstHalf.reduce((a, c) => a + Number(c.consumo_km_por_litro), 0) / firstHalf.length;
+          const avgSecond = secondHalf.reduce((a, c) => a + Number(c.consumo_km_por_litro), 0) / secondHalf.length;
+          if (avgSecond > avgFirst && avgFirst > 0) {
+            melhoriaPercent = ((avgSecond - avgFirst) / avgFirst) * 100;
+            // Litros saved = km driven in second half * (1/avgFirst - 1/avgSecond)
+            const kmSecondHalf = secondHalf.reduce((a, c) => a + Number(c.km_rodado || 0), 0);
+            economiaLitros = kmSecondHalf * (1 / avgFirst - 1 / avgSecond);
+            const avgPreco = secondHalf.reduce((a, c) => a + Number(c.preco_litro || 0), 0) / secondHalf.length;
+            economiaReais = economiaLitros * avgPreco;
+          }
+        }
+
+        // Efficiency by vehicle (for fleet view)
+        const byVehicle = displayData.reduce((acc, c) => {
           const vid = c.veiculo_id;
           const placa = veiculos?.find(v => v.id === vid)?.placa || vid;
           if (!acc[placa]) acc[placa] = { litros: 0, km: 0, gasto: 0 };
@@ -741,10 +779,35 @@ export default function Dashboard() {
           custoPorKm: v.km > 0 ? Number((v.gasto / v.km).toFixed(2)) : 0,
         }));
 
+        // Consumption evolution for single vehicle
+        const consumoEvolution = fuelVehicleFilter !== "all" && sorted.length > 0
+          ? sorted.map(c => ({
+              name: format(new Date(c.data_abastecimento), "dd/MM", { locale: ptBR }),
+              kmPorLitro: Number(c.consumo_km_por_litro || 0),
+              custoKm: c.km_rodado && Number(c.km_rodado) > 0 ? Number((Number(c.valor_total_pago) / Number(c.km_rodado)).toFixed(2)) : 0,
+            }))
+          : [];
+
         return (
           <div className="space-y-6">
+            {/* Vehicle selector */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-muted-foreground">Visão:</span>
+              <Select value={fuelVehicleFilter} onValueChange={setFuelVehicleFilter}>
+                <SelectTrigger className="w-56 h-8 text-sm">
+                  <SelectValue placeholder="Frota completa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">🚛 Frota completa</SelectItem>
+                  {fuelVehicleOptions.map(v => (
+                    <SelectItem key={v.id} value={v.id}>🚗 {v.placa}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Abastecimentos</span><p className="text-xl font-bold">{fCombustivel.length}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Abastecimentos</span><p className="text-xl font-bold">{displayData.length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total Litros</span><p className="text-xl font-bold">{fTotalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Gasto Total</span><p className="text-xl font-bold">R$ {fTotalGasto.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Média km/L</span><p className="text-xl font-bold">{fMediaKmL > 0 ? fMediaKmL.toFixed(2) : "—"}</p></div>
@@ -754,6 +817,62 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo/km</span><p className="text-xl font-bold">R$ {fCustoKm > 0 ? fCustoKm.toFixed(2) : "—"}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">KM Rodados</span><p className="text-xl font-bold">{fTotalKm.toLocaleString("pt-BR")}</p></div>
             </div>
+
+            {/* Savings from recommendations */}
+            {economiaReais > 0 && (
+              <div className="rounded-lg border border-success/30 bg-success/5 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5 text-success" />
+                  <h4 className="text-sm font-semibold text-success">Economia após nossas recomendações</h4>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Melhoria no consumo</span>
+                    <p className="text-xl font-bold text-success">+{melhoriaPercent.toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Litros economizados</span>
+                    <p className="text-xl font-bold text-success">{economiaLitros.toFixed(0)} L</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Valor economizado</span>
+                    <p className="text-xl font-bold text-success">R$ {economiaReais.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Comparação entre a primeira e a segunda metade dos registros — reflete a evolução após calibragem, alinhamento e rodízio recomendados.</p>
+              </div>
+            )}
+            {economiaReais <= 0 && fWithConsumo.length >= 4 && (
+              <div className="rounded-lg border border-warning/30 bg-warning/5 p-4">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-warning" />
+                  <h4 className="text-sm font-semibold text-warning">Potencial de economia</h4>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Seguindo as recomendações de calibragem, alinhamento e rodízio, é possível reduzir o consumo em até 15% e economizar significativamente com combustível.
+                </p>
+              </div>
+            )}
+
+            {/* Consumption evolution for single vehicle */}
+            {fuelVehicleFilter !== "all" && consumoEvolution.length > 1 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-muted-foreground">Evolução do Consumo (km/L) — {fuelVehicleOptions.find(v => v.id === fuelVehicleFilter)?.placa}</h4>
+                <div className="h-52">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={consumoEvolution}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="name" className="text-xs" />
+                      <YAxis />
+                      <Tooltip formatter={(v: number, name: string) => [name === "kmPorLitro" ? `${v} km/L` : `R$ ${v}/km`, name === "kmPorLitro" ? "km/L" : "Custo/km"]} />
+                      <Line type="monotone" dataKey="kmPorLitro" stroke="hsl(142,76%,36%)" strokeWidth={2} dot name="km/L" />
+                      <Line type="monotone" dataKey="custoKm" stroke="hsl(0,84%,60%)" strokeWidth={2} strokeDasharray="5 5" dot name="Custo/km" />
+                      <Legend />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
 
             <TimelineChart data={combustivelTimeline} label="Evolução — Gasto com Combustível (6 meses)" color="hsl(38,92%,50%)" />
 
@@ -776,7 +895,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {vehicleEffData.length > 0 && (
+            {fuelVehicleFilter === "all" && vehicleEffData.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium mb-2 text-muted-foreground">Eficiência por Veículo (km/L)</h4>
                 <div className="h-52">
@@ -796,7 +915,7 @@ export default function Dashboard() {
 
             <DetailTable
               headers={["Data", "Veículo", "Combustível", "Litros", "KM", "Preço/L", "Total", "km/L"]}
-              rows={fCombustivel.slice(0, 30).map(c => {
+              rows={displayData.slice(0, 30).map(c => {
                 const placa = veiculos?.find(v => v.id === c.veiculo_id)?.placa || "-";
                 return [
                   format(new Date(c.data_abastecimento), "dd/MM/yyyy"),
