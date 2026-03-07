@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ArrowDownToLine, ArrowUpFromLine, Bookmark, BarChart3, Camera } from "lucide-react";
+import { Package, ArrowDownToLine, ArrowUpFromLine, Bookmark, BarChart3, Camera, ClipboardCheck } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { EstoqueKPIs } from "@/components/estoque/EstoqueKPIs";
 import { EstoqueVisaoMedida } from "@/components/estoque/EstoqueVisaoMedida";
@@ -15,6 +15,7 @@ import { EstoqueSaidaModal } from "@/components/estoque/EstoqueSaidaModal";
 import { EstoqueReservaModal } from "@/components/estoque/EstoqueReservaModal";
 import { EstoqueCurvaABC } from "@/components/estoque/EstoqueCurvaABC";
 import { EstoqueIAPanel } from "@/components/estoque/EstoqueIAPanel";
+import { EstoqueInventarioModal } from "@/components/estoque/EstoqueInventarioModal";
 import { QrScanner } from "@/components/QrScanner";
 
 export default function EstoquePage() {
@@ -24,6 +25,7 @@ export default function EstoquePage() {
   const [reservaOpen, setReservaOpen] = useState(false);
   const [abcOpen, setAbcOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [inventarioOpen, setInventarioOpen] = useState(false);
   const [view, setView] = useState<"medida" | "lista">("medida");
 
   const { data: pneus, isLoading, refetch } = useQuery({
@@ -78,6 +80,9 @@ export default function EstoquePage() {
           <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
             <Camera className="h-4 w-4 mr-2" />Ler QR
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setInventarioOpen(true)}>
+            <ClipboardCheck className="h-4 w-4 mr-2" />Inventário
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setAbcOpen(true)}>
             <BarChart3 className="h-4 w-4 mr-2" />Curva ABC
           </Button>
@@ -130,6 +135,7 @@ export default function EstoquePage() {
       <EstoqueSaidaModal open={saidaOpen} onClose={() => setSaidaOpen(false)} onSuccess={refetch} pneus={pneus || []} veiculos={veiculos || []} />
       <EstoqueReservaModal open={reservaOpen} onClose={() => setReservaOpen(false)} onSuccess={refetch} pneus={pneus || []} reservedIds={reservedIds} veiculos={veiculos || []} />
       <EstoqueCurvaABC open={abcOpen} onClose={() => setAbcOpen(false)} pneus={pneus || []} />
+      <EstoqueInventarioModal open={inventarioOpen} onClose={() => setInventarioOpen(false)} pneus={pneus || []} onSuccess={refetch} />
 
       <QrScanner
         open={scannerOpen}
