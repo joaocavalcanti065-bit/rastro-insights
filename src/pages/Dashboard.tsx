@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, TrendingUp, BarChart3, CalendarIcon, ShieldAlert, Lightbulb, ArrowUp, ArrowDown } from "lucide-react";
+import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, TrendingUp, BarChart3, CalendarIcon, ShieldAlert, Lightbulb, ArrowUp, ArrowDown, Fuel, Droplets } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend, Area, AreaChart, ReferenceLine } from "recharts";
 import { format, subDays, subMonths, isAfter, isBefore, startOfDay, endOfDay, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
