@@ -375,15 +375,15 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Em Estoque</span><p className="text-xl font-bold">{emEstoque}</p></div>
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Valor em estoque</span><p className="text-xl font-bold">R$ {pneus?.filter(p => p.localizacao === "estoque").reduce((a, p) => a + Number(p.custo_aquisicao || 0), 0).toLocaleString("pt-BR")}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Em Estoque</span><p className="text-xl font-bold">{fPneus.filter(p => p.localizacao === "estoque").length}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Valor em estoque</span><p className="text-xl font-bold">R$ {fPneus.filter(p => p.localizacao === "estoque").reduce((a, p) => a + Number(p.custo_aquisicao || 0), 0).toLocaleString("pt-BR")}</p></div>
             </div>
             {(() => {
-              const estoqueMarca = pneus?.filter(p => p.localizacao === "estoque").reduce((acc, p) => {
+              const estoqueMarca = fPneus.filter(p => p.localizacao === "estoque").reduce((acc, p) => {
                 const m = p.marca || "Outros";
                 acc[m] = (acc[m] || 0) + 1;
                 return acc;
-              }, {} as Record<string, number>) || {};
+              }, {} as Record<string, number>);
               const data = Object.entries(estoqueMarca).map(([name, value]) => ({ name, value }));
               return data.length > 0 ? (
                 <div>
@@ -396,7 +396,7 @@ export default function Dashboard() {
                 </div>
               ) : null;
             })()}
-            <DetailTable headers={["Pneu", "Marca", "Medida", "Sulco", "Custo"]} rows={pneus?.filter(p => p.localizacao === "estoque").slice(0, 20).map(p => [p.id_unico, p.marca, p.medida || "-", `${p.sulco_atual || "-"} mm`, `R$ ${Number(p.custo_aquisicao || 0).toLocaleString("pt-BR")}`]) || []} />
+            <DetailTable headers={["Pneu", "Marca", "Medida", "Sulco", "Custo"]} rows={fPneus.filter(p => p.localizacao === "estoque").slice(0, 20).map(p => [p.id_unico, p.marca, p.medida || "-", `${p.sulco_atual || "-"} mm`, `R$ ${Number(p.custo_aquisicao || 0).toLocaleString("pt-BR")}`])} />
           </div>
         );
 
