@@ -897,6 +897,15 @@ export default function Dashboard() {
         <StatCard title="Custo Acumulado" value={`R$ ${custoTotal.toLocaleString("pt-BR")}`} icon={DollarSign} color="bg-primary" onClick={() => setOpenDetail("custo")} />
       </div>
 
+      {/* Fuel Section */}
+      <h2 className="text-lg font-semibold mt-2">Combustível</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Abastecimentos" value={totalAbastecimentos} icon={Fuel} color="bg-warning" onClick={() => setOpenDetail("combustivel")} />
+        <StatCard title="Total Litros" value={`${totalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L`} icon={Droplets} color="bg-primary" onClick={() => setOpenDetail("combustivel")} />
+        <StatCard title="Gasto Total" value={`R$ ${totalGastoCombustivel.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`} icon={DollarSign} color="bg-destructive" onClick={() => setOpenDetail("combustivel")} />
+        <StatCard title="Média km/L" value={mediaKmPorLitro > 0 ? mediaKmPorLitro.toFixed(2) : "—"} icon={TrendingUp} color="bg-success" onClick={() => setOpenDetail("combustivel")} />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {statusDistribution.length > 0 && (
           <Card>
