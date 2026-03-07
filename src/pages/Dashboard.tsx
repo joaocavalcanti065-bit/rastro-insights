@@ -382,6 +382,7 @@ export default function Dashboard() {
   const fRecapagens = useMemo(() => filterByDate(recapagens), [recapagens, dateFilter, dateFrom, dateTo]);
   const fMovimentacoes = useMemo(() => filterByDateField(movimentacoes, "data_movimentacao" as any), [movimentacoes, dateFilter, dateFrom, dateTo]);
   const fManutencoes = useMemo(() => filterByDate(manutencoes), [manutencoes, dateFilter, dateFrom, dateTo]);
+  const fCombustivel = useMemo(() => filterByDateField(combustivel, "data_abastecimento" as any), [combustivel, dateFilter, dateFrom, dateTo]);
 
   // Timeline data (always full 6 months, not filtered)
   const veiculosTimeline = useMemo(() => buildTimeline(veiculos || [], "created_at" as any), [veiculos]);
