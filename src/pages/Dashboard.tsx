@@ -606,12 +606,13 @@ export default function Dashboard() {
         )}
       </div>
 
-      <Dialog open={openDetail !== null} onOpenChange={(open) => !open && setOpenDetail(null)}>
+      <Dialog open={openDetail !== null} onOpenChange={handleDialogChange}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{openDetail ? detailTitles[openDetail] : ""}</DialogTitle>
             <p className="text-xs text-muted-foreground">Atualizado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
           </DialogHeader>
+          <DateFilterBar filter={dateFilter} setFilter={setDateFilter} dateFrom={dateFrom} dateTo={dateTo} setDateFrom={setDateFrom} setDateTo={setDateTo} />
           {renderDetailContent()}
         </DialogContent>
       </Dialog>
