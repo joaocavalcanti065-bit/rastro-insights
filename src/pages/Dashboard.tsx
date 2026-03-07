@@ -429,10 +429,10 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Sucateados</span><p className="text-xl font-bold">{sucateados}</p></div>
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">% do total</span><p className="text-xl font-bold">{totalPneus ? ((sucateados / totalPneus) * 100).toFixed(1) : 0}%</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Sucateados</span><p className="text-xl font-bold">{fPneus.filter(p => p.status === "sucata").length}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">% do total</span><p className="text-xl font-bold">{fPneus.length ? ((fPneus.filter(p => p.status === "sucata").length / fPneus.length) * 100).toFixed(1) : 0}%</p></div>
             </div>
-            <DetailTable headers={["Pneu", "Marca", "Medida", "Vida", "Recapagens"]} rows={pneus?.filter(p => p.status === "sucata").slice(0, 20).map(p => [p.id_unico, p.marca, p.medida || "-", String(p.vida_atual || 1), String(p.qtd_recapagens || 0)]) || []} />
+            <DetailTable headers={["Pneu", "Marca", "Medida", "Vida", "Recapagens"]} rows={fPneus.filter(p => p.status === "sucata").slice(0, 20).map(p => [p.id_unico, p.marca, p.medida || "-", String(p.vida_atual || 1), String(p.qtd_recapagens || 0)])} />
           </div>
         );
 
