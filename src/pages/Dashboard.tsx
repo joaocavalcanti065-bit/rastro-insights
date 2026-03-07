@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, BarChart3, CalendarIcon } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend } from "recharts";
-import { format, subDays, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, TrendingUp, BarChart3, CalendarIcon, ShieldAlert, Lightbulb, ArrowUp, ArrowDown } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend, Area, AreaChart, ReferenceLine } from "recharts";
+import { format, subDays, subMonths, isAfter, isBefore, startOfDay, endOfDay, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +55,176 @@ function DateFilterBar({ filter, setFilter, dateFrom, dateTo, setDateFrom, setDa
           </Popover>
         </div>
       )}
+    </div>
+  );
+}
+
+// --- Timeline helper: group items by month for the last 6 months ---
+function buildTimeline<T>(items: T[], dateField: keyof T, months = 6): { name: string; value: number }[] {
+  const now = new Date();
+  const buckets: Record<string, number> = {};
+  for (let i = months - 1; i >= 0; i--) {
+    const d = subMonths(now, i);
+    const key = format(startOfMonth(d), "MMM/yy", { locale: ptBR });
+    buckets[key] = 0;
+  }
+  const cutoff = startOfMonth(subMonths(now, months - 1));
+  items.forEach(item => {
+    const val = item[dateField];
+    if (!val || typeof val !== "string") return;
+    const d = new Date(val as string);
+    if (isBefore(d, cutoff)) return;
+    const key = format(startOfMonth(d), "MMM/yy", { locale: ptBR });
+    if (key in buckets) buckets[key]++;
+  });
+  return Object.entries(buckets).map(([name, value]) => ({ name, value }));
+}
+
+// --- Predictive Insights Component ---
+function PredictiveInsights({ pneus, recapagens }: {
+  pneus: any[];
+  recapagens: any[];
+}) {
+  const avgSulco = pneus.length ? pneus.reduce((a: number, p: any) => a + Number(p.sulco_atual || 0), 0) / pneus.length : 0;
+  const avgSulcoInicial = pneus.length ? pneus.reduce((a: number, p: any) => a + Number(p.sulco_inicial || 16), 0) / pneus.length : 16;
+  const avgVida = pneus.length ? pneus.reduce((a: number, p: any) => a + Number(p.vida_atual || 1), 0) / pneus.length : 1;
+  const avgPressao = pneus.filter(p => p.pressao_atual).length
+    ? pneus.filter(p => p.pressao_atual).reduce((a: number, p: any) => a + Number(p.pressao_atual), 0) / pneus.filter(p => p.pressao_atual).length
+    : 0;
+  const avgPressaoIdeal = pneus.length ? pneus.reduce((a: number, p: any) => a + Number(p.pressao_ideal || 110), 0) / pneus.length : 110;
+
+  const desgastePercentual = avgSulcoInicial > 0 ? ((avgSulcoInicial - avgSulco) / avgSulcoInicial) * 100 : 0;
+  const pressaoDesvio = avgPressaoIdeal > 0 && avgPressao > 0 ? Math.abs(((avgPressao - avgPressaoIdeal) / avgPressaoIdeal) * 100) : 0;
+
+  // Estimate months remaining based on wear rate
+  const vidaRestanteComRecomendacoes = avgSulco > 3 ? Math.round((avgSulco - 3) / 0.8) : 0; // 0.8mm/month with good practices
+  const vidaRestanteSemRecomendacoes = avgSulco > 3 ? Math.round((avgSulco - 3) / 1.5) : 0; // 1.5mm/month without
+
+  // Build projection data for chart
+  const projectionData = [];
+  let sulcoComRec = avgSulco;
+  let sulcoSemRec = avgSulco;
+  for (let i = 0; i <= 12; i++) {
+    const d = subMonths(new Date(), -i);
+    projectionData.push({
+      name: format(d, "MMM/yy", { locale: ptBR }),
+      comRecomendacoes: Math.max(0, Number(sulcoComRec.toFixed(1))),
+      semRecomendacoes: Math.max(0, Number(sulcoSemRec.toFixed(1))),
+      limiteMinimo: 3,
+    });
+    sulcoComRec = Math.max(0, sulcoComRec - 0.8);
+    sulcoSemRec = Math.max(0, sulcoSemRec - 1.5);
+  }
+
+  const recapTaxa = pneus.length ? (recapagens.filter(r => r.status === "retornado").length / Math.max(pneus.length, 1)) * 100 : 0;
+
+  const recommendations = [];
+  if (pressaoDesvio > 5) {
+    recommendations.push({
+      icon: ShieldAlert,
+      color: "text-destructive",
+      bg: "bg-destructive/10",
+      title: "Pressão fora do ideal",
+      desc: `Desvio médio de ${pressaoDesvio.toFixed(0)}% — calibrar semanalmente pode aumentar a vida do pneu em até 20%.`,
+    });
+  }
+  if (desgastePercentual > 60) {
+    recommendations.push({
+      icon: ArrowDown,
+      color: "text-warning",
+      bg: "bg-warning/10",
+      title: "Desgaste elevado na frota",
+      desc: `${desgastePercentual.toFixed(0)}% do sulco já foi consumido. Programe rodízio e inspeções quinzenais.`,
+    });
+  }
+  if (recapTaxa < 30 && pneus.length > 5) {
+    recommendations.push({
+      icon: RefreshCw,
+      color: "text-primary",
+      bg: "bg-primary/10",
+      title: "Aproveite mais a recapagem",
+      desc: `Apenas ${recapTaxa.toFixed(0)}% dos pneus foram recapados. Recapar carcaças A/B pode economizar até 50% vs. pneu novo.`,
+    });
+  }
+  recommendations.push({
+    icon: Lightbulb,
+    color: "text-success",
+    bg: "bg-success/10",
+    title: "Alinhamento e balanceamento",
+    desc: "Manter alinhamento a cada 10.000 km pode aumentar a vida útil em até 30% e reduzir consumo de combustível.",
+  });
+
+  return (
+    <div className="space-y-4 mt-4">
+      <div className="flex items-center gap-2">
+        <TrendingUp className="h-4 w-4 text-primary" />
+        <h4 className="text-sm font-semibold">Análise Preditiva — Vida Útil dos Pneus</h4>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="rounded-lg bg-success/10 border border-success/20 p-3">
+          <span className="text-muted-foreground flex items-center gap-1"><ArrowUp className="h-3 w-3 text-success" /> Com recomendações</span>
+          <p className="text-xl font-bold text-success">{vidaRestanteComRecomendacoes} meses</p>
+          <p className="text-xs text-muted-foreground">Desgaste ~0,8 mm/mês</p>
+        </div>
+        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+          <span className="text-muted-foreground flex items-center gap-1"><ArrowDown className="h-3 w-3 text-destructive" /> Sem recomendações</span>
+          <p className="text-xl font-bold text-destructive">{vidaRestanteSemRecomendacoes} meses</p>
+          <p className="text-xs text-muted-foreground">Desgaste ~1,5 mm/mês</p>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-medium mb-2 text-muted-foreground">Projeção de Sulco — Próximos 12 meses</h4>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={projectionData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis dataKey="name" className="text-xs" />
+              <YAxis unit=" mm" />
+              <Tooltip formatter={(v: number, name: string) => [`${v} mm`, name === "comRecomendacoes" ? "Com recomendações" : name === "semRecomendacoes" ? "Sem recomendações" : "Limite mínimo"]} />
+              <ReferenceLine y={3} stroke="hsl(0,84%,60%)" strokeDasharray="5 5" label={{ value: "Mín. 3mm", position: "right", fill: "hsl(0,84%,60%)", fontSize: 11 }} />
+              <Area type="monotone" dataKey="comRecomendacoes" stroke="hsl(142,76%,36%)" fill="hsl(142,76%,36%)" fillOpacity={0.15} strokeWidth={2} name="Com recomendações" />
+              <Area type="monotone" dataKey="semRecomendacoes" stroke="hsl(0,84%,60%)" fill="hsl(0,84%,60%)" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 5" name="Sem recomendações" />
+              <Legend />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h4 className="text-sm font-medium text-muted-foreground">Recomendações para Aumentar a Vida Útil</h4>
+        {recommendations.map((rec, i) => (
+          <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${rec.bg} border`}>
+            <rec.icon className={`h-5 w-5 mt-0.5 ${rec.color} shrink-0`} />
+            <div>
+              <p className="text-sm font-medium">{rec.title}</p>
+              <p className="text-xs text-muted-foreground">{rec.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Timeline Chart Component ---
+function TimelineChart({ data, label, color = "hsl(var(--primary))" }: { data: { name: string; value: number }[]; label: string; color?: string }) {
+  if (data.every(d => d.value === 0)) return null;
+  return (
+    <div>
+      <h4 className="text-sm font-medium mb-2 text-muted-foreground">{label}</h4>
+      <div className="h-48">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+            <XAxis dataKey="name" className="text-xs" />
+            <YAxis />
+            <Tooltip />
+            <Area type="monotone" dataKey="value" stroke={color} fill={color} fillOpacity={0.15} strokeWidth={2} name="Quantidade" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
@@ -122,6 +292,14 @@ export default function Dashboard() {
     },
   });
 
+  const { data: manutencoes } = useQuery({
+    queryKey: ["manutencoes-dash"],
+    queryFn: async () => {
+      const { data } = await supabase.from("manutencoes").select("*");
+      return data || [];
+    },
+  });
+
   const isLoading = loadingV || loadingP;
   const totalVeiculos = veiculos?.length || 0;
   const totalPneus = pneus?.length || 0;
@@ -137,7 +315,6 @@ export default function Dashboard() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
 
-  // Reset filter when dialog closes
   const handleDialogChange = (open: boolean) => {
     if (!open) {
       setOpenDetail(null);
@@ -183,12 +360,38 @@ export default function Dashboard() {
     });
   };
 
-  // Filtered datasets
   const fVeiculos = useMemo(() => filterByDate(veiculos), [veiculos, dateFilter, dateFrom, dateTo]);
   const fPneus = useMemo(() => filterByDate(pneus), [pneus, dateFilter, dateFrom, dateTo]);
   const fAlertas = useMemo(() => filterByDate(alertas), [alertas, dateFilter, dateFrom, dateTo]);
   const fRecapagens = useMemo(() => filterByDate(recapagens), [recapagens, dateFilter, dateFrom, dateTo]);
   const fMovimentacoes = useMemo(() => filterByDateField(movimentacoes, "data_movimentacao" as any), [movimentacoes, dateFilter, dateFrom, dateTo]);
+  const fManutencoes = useMemo(() => filterByDate(manutencoes), [manutencoes, dateFilter, dateFrom, dateTo]);
+
+  // Timeline data (always full 6 months, not filtered)
+  const veiculosTimeline = useMemo(() => buildTimeline(veiculos || [], "created_at" as any), [veiculos]);
+  const pneusTimeline = useMemo(() => buildTimeline(pneus || [], "created_at" as any), [pneus]);
+  const alertasTimeline = useMemo(() => buildTimeline(alertas || [], "created_at" as any), [alertas]);
+  const recapagensTimeline = useMemo(() => buildTimeline(recapagens || [], "created_at" as any), [recapagens]);
+  const movTimeline = useMemo(() => buildTimeline(movimentacoes || [], "data_movimentacao" as any), [movimentacoes]);
+  const manutencoesTimeline = useMemo(() => buildTimeline(manutencoes || [], "created_at" as any), [manutencoes]);
+  const custoTimeline = useMemo(() => {
+    const now = new Date();
+    const buckets: Record<string, number> = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = subMonths(now, i);
+      buckets[format(startOfMonth(d), "MMM/yy", { locale: ptBR })] = 0;
+    }
+    const cutoff = startOfMonth(subMonths(now, 5));
+    (pneus || []).forEach(p => {
+      const val = p.data_aquisicao || p.created_at;
+      if (!val) return;
+      const d = new Date(val);
+      if (isBefore(d, cutoff)) return;
+      const key = format(startOfMonth(d), "MMM/yy", { locale: ptBR });
+      if (key in buckets) buckets[key] += Number(p.custo_aquisicao || 0);
+    });
+    return Object.entries(buckets).map(([name, value]) => ({ name, value: Math.round(value) }));
+  }, [pneus]);
 
   const statusDistribution = [
     { name: "Em operação", value: emOperacao },
@@ -199,27 +402,14 @@ export default function Dashboard() {
 
   const hasData = totalVeiculos > 0 || totalPneus > 0;
 
-  // --- Derived data for detail dialogs (use filtered data) ---
-
-  const veiculosPorTipo = fVeiculos.reduce((acc, v) => {
-    const tipo = v.tipo_veiculo || "Outros";
-    acc[tipo] = (acc[tipo] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  // --- Derived data for detail dialogs ---
+  const veiculosPorTipo = fVeiculos.reduce((acc, v) => { acc[v.tipo_veiculo || "Outros"] = (acc[v.tipo_veiculo || "Outros"] || 0) + 1; return acc; }, {} as Record<string, number>);
   const veiculosTipoData = Object.entries(veiculosPorTipo).map(([name, value]) => ({ name, value }));
 
-  const veiculosPorStatus = fVeiculos.reduce((acc, v) => {
-    const s = v.status || "ativo";
-    acc[s] = (acc[s] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const veiculosPorStatus = fVeiculos.reduce((acc, v) => { const s = v.status || "ativo"; acc[s] = (acc[s] || 0) + 1; return acc; }, {} as Record<string, number>);
   const veiculosStatusData = Object.entries(veiculosPorStatus).map(([name, value]) => ({ name, value }));
 
-  const pneusPorMarca = fPneus.reduce((acc, p) => {
-    const m = p.marca || "Outros";
-    acc[m] = (acc[m] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const pneusPorMarca = fPneus.reduce((acc, p) => { const m = p.marca || "Outros"; acc[m] = (acc[m] || 0) + 1; return acc; }, {} as Record<string, number>);
   const pneusMarcaData = Object.entries(pneusPorMarca).map(([name, value]) => ({ name, value }));
 
   const pneusOperacaoPorVeiculo = fPneus.filter(p => p.localizacao === "veiculo").reduce((acc, p) => {
@@ -230,39 +420,17 @@ export default function Dashboard() {
   }, {} as Record<string, number>);
   const operacaoData = Object.entries(pneusOperacaoPorVeiculo).map(([name, value]) => ({ name, value }));
 
-  const alertasPorGravidade = fAlertas.reduce((acc, a) => {
-    const g = a.gravidade || "informativo";
-    acc[g] = (acc[g] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const alertasPorGravidade = fAlertas.reduce((acc, a) => { acc[a.gravidade || "informativo"] = (acc[a.gravidade || "informativo"] || 0) + 1; return acc; }, {} as Record<string, number>);
   const alertasGravData = Object.entries(alertasPorGravidade).map(([name, value]) => ({ name, value }));
 
-  const alertasPorTipo = fAlertas.reduce((acc, a) => {
-    acc[a.tipo_alerta] = (acc[a.tipo_alerta] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const alertasPorTipo = fAlertas.reduce((acc, a) => { acc[a.tipo_alerta] = (acc[a.tipo_alerta] || 0) + 1; return acc; }, {} as Record<string, number>);
   const alertasTipoData = Object.entries(alertasPorTipo).map(([name, value]) => ({ name, value }));
 
-  const custoPorMarca = fPneus.reduce((acc, p) => {
-    const m = p.marca || "Outros";
-    acc[m] = (acc[m] || 0) + Number(p.custo_acumulado || p.custo_aquisicao || 0);
-    return acc;
-  }, {} as Record<string, number>);
+  const custoPorMarca = fPneus.reduce((acc, p) => { const m = p.marca || "Outros"; acc[m] = (acc[m] || 0) + Number(p.custo_acumulado || p.custo_aquisicao || 0); return acc; }, {} as Record<string, number>);
   const custoMarcaData = Object.entries(custoPorMarca).map(([name, value]) => ({ name, value: Math.round(value) }));
 
-  const recapagensPorStatus = fRecapagens.reduce((acc, r) => {
-    const s = r.status || "aguardando";
-    acc[s] = (acc[s] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const recapagensPorStatus = fRecapagens.reduce((acc, r) => { acc[r.status || "aguardando"] = (acc[r.status || "aguardando"] || 0) + 1; return acc; }, {} as Record<string, number>);
   const recapStatusData = Object.entries(recapagensPorStatus).map(([name, value]) => ({ name, value }));
-
-  const movPorMes = fMovimentacoes.reduce((acc, m) => {
-    const month = m.data_movimentacao ? format(new Date(m.data_movimentacao), "MMM/yy", { locale: ptBR }) : "N/A";
-    acc[month] = (acc[month] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  const movMesData = Object.entries(movPorMes).map(([name, value]) => ({ name, value }));
 
   const gravColorMap: Record<string, string> = {
     critico: "hsl(0,84%,60%)",
@@ -281,6 +449,7 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total</span><p className="text-xl font-bold">{fVeiculos.length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Ativos</span><p className="text-xl font-bold">{veiculosPorStatus["ativo"] || 0}</p></div>
             </div>
+            <TimelineChart data={veiculosTimeline} label="Evolução — Cadastros de Veículos (6 meses)" />
             {veiculosTipoData.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium mb-2 text-muted-foreground">Por Tipo de Veículo</h4>
@@ -313,6 +482,7 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Marcas</span><p className="text-xl font-bold">{Object.keys(pneusPorMarca).length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Vida média</span><p className="text-xl font-bold">{fPneus.length ? (fPneus.reduce((a, p) => a + (p.vida_atual || 1), 0) / fPneus.length).toFixed(1) : 0}</p></div>
             </div>
+            <TimelineChart data={pneusTimeline} label="Evolução — Cadastros de Pneus (6 meses)" />
             {pneusMarcaData.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium mb-2 text-muted-foreground">Distribuição por Marca</h4>
@@ -333,6 +503,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+            <PredictiveInsights pneus={fPneus} recapagens={fRecapagens} />
             <DetailTable headers={["ID Único", "Marca", "Medida", "Localização", "Sulco"]} rows={fPneus.slice(0, 20).map(p => [p.id_unico, p.marca, p.medida || "-", p.localizacao, `${p.sulco_atual || "-"} mm`])} />
           </div>
         );
@@ -344,6 +515,7 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Em Operação</span><p className="text-xl font-bold">{fPneus.filter(p => p.localizacao === "veiculo").length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Veículos c/ pneus</span><p className="text-xl font-bold">{Object.keys(pneusOperacaoPorVeiculo).length}</p></div>
             </div>
+            <TimelineChart data={movTimeline} label="Evolução — Movimentações (6 meses)" color="hsl(142,76%,36%)" />
             {operacaoData.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium mb-2 text-muted-foreground">Pneus por Veículo</h4>
@@ -354,16 +526,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            {movMesData.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2 text-muted-foreground">Movimentações por Mês</h4>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={movMesData}><CartesianGrid strokeDasharray="3 3" className="stroke-border" /><XAxis dataKey="name" /><YAxis /><Tooltip /><Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} /></LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
+            <PredictiveInsights pneus={fPneus.filter(p => p.localizacao === "veiculo")} recapagens={fRecapagens} />
             <DetailTable headers={["Pneu", "Marca", "Veículo", "Posição", "Sulco"]} rows={fPneus.filter(p => p.localizacao === "veiculo").slice(0, 20).map(p => {
               const placa = veiculos?.find(v => v.id === p.veiculo_id)?.placa || "-";
               return [p.id_unico, p.marca, placa, p.posicao_atual || "-", `${p.sulco_atual || "-"} mm`];
@@ -378,10 +541,10 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Em Estoque</span><p className="text-xl font-bold">{fPneus.filter(p => p.localizacao === "estoque").length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Valor em estoque</span><p className="text-xl font-bold">R$ {fPneus.filter(p => p.localizacao === "estoque").reduce((a, p) => a + Number(p.custo_aquisicao || 0), 0).toLocaleString("pt-BR")}</p></div>
             </div>
+            <TimelineChart data={pneusTimeline} label="Evolução — Entradas em Estoque (6 meses)" color="hsl(38,92%,50%)" />
             {(() => {
               const estoqueMarca = fPneus.filter(p => p.localizacao === "estoque").reduce((acc, p) => {
-                const m = p.marca || "Outros";
-                acc[m] = (acc[m] || 0) + 1;
+                acc[p.marca || "Outros"] = (acc[p.marca || "Outros"] || 0) + 1;
                 return acc;
               }, {} as Record<string, number>);
               const data = Object.entries(estoqueMarca).map(([name, value]) => ({ name, value }));
@@ -408,6 +571,7 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total Recapagens</span><p className="text-xl font-bold">{fRecapagens.length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Retornados</span><p className="text-xl font-bold">{fRecapagens.filter(r => r.status === "retornado").length}</p></div>
             </div>
+            <TimelineChart data={recapagensTimeline} label="Evolução — Recapagens (6 meses)" color="hsl(280,60%,50%)" />
             {recapStatusData.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium mb-2 text-muted-foreground">Recapagens por Status</h4>
@@ -418,6 +582,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+            <PredictiveInsights pneus={fPneus} recapagens={fRecapagens} />
             <DetailTable headers={["Pneu", "Status", "Ciclo", "Envio", "Custo"]} rows={fRecapagens.slice(0, 20).map(r => {
               const pneu = pneus?.find(p => p.id === r.pneu_id);
               return [pneu?.id_unico || "-", r.status || "-", String(r.numero_ciclo || 1), r.data_envio ? format(new Date(r.data_envio), "dd/MM/yyyy") : "-", `R$ ${Number(r.custo_recapagem || 0).toLocaleString("pt-BR")}`];
@@ -432,6 +597,8 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Sucateados</span><p className="text-xl font-bold">{fPneus.filter(p => p.status === "sucata").length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">% do total</span><p className="text-xl font-bold">{fPneus.length ? ((fPneus.filter(p => p.status === "sucata").length / fPneus.length) * 100).toFixed(1) : 0}%</p></div>
             </div>
+            <TimelineChart data={manutencoesTimeline} label="Evolução — Manutenções/Descartes (6 meses)" color="hsl(0,84%,60%)" />
+            <PredictiveInsights pneus={fPneus} recapagens={fRecapagens} />
             <DetailTable headers={["Pneu", "Marca", "Medida", "Vida", "Recapagens"]} rows={fPneus.filter(p => p.status === "sucata").slice(0, 20).map(p => [p.id_unico, p.marca, p.medida || "-", String(p.vida_atual || 1), String(p.qtd_recapagens || 0)])} />
           </div>
         );
@@ -444,6 +611,7 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Críticos</span><p className="text-xl font-bold text-destructive">{fAlertas.filter(a => a.gravidade === "critico").length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Tipos</span><p className="text-xl font-bold">{Object.keys(alertasPorTipo).length}</p></div>
             </div>
+            <TimelineChart data={alertasTimeline} label="Evolução — Alertas Gerados (6 meses)" color="hsl(0,84%,60%)" />
             {alertasGravData.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium mb-2 text-muted-foreground">Por Gravidade</h4>
@@ -475,6 +643,7 @@ export default function Dashboard() {
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo Total</span><p className="text-xl font-bold">R$ {fPneus.reduce((a, p) => a + Number(p.custo_acumulado || p.custo_aquisicao || 0), 0).toLocaleString("pt-BR")}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo Médio/Pneu</span><p className="text-xl font-bold">R$ {fPneus.length ? Math.round(fPneus.reduce((a, p) => a + Number(p.custo_acumulado || p.custo_aquisicao || 0), 0) / fPneus.length).toLocaleString("pt-BR") : 0}</p></div>
             </div>
+            <TimelineChart data={custoTimeline} label="Evolução — Investimento Mensal (6 meses)" color="hsl(239,84%,67%)" />
             {custoMarcaData.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium mb-2 text-muted-foreground">Custo por Marca</h4>
@@ -497,6 +666,7 @@ export default function Dashboard() {
                 </div>
               ) : null;
             })()}
+            <PredictiveInsights pneus={fPneus} recapagens={fRecapagens} />
             <DetailTable headers={["Pneu", "Marca", "Aquisição", "Acumulado", "Data"]} rows={fPneus.slice(0, 20).map(p => [p.id_unico, p.marca, `R$ ${Number(p.custo_aquisicao || 0).toLocaleString("pt-BR")}`, `R$ ${Number(p.custo_acumulado || 0).toLocaleString("pt-BR")}`, p.data_aquisicao ? format(new Date(p.data_aquisicao), "dd/MM/yyyy") : "-"])} />
           </div>
         );
