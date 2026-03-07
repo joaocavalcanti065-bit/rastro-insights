@@ -51,6 +51,35 @@ Retorne:
 2. Possíveis causas (desalinhamento, sobrecarga, condução)
 3. Recomendações específicas por veículo
 4. Estimativa de economia se corrigido`,
+
+  recomendacao_compra: `Você é um consultor de compras de pneus da Rastro. Analise o estoque atual e consumo histórico.
+Com base nos dados fornecidos (estoque por medida, consumo médio nos últimos 90 dias, cobertura estimada):
+1. Liste as medidas que precisam de reposição urgente (cobertura < 7 dias)
+2. Liste as medidas em alerta (cobertura entre 7 e 15 dias)
+3. Para cada medida, sugira a quantidade ideal de compra para manter 30 dias de cobertura
+4. Estime o investimento necessário com base no custo médio unitário
+5. Priorize as sugestões por urgência
+Seja direto e prático. Formate como lista de ações.`,
+
+  analise_giro: `Você é um analista de estoque inteligente da Rastro. Analise os dados de giro do estoque de pneus.
+Com base nos dados (movimentações dos últimos 90 dias, estoque atual, custo):
+1. Identifique medidas de ALTO GIRO (rotação rápida) — priorizar manutenção de estoque mínimo
+2. Identifique medidas de BAIXO GIRO (paradas > 60 dias) — avaliar venda, descarte ou transferência
+3. Calcule o custo de capital parado em itens de baixo giro
+4. Sugira otimizações: redistribuir estoque, negociar com fornecedores, oportunidades de venda
+5. Conclusão com potencial de economia
+Use dados reais. Formate com seções claras e emojis para prioridade.`,
+
+  alerta_pneu_parado: `Você é o sistema de inteligência da Rastro para gestão de estoque. Analise pneus parados.
+Com base nos dados (pneus em estoque com dias parados, condição, custo):
+1. Liste pneus parados há mais de 90 dias com recomendação individual:
+   - Vender (com sugestão de preço baseado no custo e depreciação)
+   - Enviar para recapagem (se carcaça apta)
+   - Manter (se medida estratégica com demanda futura)
+   - Descartar (se sucata ou sem viabilidade)
+2. Calcule o custo de oportunidade de manter esses itens parados
+3. Priorize por valor financeiro imobilizado
+4. Resumo executivo com ação imediata recomendada`,
 };
 
 serve(async (req) => {
