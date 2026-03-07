@@ -1,14 +1,63 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, BarChart3, CalendarIcon } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend } from "recharts";
-import { format } from "date-fns";
+import { format, subDays, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+type DateFilterType = "7d" | "30d" | "custom" | "all";
+
+function DateFilterBar({ filter, setFilter, dateFrom, dateTo, setDateFrom, setDateTo }: {
+  filter: DateFilterType; setFilter: (f: DateFilterType) => void;
+  dateFrom: Date | undefined; dateTo: Date | undefined;
+  setDateFrom: (d: Date | undefined) => void; setDateTo: (d: Date | undefined) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 pb-2 border-b mb-4">
+      {([["all", "Tudo"], ["7d", "7 dias"], ["30d", "30 dias"], ["custom", "Personalizado"]] as [DateFilterType, string][]).map(([key, label]) => (
+        <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} className="text-xs h-7">
+          {label}
+        </Button>
+      ))}
+      {filter === "custom" && (
+        <div className="flex items-center gap-1 ml-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("h-7 text-xs gap-1", !dateFrom && "text-muted-foreground")}>
+                <CalendarIcon className="h-3 w-3" />
+                {dateFrom ? format(dateFrom, "dd/MM/yy") : "De"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className="p-3 pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+          <span className="text-xs text-muted-foreground">—</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("h-7 text-xs gap-1", !dateTo && "text-muted-foreground")}>
+                <CalendarIcon className="h-3 w-3" />
+                {dateTo ? format(dateTo, "dd/MM/yy") : "Até"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className="p-3 pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const COLORS = ["hsl(239,84%,67%)", "hsl(142,76%,36%)", "hsl(38,92%,50%)", "hsl(0,84%,60%)", "hsl(280,60%,50%)"];
 
