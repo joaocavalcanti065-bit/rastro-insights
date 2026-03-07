@@ -828,6 +828,7 @@ export default function Dashboard() {
     sucata: "Detalhes — Sucateados",
     alertas: "Detalhes — Alertas Críticos",
     custo: "Detalhes — Custo Acumulado",
+    combustivel: "Detalhes — Combustível",
   };
 
   if (isLoading) {
