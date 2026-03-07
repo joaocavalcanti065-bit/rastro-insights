@@ -404,9 +404,9 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Em Recapagem</span><p className="text-xl font-bold">{emRecapagem}</p></div>
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total Recapagens</span><p className="text-xl font-bold">{recapagens?.length || 0}</p></div>
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Retornados</span><p className="text-xl font-bold">{recapagens?.filter(r => r.status === "retornado").length || 0}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Em Recapagem</span><p className="text-xl font-bold">{fPneus.filter(p => p.status === "em_recapagem" || p.status === "aguardando_recapagem").length}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total Recapagens</span><p className="text-xl font-bold">{fRecapagens.length}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Retornados</span><p className="text-xl font-bold">{fRecapagens.filter(r => r.status === "retornado").length}</p></div>
             </div>
             {recapStatusData.length > 0 && (
               <div>
@@ -418,10 +418,10 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            <DetailTable headers={["Pneu", "Status", "Ciclo", "Envio", "Custo"]} rows={recapagens?.slice(0, 20).map(r => {
+            <DetailTable headers={["Pneu", "Status", "Ciclo", "Envio", "Custo"]} rows={fRecapagens.slice(0, 20).map(r => {
               const pneu = pneus?.find(p => p.id === r.pneu_id);
               return [pneu?.id_unico || "-", r.status || "-", String(r.numero_ciclo || 1), r.data_envio ? format(new Date(r.data_envio), "dd/MM/yyyy") : "-", `R$ ${Number(r.custo_recapagem || 0).toLocaleString("pt-BR")}`];
-            }) || []} />
+            })} />
           </div>
         );
 
