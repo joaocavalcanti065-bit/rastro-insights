@@ -37,7 +37,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("pneus").insert({
+      const { data: inserted, error } = await supabase.from("pneus").insert({
         id_unico: form.id_unico || `EST-${Date.now()}`,
         marca: form.marca,
         modelo_pneu: form.modelo_pneu,
@@ -57,8 +57,21 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
         nota_fiscal: form.nota_fiscal,
         observacoes: form.observacoes,
         cliente_id: "00000000-0000-0000-0000-000000000000",
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Register movement
+      if (inserted) {
+        await supabase.from("movimentacoes_pneus").insert({
+          pneu_id: inserted.id,
+          tipo_movimentacao: "entrada_estoque",
+          origem: form.motivo,
+          destino: "estoque",
+          sulco_no_momento: form.sulco_entrada,
+          pressao_no_momento: form.pressao_entrada,
+          observacoes: form.observacoes || `Entrada: ${MOTIVOS.find(m => m.value === form.motivo)?.label}`,
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pneus-estoque-all"] });

@@ -104,6 +104,29 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
           observacoes,
         });
       }
+
+      // If recapagem, create recapagem record
+      if (motivo === "recapagem") {
+        const ciclo = (selected?.qtd_recapagens || 0) + 1;
+        await supabase.from("recapagens").insert({
+          pneu_id: pneuId,
+          numero_ciclo: ciclo,
+          data_envio: new Date().toISOString().split("T")[0],
+          status: "aguardando",
+          observacoes,
+        });
+        await supabase.from("pneus").update({
+          qtd_recapagens: ciclo,
+        }).eq("id", pneuId);
+      }
+
+      // If descarte, update custo_acumulado as loss
+      if (motivo === "descarte") {
+        await supabase.from("pneus").update({
+          status: "sucata",
+          localizacao: "sucata",
+        }).eq("id", pneuId);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pneus-estoque-all"] });
