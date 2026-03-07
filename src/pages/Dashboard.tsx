@@ -133,6 +133,63 @@ export default function Dashboard() {
   const custoTotal = pneus?.reduce((acc, p) => acc + Number(p.custo_acumulado || p.custo_aquisicao || 0), 0) || 0;
   const economiaRecapagem = (recapagens?.filter(r => r.status === "retornado").length || 0) * 1800;
 
+  const [dateFilter, setDateFilter] = useState<DateFilterType>("all");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+
+  // Reset filter when dialog closes
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      setOpenDetail(null);
+      setDateFilter("all");
+      setDateFrom(undefined);
+      setDateTo(undefined);
+    }
+  };
+
+  const filterByDate = <T extends { created_at: string }>(items: T[] | undefined | null): T[] => {
+    if (!items) return [];
+    if (dateFilter === "all") return items;
+    const now = new Date();
+    let start: Date | undefined;
+    let end: Date | undefined;
+    if (dateFilter === "7d") { start = startOfDay(subDays(now, 7)); end = endOfDay(now); }
+    else if (dateFilter === "30d") { start = startOfDay(subDays(now, 30)); end = endOfDay(now); }
+    else if (dateFilter === "custom") { start = dateFrom ? startOfDay(dateFrom) : undefined; end = dateTo ? endOfDay(dateTo) : undefined; }
+    return items.filter(item => {
+      const d = new Date(item.created_at);
+      if (start && isBefore(d, start)) return false;
+      if (end && isAfter(d, end)) return false;
+      return true;
+    });
+  };
+
+  const filterByDateField = <T,>(items: T[] | undefined | null, field: keyof T): T[] => {
+    if (!items) return [];
+    if (dateFilter === "all") return items;
+    const now = new Date();
+    let start: Date | undefined;
+    let end: Date | undefined;
+    if (dateFilter === "7d") { start = startOfDay(subDays(now, 7)); end = endOfDay(now); }
+    else if (dateFilter === "30d") { start = startOfDay(subDays(now, 30)); end = endOfDay(now); }
+    else if (dateFilter === "custom") { start = dateFrom ? startOfDay(dateFrom) : undefined; end = dateTo ? endOfDay(dateTo) : undefined; }
+    return items.filter(item => {
+      const val = item[field];
+      if (!val || typeof val !== "string") return dateFilter === "all";
+      const d = new Date(val as string);
+      if (start && isBefore(d, start)) return false;
+      if (end && isAfter(d, end)) return false;
+      return true;
+    });
+  };
+
+  // Filtered datasets
+  const fVeiculos = useMemo(() => filterByDate(veiculos), [veiculos, dateFilter, dateFrom, dateTo]);
+  const fPneus = useMemo(() => filterByDate(pneus), [pneus, dateFilter, dateFrom, dateTo]);
+  const fAlertas = useMemo(() => filterByDate(alertas), [alertas, dateFilter, dateFrom, dateTo]);
+  const fRecapagens = useMemo(() => filterByDate(recapagens), [recapagens, dateFilter, dateFrom, dateTo]);
+  const fMovimentacoes = useMemo(() => filterByDateField(movimentacoes, "data_movimentacao" as any), [movimentacoes, dateFilter, dateFrom, dateTo]);
+
   const statusDistribution = [
     { name: "Em operação", value: emOperacao },
     { name: "Em estoque", value: emEstoque },
@@ -142,13 +199,13 @@ export default function Dashboard() {
 
   const hasData = totalVeiculos > 0 || totalPneus > 0;
 
-  // --- Derived data for detail dialogs ---
+  // --- Derived data for detail dialogs (use filtered data) ---
 
-  const veiculosPorTipo = veiculos?.reduce((acc, v) => {
+  const veiculosPorTipo = fVeiculos.reduce((acc, v) => {
     const tipo = v.tipo_veiculo || "Outros";
     acc[tipo] = (acc[tipo] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const veiculosTipoData = Object.entries(veiculosPorTipo).map(([name, value]) => ({ name, value }));
 
   const veiculosPorStatus = veiculos?.reduce((acc, v) => {
