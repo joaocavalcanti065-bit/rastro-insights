@@ -1,83 +1,141 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Package, ArrowDownToLine, ArrowUpFromLine, Bookmark, BarChart3, Camera } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
-import { Package, DollarSign, Clock, TrendingUp } from "lucide-react";
+import { EstoqueKPIs } from "@/components/estoque/EstoqueKPIs";
+import { EstoqueVisaoMedida } from "@/components/estoque/EstoqueVisaoMedida";
+import { EstoqueListaCompleta } from "@/components/estoque/EstoqueListaCompleta";
+import { EstoqueEntradaModal } from "@/components/estoque/EstoqueEntradaModal";
+import { EstoqueSaidaModal } from "@/components/estoque/EstoqueSaidaModal";
+import { EstoqueReservaModal } from "@/components/estoque/EstoqueReservaModal";
+import { EstoqueCurvaABC } from "@/components/estoque/EstoqueCurvaABC";
+import { QrScanner } from "@/components/QrScanner";
 
 export default function EstoquePage() {
-  const { data: pneus, isLoading } = useQuery({
-    queryKey: ["pneus-estoque"],
+  const navigate = useNavigate();
+  const [entradaOpen, setEntradaOpen] = useState(false);
+  const [saidaOpen, setSaidaOpen] = useState(false);
+  const [reservaOpen, setReservaOpen] = useState(false);
+  const [abcOpen, setAbcOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [view, setView] = useState<"medida" | "lista">("medida");
+
+  const { data: pneus, isLoading, refetch } = useQuery({
+    queryKey: ["pneus-estoque-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("pneus").select("*").eq("localizacao", "estoque");
+      const { data } = await supabase
+        .from("pneus")
+        .select("*")
+        .in("localizacao", ["estoque"])
+        .order("created_at", { ascending: false });
       return data || [];
     },
   });
 
-  if (isLoading) return <div className="space-y-6"><h1 className="text-2xl font-bold">Estoque</h1><Skeleton className="h-64 rounded-xl" /></div>;
+  const { data: reservas } = useQuery({
+    queryKey: ["reservas-ativas"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("reservas_pneu")
+        .select("*")
+        .eq("ativa", true);
+      return data || [];
+    },
+  });
 
-  const byMedida = pneus?.reduce((acc, p) => {
-    const key = p.medida || "Sem medida";
-    if (!acc[key]) acc[key] = { total: 0, valor: 0, novos: 0, recapados: 0 };
-    acc[key].total++;
-    acc[key].valor += Number(p.custo_aquisicao || 0);
-    if (p.tipo_pneu === "novo") acc[key].novos++;
-    else acc[key].recapados++;
-    return acc;
-  }, {} as Record<string, { total: number; valor: number; novos: number; recapados: number }>);
+  const { data: veiculos } = useQuery({
+    queryKey: ["veiculos-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("veiculos").select("id, placa, frota").eq("status", "ativo");
+      return data || [];
+    },
+  });
 
-  const totalValor = pneus?.reduce((acc, p) => acc + Number(p.custo_aquisicao || 0), 0) || 0;
+  const reservedIds = new Set((reservas || []).map((r: any) => r.pneu_id));
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Estoque</h1>
+        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Estoque</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h1 className="text-2xl font-bold">Estoque</h1>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
+            <Camera className="h-4 w-4 mr-2" />Ler QR
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setAbcOpen(true)}>
+            <BarChart3 className="h-4 w-4 mr-2" />Curva ABC
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setReservaOpen(true)}>
+            <Bookmark className="h-4 w-4 mr-2" />Reservar
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setSaidaOpen(true)}>
+            <ArrowUpFromLine className="h-4 w-4 mr-2" />Saída
+          </Button>
+          <Button size="sm" onClick={() => setEntradaOpen(true)}>
+            <ArrowDownToLine className="h-4 w-4 mr-2" />Entrada
+          </Button>
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <EstoqueKPIs pneus={pneus || []} reservedIds={reservedIds} />
 
       {!pneus?.length ? (
-        <EmptyState icon={Package} title="Estoque vazio" description="Os pneus cadastrados com localização 'Estoque' aparecerão aqui automaticamente." />
+        <EmptyState
+          icon={Package}
+          title="Estoque vazio"
+          description="Registre a entrada de pneus no estoque para começar o controle."
+          actionLabel="Registrar Entrada"
+          onAction={() => setEntradaOpen(true)}
+        />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="flex items-center gap-4 p-5">
-                <div className="rounded-xl p-3 bg-primary"><Package className="h-5 w-5 text-primary-foreground" /></div>
-                <div><p className="text-sm text-muted-foreground">Total em Estoque</p><p className="text-2xl font-bold">{pneus.length}</p></div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center gap-4 p-5">
-                <div className="rounded-xl p-3 bg-success"><DollarSign className="h-5 w-5 text-success-foreground" /></div>
-                <div><p className="text-sm text-muted-foreground">Valor em Estoque</p><p className="text-2xl font-bold">R$ {totalValor.toLocaleString("pt-BR")}</p></div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center gap-4 p-5">
-                <div className="rounded-xl p-3 bg-info"><TrendingUp className="h-5 w-5 text-info-foreground" /></div>
-                <div><p className="text-sm text-muted-foreground">Medidas Diferentes</p><p className="text-2xl font-bold">{Object.keys(byMedida || {}).length}</p></div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(byMedida || {}).map(([medida, data]) => (
-              <Card key={medida}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-mono">{medida}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Disponível</span><span className="font-bold">{data.total}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Novos</span><span>{data.novos}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Recapados</span><span>{data.recapados}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Valor</span><span>R$ {data.valor.toLocaleString("pt-BR")}</span></div>
-                  <Badge variant={data.total > 2 ? "default" : data.total > 0 ? "outline" : "destructive"} className="mt-2">
-                    {data.total > 2 ? "OK" : data.total > 0 ? "Atenção" : "Crítico"}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {/* View Toggle */}
+          <Tabs value={view} onValueChange={(v) => setView(v as any)}>
+            <TabsList>
+              <TabsTrigger value="medida">Por Medida</TabsTrigger>
+              <TabsTrigger value="lista">Lista Completa</TabsTrigger>
+            </TabsList>
+            <TabsContent value="medida">
+              <EstoqueVisaoMedida pneus={pneus} reservedIds={reservedIds} onEntrada={() => setEntradaOpen(true)} onReservar={() => setReservaOpen(true)} />
+            </TabsContent>
+            <TabsContent value="lista">
+              <EstoqueListaCompleta pneus={pneus} reservedIds={reservedIds} onNavigate={(rg) => navigate(`/pneu/${rg}`)} />
+            </TabsContent>
+          </Tabs>
         </>
       )}
+
+      {/* Modals */}
+      <EstoqueEntradaModal open={entradaOpen} onClose={() => setEntradaOpen(false)} onSuccess={refetch} />
+      <EstoqueSaidaModal open={saidaOpen} onClose={() => setSaidaOpen(false)} onSuccess={refetch} pneus={pneus || []} veiculos={veiculos || []} />
+      <EstoqueReservaModal open={reservaOpen} onClose={() => setReservaOpen(false)} onSuccess={refetch} pneus={pneus || []} reservedIds={reservedIds} veiculos={veiculos || []} />
+      <EstoqueCurvaABC open={abcOpen} onClose={() => setAbcOpen(false)} pneus={pneus || []} />
+
+      <QrScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={(value) => {
+          const found = pneus?.find(p => (p as any).rg_code === value || p.qr_code === value || p.id_unico === value);
+          if (found) navigate(`/pneu/${(found as any).rg_code || found.id_unico}`);
+          else navigate(`/pneu/${value}`);
+        }}
+      />
     </div>
   );
 }
