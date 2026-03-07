@@ -581,122 +581,161 @@ export type Database = {
       }
       pneus: {
         Row: {
+          aro_nominal: number | null
           cliente_id: string
           created_at: string
           custo_acumulado: number | null
           custo_aquisicao: number | null
           data_aquisicao: string | null
+          desgaste_observado: string | null
           dot: string | null
+          dot_alerta_vencimento: boolean | null
+          dot_data_fabricacao: string | null
           empresa_id: string | null
+          fornecedor_origem_id: string | null
           fornecedor_recapagem_id: string | null
           fotos: Json | null
           id: string
           id_interno: string | null
           id_unico: string
           indice_carga: string | null
+          indice_velocidade: string | null
           km_atual: number | null
           km_inicial: number | null
+          largura_nominal: number | null
           local_atual: string | null
+          local_estoque_id: string | null
           localizacao: string
           marca: string
           medida: string | null
           modelo_pneu: string | null
+          nota_fiscal: string | null
           numero_fogo: string | null
           numero_recapagens: number | null
           observacoes: string | null
+          perfil_nominal: number | null
           posicao_atual: string | null
           pressao_atual: number | null
           pressao_ideal: number | null
           qr_code: string | null
           qtd_recapagens: number | null
+          rg_code: string | null
           status: string
           sulco_atual: number | null
           sulco_inicial: number | null
           tipo_aplicacao: string | null
+          tipo_construcao: string | null
           tipo_eixo: string | null
           tipo_pneu: string | null
           updated_at: string | null
           valor_aquisicao: number | null
+          valor_venda_sugerido: number | null
           veiculo_id: string | null
           vida_atual: number | null
         }
         Insert: {
+          aro_nominal?: number | null
           cliente_id: string
           created_at?: string
           custo_acumulado?: number | null
           custo_aquisicao?: number | null
           data_aquisicao?: string | null
+          desgaste_observado?: string | null
           dot?: string | null
+          dot_alerta_vencimento?: boolean | null
+          dot_data_fabricacao?: string | null
           empresa_id?: string | null
+          fornecedor_origem_id?: string | null
           fornecedor_recapagem_id?: string | null
           fotos?: Json | null
           id?: string
           id_interno?: string | null
           id_unico: string
           indice_carga?: string | null
+          indice_velocidade?: string | null
           km_atual?: number | null
           km_inicial?: number | null
+          largura_nominal?: number | null
           local_atual?: string | null
+          local_estoque_id?: string | null
           localizacao?: string
           marca?: string
           medida?: string | null
           modelo_pneu?: string | null
+          nota_fiscal?: string | null
           numero_fogo?: string | null
           numero_recapagens?: number | null
           observacoes?: string | null
+          perfil_nominal?: number | null
           posicao_atual?: string | null
           pressao_atual?: number | null
           pressao_ideal?: number | null
           qr_code?: string | null
           qtd_recapagens?: number | null
+          rg_code?: string | null
           status?: string
           sulco_atual?: number | null
           sulco_inicial?: number | null
           tipo_aplicacao?: string | null
+          tipo_construcao?: string | null
           tipo_eixo?: string | null
           tipo_pneu?: string | null
           updated_at?: string | null
           valor_aquisicao?: number | null
+          valor_venda_sugerido?: number | null
           veiculo_id?: string | null
           vida_atual?: number | null
         }
         Update: {
+          aro_nominal?: number | null
           cliente_id?: string
           created_at?: string
           custo_acumulado?: number | null
           custo_aquisicao?: number | null
           data_aquisicao?: string | null
+          desgaste_observado?: string | null
           dot?: string | null
+          dot_alerta_vencimento?: boolean | null
+          dot_data_fabricacao?: string | null
           empresa_id?: string | null
+          fornecedor_origem_id?: string | null
           fornecedor_recapagem_id?: string | null
           fotos?: Json | null
           id?: string
           id_interno?: string | null
           id_unico?: string
           indice_carga?: string | null
+          indice_velocidade?: string | null
           km_atual?: number | null
           km_inicial?: number | null
+          largura_nominal?: number | null
           local_atual?: string | null
+          local_estoque_id?: string | null
           localizacao?: string
           marca?: string
           medida?: string | null
           modelo_pneu?: string | null
+          nota_fiscal?: string | null
           numero_fogo?: string | null
           numero_recapagens?: number | null
           observacoes?: string | null
+          perfil_nominal?: number | null
           posicao_atual?: string | null
           pressao_atual?: number | null
           pressao_ideal?: number | null
           qr_code?: string | null
           qtd_recapagens?: number | null
+          rg_code?: string | null
           status?: string
           sulco_atual?: number | null
           sulco_inicial?: number | null
           tipo_aplicacao?: string | null
+          tipo_construcao?: string | null
           tipo_eixo?: string | null
           tipo_pneu?: string | null
           updated_at?: string | null
           valor_aquisicao?: number | null
+          valor_venda_sugerido?: number | null
           veiculo_id?: string | null
           vida_atual?: number | null
         }
@@ -713,6 +752,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pneus_fornecedor_origem_id_fkey"
+            columns: ["fornecedor_origem_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
             referencedColumns: ["id"]
           },
           {
@@ -911,6 +957,78 @@ export type Database = {
             columns: ["empresa_id_ref"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendas_pneu: {
+        Row: {
+          comprador_contato: string | null
+          comprador_documento: string | null
+          comprador_email: string | null
+          comprador_nome: string | null
+          created_at: string | null
+          custo_acumulado_na_venda: number | null
+          data_venda: string | null
+          empresa_id: string | null
+          forma_pagamento: string | null
+          id: string
+          numero_nota_fiscal: string | null
+          observacoes: string | null
+          pneu_id: string | null
+          resultado_financeiro: number | null
+          tipo_comprador: string | null
+          valor_venda: number | null
+        }
+        Insert: {
+          comprador_contato?: string | null
+          comprador_documento?: string | null
+          comprador_email?: string | null
+          comprador_nome?: string | null
+          created_at?: string | null
+          custo_acumulado_na_venda?: number | null
+          data_venda?: string | null
+          empresa_id?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          numero_nota_fiscal?: string | null
+          observacoes?: string | null
+          pneu_id?: string | null
+          resultado_financeiro?: number | null
+          tipo_comprador?: string | null
+          valor_venda?: number | null
+        }
+        Update: {
+          comprador_contato?: string | null
+          comprador_documento?: string | null
+          comprador_email?: string | null
+          comprador_nome?: string | null
+          created_at?: string | null
+          custo_acumulado_na_venda?: number | null
+          data_venda?: string | null
+          empresa_id?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          numero_nota_fiscal?: string | null
+          observacoes?: string | null
+          pneu_id?: string | null
+          resultado_financeiro?: number | null
+          tipo_comprador?: string | null
+          valor_venda?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendas_pneu_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendas_pneu_pneu_id_fkey"
+            columns: ["pneu_id"]
+            isOneToOne: false
+            referencedRelation: "pneus"
             referencedColumns: ["id"]
           },
         ]

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 
 export default function PneusPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [qrModal, setQrModal] = useState<string | null>(null);
@@ -255,8 +257,8 @@ export default function PneusPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>RG</TableHead>
                   <TableHead>ID</TableHead>
-                  <TableHead>QR</TableHead>
                   <TableHead>Medida</TableHead>
                   <TableHead>Marca</TableHead>
                   <TableHead>Status</TableHead>
@@ -271,15 +273,9 @@ export default function PneusPage() {
                   const cpk = p.km_atual && p.km_atual > 0 && p.custo_acumulado ? (Number(p.custo_acumulado) / p.km_atual).toFixed(3) : "—";
                   const sulcoPercent = p.sulco_inicial ? ((Number(p.sulco_atual || 0) / Number(p.sulco_inicial)) * 100).toFixed(0) : "—";
                   return (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-mono font-medium">{p.id_unico}</TableCell>
-                      <TableCell>
-                        {p.qr_code && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setQrModal(p.qr_code!)}>
-                            <QrCode className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </TableCell>
+                    <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/pneu/${(p as any).rg_code || p.id_unico}`)}>
+                      <TableCell className="font-mono font-medium text-primary">{(p as any).rg_code || "—"}</TableCell>
+                      <TableCell className="font-mono text-xs">{p.id_unico}</TableCell>
                       <TableCell>{p.medida}</TableCell>
                       <TableCell>{p.marca}</TableCell>
                       <TableCell><Badge variant={status.variant}>{status.label}</Badge></TableCell>
