@@ -251,6 +251,7 @@ function StatCard({ title, value, icon: Icon, color, onClick }: { title: string;
 
 export default function Dashboard() {
   const [openDetail, setOpenDetail] = useState<DetailType>(null);
+  const [fuelVehicleFilter, setFuelVehicleFilter] = useState<string>("all");
 
   const { data: veiculos, isLoading: loadingV } = useQuery({
     queryKey: ["veiculos-dash"],
