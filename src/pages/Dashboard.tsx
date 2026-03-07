@@ -301,7 +301,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            <DetailTable headers={["Placa", "Tipo", "Marca", "Status", "Cadastro"]} rows={veiculos?.slice(0, 20).map(v => [v.placa, v.tipo_veiculo || "-", v.marca || "-", v.status || "-", format(new Date(v.created_at), "dd/MM/yyyy")]) || []} />
+            <DetailTable headers={["Placa", "Tipo", "Marca", "Status", "Cadastro"]} rows={fVeiculos.slice(0, 20).map(v => [v.placa, v.tipo_veiculo || "-", v.marca || "-", v.status || "-", format(new Date(v.created_at), "dd/MM/yyyy")])} />
           </div>
         );
 
