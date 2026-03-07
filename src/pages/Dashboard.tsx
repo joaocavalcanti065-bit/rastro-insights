@@ -341,7 +341,7 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Em Operação</span><p className="text-xl font-bold">{emOperacao}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Em Operação</span><p className="text-xl font-bold">{fPneus.filter(p => p.localizacao === "veiculo").length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Veículos c/ pneus</span><p className="text-xl font-bold">{Object.keys(pneusOperacaoPorVeiculo).length}</p></div>
             </div>
             {operacaoData.length > 0 && (
