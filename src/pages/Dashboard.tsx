@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, TrendingUp, BarChart3, CalendarIcon, ShieldAlert, Lightbulb, ArrowUp, ArrowDown } from "lucide-react";
+import { Truck, Circle, Package, RefreshCw, Bell, DollarSign, TrendingDown, TrendingUp, BarChart3, CalendarIcon, ShieldAlert, Lightbulb, ArrowUp, ArrowDown, Fuel, Droplets } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend, Area, AreaChart, ReferenceLine } from "recharts";
 import { format, subDays, subMonths, isAfter, isBefore, startOfDay, endOfDay, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -231,7 +231,7 @@ function TimelineChart({ data, label, color = "hsl(var(--primary))" }: { data: {
 
 const COLORS = ["hsl(239,84%,67%)", "hsl(142,76%,36%)", "hsl(38,92%,50%)", "hsl(0,84%,60%)", "hsl(280,60%,50%)"];
 
-type DetailType = "veiculos" | "pneus" | "operacao" | "estoque" | "recapagem" | "sucata" | "alertas" | "custo" | null;
+type DetailType = "veiculos" | "pneus" | "operacao" | "estoque" | "recapagem" | "sucata" | "alertas" | "custo" | "combustivel" | null;
 
 function StatCard({ title, value, icon: Icon, color, onClick }: { title: string; value: string | number; icon: any; color: string; onClick?: () => void }) {
   return (
@@ -300,6 +300,14 @@ export default function Dashboard() {
     },
   });
 
+  const { data: combustivel } = useQuery({
+    queryKey: ["combustivel-dash"],
+    queryFn: async () => {
+      const { data } = await supabase.from("coleta_manual_combustivel").select("*");
+      return data || [];
+    },
+  });
+
   const isLoading = loadingV || loadingP;
   const totalVeiculos = veiculos?.length || 0;
   const totalPneus = pneus?.length || 0;
@@ -311,6 +319,14 @@ export default function Dashboard() {
   const custoTotal = pneus?.reduce((acc, p) => acc + Number(p.custo_acumulado || p.custo_aquisicao || 0), 0) || 0;
   const economiaRecapagem = (recapagens?.filter(r => r.status === "retornado").length || 0) * 1800;
 
+  // Fuel stats
+  const totalAbastecimentos = combustivel?.length || 0;
+  const totalLitros = combustivel?.reduce((a, c) => a + Number(c.litros_abastecidos || 0), 0) || 0;
+  const totalGastoCombustivel = combustivel?.reduce((a, c) => a + Number(c.valor_total_pago || 0), 0) || 0;
+  const avgConsumo = combustivel?.filter(c => c.consumo_km_por_litro && c.consumo_km_por_litro > 0);
+  const mediaKmPorLitro = avgConsumo && avgConsumo.length > 0
+    ? avgConsumo.reduce((a, c) => a + Number(c.consumo_km_por_litro || 0), 0) / avgConsumo.length
+    : 0;
   const [dateFilter, setDateFilter] = useState<DateFilterType>("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
@@ -366,6 +382,7 @@ export default function Dashboard() {
   const fRecapagens = useMemo(() => filterByDate(recapagens), [recapagens, dateFilter, dateFrom, dateTo]);
   const fMovimentacoes = useMemo(() => filterByDateField(movimentacoes, "data_movimentacao" as any), [movimentacoes, dateFilter, dateFrom, dateTo]);
   const fManutencoes = useMemo(() => filterByDate(manutencoes), [manutencoes, dateFilter, dateFrom, dateTo]);
+  const fCombustivel = useMemo(() => filterByDateField(combustivel, "data_abastecimento" as any), [combustivel, dateFilter, dateFrom, dateTo]);
 
   // Timeline data (always full 6 months, not filtered)
   const veiculosTimeline = useMemo(() => buildTimeline(veiculos || [], "created_at" as any), [veiculos]);
@@ -374,6 +391,24 @@ export default function Dashboard() {
   const recapagensTimeline = useMemo(() => buildTimeline(recapagens || [], "created_at" as any), [recapagens]);
   const movTimeline = useMemo(() => buildTimeline(movimentacoes || [], "data_movimentacao" as any), [movimentacoes]);
   const manutencoesTimeline = useMemo(() => buildTimeline(manutencoes || [], "created_at" as any), [manutencoes]);
+  const combustivelTimeline = useMemo(() => {
+    const now = new Date();
+    const buckets: Record<string, number> = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = subMonths(now, i);
+      buckets[format(startOfMonth(d), "MMM/yy", { locale: ptBR })] = 0;
+    }
+    const cutoff = startOfMonth(subMonths(now, 5));
+    (combustivel || []).forEach(c => {
+      const val = c.data_abastecimento;
+      if (!val) return;
+      const d = new Date(val);
+      if (isBefore(d, cutoff)) return;
+      const key = format(startOfMonth(d), "MMM/yy", { locale: ptBR });
+      if (key in buckets) buckets[key] += Number(c.valor_total_pago || 0);
+    });
+    return Object.entries(buckets).map(([name, value]) => ({ name, value: Math.round(value) }));
+  }, [combustivel]);
   const custoTimeline = useMemo(() => {
     const now = new Date();
     const buckets: Record<string, number> = {};
@@ -400,7 +435,7 @@ export default function Dashboard() {
     { name: "Sucata", value: sucateados },
   ].filter(d => d.value > 0);
 
-  const hasData = totalVeiculos > 0 || totalPneus > 0;
+  
 
   // --- Derived data for detail dialogs ---
   const veiculosPorTipo = fVeiculos.reduce((acc, v) => { acc[v.tipo_veiculo || "Outros"] = (acc[v.tipo_veiculo || "Outros"] || 0) + 1; return acc; }, {} as Record<string, number>);
@@ -671,6 +706,114 @@ export default function Dashboard() {
           </div>
         );
 
+      case "combustivel": {
+        const fuelByType = fCombustivel.reduce((acc, c) => {
+          const t = c.tipo_combustivel || "Diesel S10";
+          if (!acc[t]) acc[t] = { litros: 0, gasto: 0, count: 0 };
+          acc[t].litros += Number(c.litros_abastecidos || 0);
+          acc[t].gasto += Number(c.valor_total_pago || 0);
+          acc[t].count++;
+          return acc;
+        }, {} as Record<string, { litros: number; gasto: number; count: number }>);
+        const fuelTypeData = Object.entries(fuelByType).map(([name, v]) => ({ name, litros: Math.round(v.litros), gasto: Math.round(v.gasto), count: v.count }));
+
+        const fTotalLitros = fCombustivel.reduce((a, c) => a + Number(c.litros_abastecidos || 0), 0);
+        const fTotalGasto = fCombustivel.reduce((a, c) => a + Number(c.valor_total_pago || 0), 0);
+        const fAvgConsumo = fCombustivel.filter(c => c.consumo_km_por_litro && c.consumo_km_por_litro > 0);
+        const fMediaKmL = fAvgConsumo.length > 0 ? fAvgConsumo.reduce((a, c) => a + Number(c.consumo_km_por_litro), 0) / fAvgConsumo.length : 0;
+        const fAvgPrecoLitro = fCombustivel.length > 0 ? fCombustivel.reduce((a, c) => a + Number(c.preco_litro || 0), 0) / fCombustivel.length : 0;
+        const fTotalKm = fCombustivel.reduce((a, c) => a + Number(c.km_rodado || 0), 0);
+        const fCustoKm = fTotalKm > 0 ? fTotalGasto / fTotalKm : 0;
+
+        // Efficiency by vehicle
+        const byVehicle = fCombustivel.reduce((acc, c) => {
+          const vid = c.veiculo_id;
+          const placa = veiculos?.find(v => v.id === vid)?.placa || vid;
+          if (!acc[placa]) acc[placa] = { litros: 0, km: 0, gasto: 0 };
+          acc[placa].litros += Number(c.litros_abastecidos || 0);
+          acc[placa].km += Number(c.km_rodado || 0);
+          acc[placa].gasto += Number(c.valor_total_pago || 0);
+          return acc;
+        }, {} as Record<string, { litros: number; km: number; gasto: number }>);
+        const vehicleEffData = Object.entries(byVehicle).map(([name, v]) => ({
+          name,
+          kmPorLitro: v.litros > 0 ? Number((v.km / v.litros).toFixed(2)) : 0,
+          custoPorKm: v.km > 0 ? Number((v.gasto / v.km).toFixed(2)) : 0,
+        }));
+
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Abastecimentos</span><p className="text-xl font-bold">{fCombustivel.length}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total Litros</span><p className="text-xl font-bold">{fTotalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Gasto Total</span><p className="text-xl font-bold">R$ {fTotalGasto.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Média km/L</span><p className="text-xl font-bold">{fMediaKmL > 0 ? fMediaKmL.toFixed(2) : "—"}</p></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Preço Médio/L</span><p className="text-xl font-bold">R$ {fAvgPrecoLitro > 0 ? fAvgPrecoLitro.toFixed(2) : "—"}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo/km</span><p className="text-xl font-bold">R$ {fCustoKm > 0 ? fCustoKm.toFixed(2) : "—"}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">KM Rodados</span><p className="text-xl font-bold">{fTotalKm.toLocaleString("pt-BR")}</p></div>
+            </div>
+
+            <TimelineChart data={combustivelTimeline} label="Evolução — Gasto com Combustível (6 meses)" color="hsl(38,92%,50%)" />
+
+            {fuelTypeData.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-muted-foreground">Consumo por Tipo de Combustível</h4>
+                <div className="h-52">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={fuelTypeData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="name" className="text-xs" />
+                      <YAxis />
+                      <Tooltip formatter={(v: number, name: string) => [name === "litros" ? `${v} L` : name === "gasto" ? `R$ ${v.toLocaleString("pt-BR")}` : v, name === "litros" ? "Litros" : name === "gasto" ? "Gasto" : "Abastecimentos"]} />
+                      <Bar dataKey="litros" fill="hsl(239,84%,67%)" radius={[4,4,0,0]} name="Litros" />
+                      <Bar dataKey="gasto" fill="hsl(38,92%,50%)" radius={[4,4,0,0]} name="Gasto" />
+                      <Legend />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {vehicleEffData.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-muted-foreground">Eficiência por Veículo (km/L)</h4>
+                <div className="h-52">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={vehicleEffData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="name" className="text-xs" angle={-20} textAnchor="end" height={60} />
+                      <YAxis />
+                      <Tooltip formatter={(v: number, name: string) => [name === "kmPorLitro" ? `${v} km/L` : `R$ ${v}/km`, name === "kmPorLitro" ? "km/L" : "Custo/km"]} />
+                      <Bar dataKey="kmPorLitro" fill="hsl(142,76%,36%)" radius={[4,4,0,0]} name="km/L" />
+                      <Legend />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            <DetailTable
+              headers={["Data", "Veículo", "Combustível", "Litros", "KM", "Preço/L", "Total", "km/L"]}
+              rows={fCombustivel.slice(0, 30).map(c => {
+                const placa = veiculos?.find(v => v.id === c.veiculo_id)?.placa || "-";
+                return [
+                  format(new Date(c.data_abastecimento), "dd/MM/yyyy"),
+                  placa,
+                  c.tipo_combustivel || "-",
+                  `${Number(c.litros_abastecidos).toFixed(1)} L`,
+                  c.km_atual?.toLocaleString("pt-BR") || "-",
+                  c.preco_litro ? `R$ ${Number(c.preco_litro).toFixed(2)}` : "-",
+                  `R$ ${Number(c.valor_total_pago).toFixed(2)}`,
+                  c.consumo_km_por_litro ? `${Number(c.consumo_km_por_litro).toFixed(2)}` : "—",
+                ];
+              })}
+            />
+          </div>
+        );
+      }
+
       default:
         return null;
     }
@@ -685,6 +828,7 @@ export default function Dashboard() {
     sucata: "Detalhes — Sucateados",
     alertas: "Detalhes — Alertas Críticos",
     custo: "Detalhes — Custo Acumulado",
+    combustivel: "Detalhes — Combustível",
   };
 
   if (isLoading) {
@@ -697,6 +841,8 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  const hasData = totalVeiculos > 0 || totalPneus > 0 || totalAbastecimentos > 0;
 
   if (!hasData) {
     return (
@@ -749,6 +895,15 @@ export default function Dashboard() {
         <StatCard title="Sucateados" value={sucateados} icon={Circle} color="bg-destructive" onClick={() => setOpenDetail("sucata")} />
         <StatCard title="Alertas Críticos" value={alertasCriticos} icon={Bell} color="bg-destructive" onClick={() => setOpenDetail("alertas")} />
         <StatCard title="Custo Acumulado" value={`R$ ${custoTotal.toLocaleString("pt-BR")}`} icon={DollarSign} color="bg-primary" onClick={() => setOpenDetail("custo")} />
+      </div>
+
+      {/* Fuel Section */}
+      <h2 className="text-lg font-semibold mt-2">Combustível</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Abastecimentos" value={totalAbastecimentos} icon={Fuel} color="bg-warning" onClick={() => setOpenDetail("combustivel")} />
+        <StatCard title="Total Litros" value={`${totalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L`} icon={Droplets} color="bg-primary" onClick={() => setOpenDetail("combustivel")} />
+        <StatCard title="Gasto Total" value={`R$ ${totalGastoCombustivel.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`} icon={DollarSign} color="bg-destructive" onClick={() => setOpenDetail("combustivel")} />
+        <StatCard title="Média km/L" value={mediaKmPorLitro > 0 ? mediaKmPorLitro.toFixed(2) : "—"} icon={TrendingUp} color="bg-success" onClick={() => setOpenDetail("combustivel")} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
