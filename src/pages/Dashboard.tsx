@@ -842,6 +842,8 @@ export default function Dashboard() {
     );
   }
 
+  const hasData = totalVeiculos > 0 || totalPneus > 0 || totalAbastecimentos > 0;
+
   if (!hasData) {
     return (
       <div className="space-y-6">
