@@ -364,10 +364,10 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            <DetailTable headers={["Pneu", "Marca", "Veículo", "Posição", "Sulco"]} rows={pneus?.filter(p => p.localizacao === "veiculo").slice(0, 20).map(p => {
+            <DetailTable headers={["Pneu", "Marca", "Veículo", "Posição", "Sulco"]} rows={fPneus.filter(p => p.localizacao === "veiculo").slice(0, 20).map(p => {
               const placa = veiculos?.find(v => v.id === p.veiculo_id)?.placa || "-";
               return [p.id_unico, p.marca, placa, p.posicao_atual || "-", `${p.sulco_atual || "-"} mm`];
-            }) || []} />
+            })} />
           </div>
         );
 
