@@ -883,6 +883,76 @@ export type Database = {
           },
         ]
       }
+      reservas_pneu: {
+        Row: {
+          ativa: boolean | null
+          cancelada_em: string | null
+          comprador_nome: string | null
+          created_at: string | null
+          data_prevista: string | null
+          destino_descricao: string | null
+          empresa_id: string | null
+          id: string
+          motivo: string
+          motivo_cancelamento: string | null
+          pneu_id: string
+          responsavel: string | null
+          veiculo_destino_id: string | null
+        }
+        Insert: {
+          ativa?: boolean | null
+          cancelada_em?: string | null
+          comprador_nome?: string | null
+          created_at?: string | null
+          data_prevista?: string | null
+          destino_descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          motivo?: string
+          motivo_cancelamento?: string | null
+          pneu_id: string
+          responsavel?: string | null
+          veiculo_destino_id?: string | null
+        }
+        Update: {
+          ativa?: boolean | null
+          cancelada_em?: string | null
+          comprador_nome?: string | null
+          created_at?: string | null
+          data_prevista?: string | null
+          destino_descricao?: string | null
+          empresa_id?: string | null
+          id?: string
+          motivo?: string
+          motivo_cancelamento?: string | null
+          pneu_id?: string
+          responsavel?: string | null
+          veiculo_destino_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservas_pneu_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservas_pneu_pneu_id_fkey"
+            columns: ["pneu_id"]
+            isOneToOne: false
+            referencedRelation: "pneus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservas_pneu_veiculo_destino_id_fkey"
+            columns: ["veiculo_destino_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       veiculos: {
         Row: {
           ano: number | null
