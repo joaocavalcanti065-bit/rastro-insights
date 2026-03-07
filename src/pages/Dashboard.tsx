@@ -309,9 +309,9 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total</span><p className="text-xl font-bold">{totalPneus}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total</span><p className="text-xl font-bold">{fPneus.length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Marcas</span><p className="text-xl font-bold">{Object.keys(pneusPorMarca).length}</p></div>
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Vida média</span><p className="text-xl font-bold">{pneus?.length ? (pneus.reduce((a, p) => a + (p.vida_atual || 1), 0) / pneus.length).toFixed(1) : 0}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Vida média</span><p className="text-xl font-bold">{fPneus.length ? (fPneus.reduce((a, p) => a + (p.vida_atual || 1), 0) / fPneus.length).toFixed(1) : 0}</p></div>
             </div>
             {pneusMarcaData.length > 0 && (
               <div>
