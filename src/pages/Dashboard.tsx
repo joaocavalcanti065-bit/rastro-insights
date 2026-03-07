@@ -333,7 +333,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            <DetailTable headers={["ID Único", "Marca", "Medida", "Localização", "Sulco"]} rows={pneus?.slice(0, 20).map(p => [p.id_unico, p.marca, p.medida || "-", p.localizacao, `${p.sulco_atual || "-"} mm`]) || []} />
+            <DetailTable headers={["ID Único", "Marca", "Medida", "Localização", "Sulco"]} rows={fPneus.slice(0, 20).map(p => [p.id_unico, p.marca, p.medida || "-", p.localizacao, `${p.sulco_atual || "-"} mm`])} />
           </div>
         );
 
