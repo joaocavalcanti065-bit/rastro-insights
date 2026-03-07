@@ -278,7 +278,7 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total</span><p className="text-xl font-bold">{totalVeiculos}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total</span><p className="text-xl font-bold">{fVeiculos.length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Ativos</span><p className="text-xl font-bold">{veiculosPorStatus["ativo"] || 0}</p></div>
             </div>
             {veiculosTipoData.length > 0 && (
