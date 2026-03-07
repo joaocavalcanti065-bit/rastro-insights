@@ -175,7 +175,7 @@ export default function Dashboard() {
     else if (dateFilter === "custom") { start = dateFrom ? startOfDay(dateFrom) : undefined; end = dateTo ? endOfDay(dateTo) : undefined; }
     return items.filter(item => {
       const val = item[field];
-      if (!val || typeof val !== "string") return dateFilter === "all";
+      if (!val || typeof val !== "string") return false;
       const d = new Date(val as string);
       if (start && isBefore(d, start)) return false;
       if (end && isAfter(d, end)) return false;
