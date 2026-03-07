@@ -208,60 +208,60 @@ export default function Dashboard() {
   }, {} as Record<string, number>);
   const veiculosTipoData = Object.entries(veiculosPorTipo).map(([name, value]) => ({ name, value }));
 
-  const veiculosPorStatus = veiculos?.reduce((acc, v) => {
+  const veiculosPorStatus = fVeiculos.reduce((acc, v) => {
     const s = v.status || "ativo";
     acc[s] = (acc[s] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const veiculosStatusData = Object.entries(veiculosPorStatus).map(([name, value]) => ({ name, value }));
 
-  const pneusPorMarca = pneus?.reduce((acc, p) => {
+  const pneusPorMarca = fPneus.reduce((acc, p) => {
     const m = p.marca || "Outros";
     acc[m] = (acc[m] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const pneusMarcaData = Object.entries(pneusPorMarca).map(([name, value]) => ({ name, value }));
 
-  const pneusOperacaoPorVeiculo = pneus?.filter(p => p.localizacao === "veiculo").reduce((acc, p) => {
+  const pneusOperacaoPorVeiculo = fPneus.filter(p => p.localizacao === "veiculo").reduce((acc, p) => {
     const vid = p.veiculo_id || "Sem veículo";
     const placa = veiculos?.find(v => v.id === vid)?.placa || vid;
     acc[placa] = (acc[placa] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const operacaoData = Object.entries(pneusOperacaoPorVeiculo).map(([name, value]) => ({ name, value }));
 
-  const alertasPorGravidade = alertas?.reduce((acc, a) => {
+  const alertasPorGravidade = fAlertas.reduce((acc, a) => {
     const g = a.gravidade || "informativo";
     acc[g] = (acc[g] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const alertasGravData = Object.entries(alertasPorGravidade).map(([name, value]) => ({ name, value }));
 
-  const alertasPorTipo = alertas?.reduce((acc, a) => {
+  const alertasPorTipo = fAlertas.reduce((acc, a) => {
     acc[a.tipo_alerta] = (acc[a.tipo_alerta] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const alertasTipoData = Object.entries(alertasPorTipo).map(([name, value]) => ({ name, value }));
 
-  const custoPorMarca = pneus?.reduce((acc, p) => {
+  const custoPorMarca = fPneus.reduce((acc, p) => {
     const m = p.marca || "Outros";
     acc[m] = (acc[m] || 0) + Number(p.custo_acumulado || p.custo_aquisicao || 0);
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const custoMarcaData = Object.entries(custoPorMarca).map(([name, value]) => ({ name, value: Math.round(value) }));
 
-  const recapagensPorStatus = recapagens?.reduce((acc, r) => {
+  const recapagensPorStatus = fRecapagens.reduce((acc, r) => {
     const s = r.status || "aguardando";
     acc[s] = (acc[s] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const recapStatusData = Object.entries(recapagensPorStatus).map(([name, value]) => ({ name, value }));
 
-  const movPorMes = movimentacoes?.reduce((acc, m) => {
+  const movPorMes = fMovimentacoes.reduce((acc, m) => {
     const month = m.data_movimentacao ? format(new Date(m.data_movimentacao), "MMM/yy", { locale: ptBR }) : "N/A";
     acc[month] = (acc[month] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>) || {};
+  }, {} as Record<string, number>);
   const movMesData = Object.entries(movPorMes).map(([name, value]) => ({ name, value }));
 
   const gravColorMap: Record<string, string> = {
