@@ -472,8 +472,8 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo Total</span><p className="text-xl font-bold">R$ {custoTotal.toLocaleString("pt-BR")}</p></div>
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo Médio/Pneu</span><p className="text-xl font-bold">R$ {totalPneus ? Math.round(custoTotal / totalPneus).toLocaleString("pt-BR") : 0}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo Total</span><p className="text-xl font-bold">R$ {fPneus.reduce((a, p) => a + Number(p.custo_acumulado || p.custo_aquisicao || 0), 0).toLocaleString("pt-BR")}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Custo Médio/Pneu</span><p className="text-xl font-bold">R$ {fPneus.length ? Math.round(fPneus.reduce((a, p) => a + Number(p.custo_acumulado || p.custo_aquisicao || 0), 0) / fPneus.length).toLocaleString("pt-BR") : 0}</p></div>
             </div>
             {custoMarcaData.length > 0 && (
               <div>
@@ -485,16 +485,19 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            {economiaRecapagem > 0 && (
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
-                <TrendingDown className="h-8 w-8 text-success" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Economia estimada com recapagem</p>
-                  <p className="text-2xl font-bold text-success">R$ {economiaRecapagem.toLocaleString("pt-BR")}</p>
+            {(() => {
+              const econ = (fRecapagens.filter(r => r.status === "retornado").length) * 1800;
+              return econ > 0 ? (
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
+                  <TrendingDown className="h-8 w-8 text-success" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Economia estimada com recapagem</p>
+                    <p className="text-2xl font-bold text-success">R$ {econ.toLocaleString("pt-BR")}</p>
+                  </div>
                 </div>
-              </div>
-            )}
-            <DetailTable headers={["Pneu", "Marca", "Aquisição", "Acumulado", "Data"]} rows={pneus?.slice(0, 20).map(p => [p.id_unico, p.marca, `R$ ${Number(p.custo_aquisicao || 0).toLocaleString("pt-BR")}`, `R$ ${Number(p.custo_acumulado || 0).toLocaleString("pt-BR")}`, p.data_aquisicao ? format(new Date(p.data_aquisicao), "dd/MM/yyyy") : "-"]) || []} />
+              ) : null;
+            })()}
+            <DetailTable headers={["Pneu", "Marca", "Aquisição", "Acumulado", "Data"]} rows={fPneus.slice(0, 20).map(p => [p.id_unico, p.marca, `R$ ${Number(p.custo_aquisicao || 0).toLocaleString("pt-BR")}`, `R$ ${Number(p.custo_acumulado || 0).toLocaleString("pt-BR")}`, p.data_aquisicao ? format(new Date(p.data_aquisicao), "dd/MM/yyyy") : "-"])} />
           </div>
         );
 
