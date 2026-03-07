@@ -435,7 +435,7 @@ export default function Dashboard() {
     { name: "Sucata", value: sucateados },
   ].filter(d => d.value > 0);
 
-  const hasData = totalVeiculos > 0 || totalPneus > 0;
+  
 
   // --- Derived data for detail dialogs ---
   const veiculosPorTipo = fVeiculos.reduce((acc, v) => { acc[v.tipo_veiculo || "Outros"] = (acc[v.tipo_veiculo || "Outros"] || 0) + 1; return acc; }, {} as Record<string, number>);
