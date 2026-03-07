@@ -257,8 +257,8 @@ export default function PneusPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>RG</TableHead>
                   <TableHead>ID</TableHead>
-                  <TableHead>QR</TableHead>
                   <TableHead>Medida</TableHead>
                   <TableHead>Marca</TableHead>
                   <TableHead>Status</TableHead>
