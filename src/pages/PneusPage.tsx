@@ -30,6 +30,7 @@ const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondar
 
 export default function PneusPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [qrModal, setQrModal] = useState<string | null>(null);
