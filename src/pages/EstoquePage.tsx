@@ -80,6 +80,9 @@ export default function EstoquePage() {
           <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
             <Camera className="h-4 w-4 mr-2" />Ler QR
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setInventarioOpen(true)}>
+            <ClipboardCheck className="h-4 w-4 mr-2" />Inventário
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setAbcOpen(true)}>
             <BarChart3 className="h-4 w-4 mr-2" />Curva ABC
           </Button>
