@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ArrowDownToLine, ArrowUpFromLine, Bookmark, BarChart3, Camera } from "lucide-react";
+import { Package, ArrowDownToLine, ArrowUpFromLine, Bookmark, BarChart3, Camera, ClipboardCheck } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { EstoqueKPIs } from "@/components/estoque/EstoqueKPIs";
 import { EstoqueVisaoMedida } from "@/components/estoque/EstoqueVisaoMedida";
