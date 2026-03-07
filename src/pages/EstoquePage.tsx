@@ -25,6 +25,7 @@ export default function EstoquePage() {
   const [reservaOpen, setReservaOpen] = useState(false);
   const [abcOpen, setAbcOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [inventarioOpen, setInventarioOpen] = useState(false);
   const [view, setView] = useState<"medida" | "lista">("medida");
 
   const { data: pneus, isLoading, refetch } = useQuery({
