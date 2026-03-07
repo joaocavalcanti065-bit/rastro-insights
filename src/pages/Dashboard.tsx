@@ -339,6 +339,7 @@ export default function Dashboard() {
       setDateFilter("all");
       setDateFrom(undefined);
       setDateTo(undefined);
+      setFuelVehicleFilter("all");
     }
   };
 
