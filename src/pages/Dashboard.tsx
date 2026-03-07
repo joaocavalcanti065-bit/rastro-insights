@@ -319,6 +319,14 @@ export default function Dashboard() {
   const custoTotal = pneus?.reduce((acc, p) => acc + Number(p.custo_acumulado || p.custo_aquisicao || 0), 0) || 0;
   const economiaRecapagem = (recapagens?.filter(r => r.status === "retornado").length || 0) * 1800;
 
+  // Fuel stats
+  const totalAbastecimentos = combustivel?.length || 0;
+  const totalLitros = combustivel?.reduce((a, c) => a + Number(c.litros_abastecidos || 0), 0) || 0;
+  const totalGastoCombustivel = combustivel?.reduce((a, c) => a + Number(c.valor_total_pago || 0), 0) || 0;
+  const avgConsumo = combustivel?.filter(c => c.consumo_km_por_litro && c.consumo_km_por_litro > 0);
+  const mediaKmPorLitro = avgConsumo && avgConsumo.length > 0
+    ? avgConsumo.reduce((a, c) => a + Number(c.consumo_km_por_litro || 0), 0) / avgConsumo.length
+    : 0;
   const [dateFilter, setDateFilter] = useState<DateFilterType>("all");
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
