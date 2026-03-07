@@ -391,6 +391,24 @@ export default function Dashboard() {
   const recapagensTimeline = useMemo(() => buildTimeline(recapagens || [], "created_at" as any), [recapagens]);
   const movTimeline = useMemo(() => buildTimeline(movimentacoes || [], "data_movimentacao" as any), [movimentacoes]);
   const manutencoesTimeline = useMemo(() => buildTimeline(manutencoes || [], "created_at" as any), [manutencoes]);
+  const combustivelTimeline = useMemo(() => {
+    const now = new Date();
+    const buckets: Record<string, number> = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = subMonths(now, i);
+      buckets[format(startOfMonth(d), "MMM/yy", { locale: ptBR })] = 0;
+    }
+    const cutoff = startOfMonth(subMonths(now, 5));
+    (combustivel || []).forEach(c => {
+      const val = c.data_abastecimento;
+      if (!val) return;
+      const d = new Date(val);
+      if (isBefore(d, cutoff)) return;
+      const key = format(startOfMonth(d), "MMM/yy", { locale: ptBR });
+      if (key in buckets) buckets[key] += Number(c.valor_total_pago || 0);
+    });
+    return Object.entries(buckets).map(([name, value]) => ({ name, value: Math.round(value) }));
+  }, [combustivel]);
   const custoTimeline = useMemo(() => {
     const now = new Date();
     const buckets: Record<string, number> = {};
