@@ -440,8 +440,8 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total Ativos</span><p className="text-xl font-bold">{alertas?.length || 0}</p></div>
-              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Críticos</span><p className="text-xl font-bold text-destructive">{alertasCriticos}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Total Ativos</span><p className="text-xl font-bold">{fAlertas.length}</p></div>
+              <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Críticos</span><p className="text-xl font-bold text-destructive">{fAlertas.filter(a => a.gravidade === "critico").length}</p></div>
               <div className="rounded-lg bg-muted p-3"><span className="text-muted-foreground">Tipos</span><p className="text-xl font-bold">{Object.keys(alertasPorTipo).length}</p></div>
             </div>
             {alertasGravData.length > 0 && (
@@ -464,7 +464,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            <DetailTable headers={["Tipo", "Gravidade", "Mensagem", "Data"]} rows={alertas?.slice(0, 20).map(a => [a.tipo_alerta, a.gravidade || "-", a.mensagem.substring(0, 50), format(new Date(a.created_at), "dd/MM/yyyy HH:mm")]) || []} />
+            <DetailTable headers={["Tipo", "Gravidade", "Mensagem", "Data"]} rows={fAlertas.slice(0, 20).map(a => [a.tipo_alerta, a.gravidade || "-", a.mensagem.substring(0, 50), format(new Date(a.created_at), "dd/MM/yyyy HH:mm")])} />
           </div>
         );
 
