@@ -8,10 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, MapPin, Trash2, Edit2, Warehouse, LayoutGrid } from "lucide-react";
+import { Plus, MapPin, Trash2, Edit2, Warehouse, LayoutGrid, ArrowRightLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EstoqueTransferPanel } from "@/components/estoque/EstoqueTransferPanel";
 
 const MEDIDAS_COMUNS = [
   "295/80 R22.5", "275/80 R22.5", "215/75 R17.5", "235/75 R17.5",
