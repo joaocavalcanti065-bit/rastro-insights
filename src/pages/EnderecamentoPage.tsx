@@ -8,10 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, MapPin, Trash2, Edit2, Warehouse, LayoutGrid } from "lucide-react";
+import { Plus, MapPin, Trash2, Edit2, Warehouse, LayoutGrid, ArrowRightLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EstoqueTransferPanel } from "@/components/estoque/EstoqueTransferPanel";
 
 const MEDIDAS_COMUNS = [
   "295/80 R22.5", "275/80 R22.5", "215/75 R17.5", "235/75 R17.5",
@@ -36,6 +38,7 @@ export default function EnderecamentoPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<LocalEstoque | null>(null);
   const [filterAlmox, setFilterAlmox] = useState("todos");
+  const [activeTab, setActiveTab] = useState("locais");
   const [form, setForm] = useState({
     almoxarifado: "", setor: "", corredor: "", prateleira: "",
     capacidade: 20, medida_preferencial: "", observacoes: "",
@@ -52,7 +55,7 @@ export default function EnderecamentoPage() {
   const { data: pneus } = useQuery({
     queryKey: ["pneus-estoque-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("pneus").select("id, local_atual, medida").eq("localizacao", "estoque");
+      const { data } = await supabase.from("pneus").select("id, id_unico, local_atual, medida, marca, sulco_atual, status").eq("localizacao", "estoque");
       return data || [];
     },
   });
@@ -186,72 +189,86 @@ export default function EnderecamentoPage() {
         </Card>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2 items-center">
-        <Label className="text-sm">Filtrar almoxarifado:</Label>
-        <Select value={filterAlmox} onValueChange={setFilterAlmox}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            {almoxarifados.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Tabs: Locais vs Transferências */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="locais"><LayoutGrid className="h-4 w-4 mr-1.5" />Locais</TabsTrigger>
+          <TabsTrigger value="transferir"><ArrowRightLeft className="h-4 w-4 mr-1.5" />Transferir</TabsTrigger>
+        </TabsList>
 
-      {/* Table */}
-      {!filtered?.length ? (
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            <MapPin className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="font-medium">Nenhum local cadastrado</p>
-            <p className="text-sm">Cadastre almoxarifados, setores e prateleiras para organizar o estoque.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Endereço</TableHead>
-                  <TableHead>Medida Preferencial</TableHead>
-                  <TableHead className="text-center">Capacidade</TableHead>
-                  <TableHead className="text-center">Ocupação</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered?.map(l => {
-                  const ocup = getOcupacao(l);
-                  const pct = l.capacidade ? Math.round((ocup / l.capacidade) * 100) : 0;
-                  return (
-                    <TableRow key={l.id}>
-                      <TableCell className="font-mono text-sm">{formatEndereco(l)}</TableCell>
-                      <TableCell>
-                        {l.medida_preferencial ? (
-                          <Badge variant="secondary">{l.medida_preferencial}</Badge>
-                        ) : <span className="text-muted-foreground text-xs">—</span>}
-                      </TableCell>
-                      <TableCell className="text-center">{l.capacidade || 0}</TableCell>
-                      <TableCell className="text-center">
-                        <span className={pct > 90 ? "text-destructive font-medium" : pct > 70 ? "text-chart-4 font-medium" : ""}>
-                          {ocup}/{l.capacidade || 0} ({pct}%)
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-1 justify-end">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(l)}><Edit2 className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(l.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                        </div>
-                      </TableCell>
+        <TabsContent value="locais" className="space-y-4">
+          {/* Filter */}
+          <div className="flex gap-2 items-center">
+            <Label className="text-sm">Filtrar almoxarifado:</Label>
+            <Select value={filterAlmox} onValueChange={setFilterAlmox}>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {almoxarifados.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Table */}
+          {!filtered?.length ? (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                <MapPin className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">Nenhum local cadastrado</p>
+                <p className="text-sm">Cadastre almoxarifados, setores e prateleiras para organizar o estoque.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Endereço</TableHead>
+                      <TableHead>Medida Preferencial</TableHead>
+                      <TableHead className="text-center">Capacidade</TableHead>
+                      <TableHead className="text-center">Ocupação</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+                  </TableHeader>
+                  <TableBody>
+                    {filtered?.map(l => {
+                      const ocup = getOcupacao(l);
+                      const pct = l.capacidade ? Math.round((ocup / l.capacidade) * 100) : 0;
+                      return (
+                        <TableRow key={l.id}>
+                          <TableCell className="font-mono text-sm">{formatEndereco(l)}</TableCell>
+                          <TableCell>
+                            {l.medida_preferencial ? (
+                              <Badge variant="secondary">{l.medida_preferencial}</Badge>
+                            ) : <span className="text-muted-foreground text-xs">—</span>}
+                          </TableCell>
+                          <TableCell className="text-center">{l.capacidade || 0}</TableCell>
+                          <TableCell className="text-center">
+                            <span className={pct > 90 ? "text-destructive font-medium" : pct > 70 ? "text-chart-4 font-medium" : ""}>
+                              {ocup}/{l.capacidade || 0} ({pct}%)
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-1 justify-end">
+                              <Button variant="ghost" size="icon" onClick={() => openEdit(l)}><Edit2 className="h-4 w-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(l.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="transferir">
+          <EstoqueTransferPanel locais={locais || []} pneus={pneus || []} />
+        </TabsContent>
+      </Tabs>
 
       {/* Modal */}
       <Dialog open={modalOpen} onOpenChange={v => { if (!v) closeModal(); }}>
