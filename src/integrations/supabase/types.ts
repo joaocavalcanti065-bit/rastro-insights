@@ -426,6 +426,59 @@ export type Database = {
           },
         ]
       }
+      locais_estoque: {
+        Row: {
+          almoxarifado: string
+          ativo: boolean | null
+          capacidade: number | null
+          corredor: string | null
+          created_at: string
+          empresa_id: string | null
+          id: string
+          medida_preferencial: string | null
+          observacoes: string | null
+          ocupacao_atual: number | null
+          prateleira: string | null
+          setor: string | null
+        }
+        Insert: {
+          almoxarifado: string
+          ativo?: boolean | null
+          capacidade?: number | null
+          corredor?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          medida_preferencial?: string | null
+          observacoes?: string | null
+          ocupacao_atual?: number | null
+          prateleira?: string | null
+          setor?: string | null
+        }
+        Update: {
+          almoxarifado?: string
+          ativo?: boolean | null
+          capacidade?: number | null
+          corredor?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          medida_preferencial?: string | null
+          observacoes?: string | null
+          ocupacao_atual?: number | null
+          prateleira?: string | null
+          setor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locais_estoque_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       manutencoes: {
         Row: {
           causa: string | null
