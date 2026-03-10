@@ -38,6 +38,7 @@ export default function EnderecamentoPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<LocalEstoque | null>(null);
   const [filterAlmox, setFilterAlmox] = useState("todos");
+  const [activeTab, setActiveTab] = useState("locais");
   const [form, setForm] = useState({
     almoxarifado: "", setor: "", corredor: "", prateleira: "",
     capacidade: 20, medida_preferencial: "", observacoes: "",
