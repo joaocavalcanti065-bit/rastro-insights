@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 
 const MOTIVOS_SAIDA = [
   { value: "instalacao", label: "Instalação em veículo" },
