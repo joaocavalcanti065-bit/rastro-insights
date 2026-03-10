@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Frota from "./pages/Frota";
 import PneusPage from "./pages/PneusPage";
 import EstoquePage from "./pages/EstoquePage";
+import EnderecamentoPage from "./pages/EnderecamentoPage";
 import RecapagemPage from "./pages/RecapagemPage";
 import ManutencaoPage from "./pages/ManutencaoPage";
 import AlertasPage from "./pages/AlertasPage";
@@ -86,6 +87,7 @@ const AppRoutes = () => {
       <Route path="/pneus" element={<ProtectedLayout session={session}><PneusPage /></ProtectedLayout>} />
       <Route path="/pneu/:rg" element={<ProtectedLayout session={session}><PneuProfilePage /></ProtectedLayout>} />
       <Route path="/estoque" element={<ProtectedLayout session={session}><EstoquePage /></ProtectedLayout>} />
+      <Route path="/enderecamento" element={<ProtectedLayout session={session}><EnderecamentoPage /></ProtectedLayout>} />
       <Route path="/recapagem" element={<ProtectedLayout session={session}><RecapagemPage /></ProtectedLayout>} />
       <Route path="/manutencao" element={<ProtectedLayout session={session}><ManutencaoPage /></ProtectedLayout>} />
       <Route path="/alertas" element={<ProtectedLayout session={session}><AlertasPage /></ProtectedLayout>} />

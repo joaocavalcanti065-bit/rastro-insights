@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Truck, Circle, Package, RefreshCw,
+  LayoutDashboard, Truck, Circle, Package, MapPin, RefreshCw,
   Wrench, Bell, FileText, Settings, Link2, Cog, LogOut
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -17,6 +17,7 @@ const navItems = [
   { title: "Frota", url: "/frota", icon: Truck },
   { title: "Pneus", url: "/pneus", icon: Circle },
   { title: "Estoque", url: "/estoque", icon: Package },
+  { title: "Endereçamento", url: "/enderecamento", icon: MapPin },
   { title: "Recapagem", url: "/recapagem", icon: RefreshCw },
   { title: "Manutenção", url: "/manutencao", icon: Wrench },
   { title: "Alertas", url: "/alertas", icon: Bell },
