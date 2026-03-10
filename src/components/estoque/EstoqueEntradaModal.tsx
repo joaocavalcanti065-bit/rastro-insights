@@ -126,6 +126,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
         local_atual: form.local_fisico || "Sem endereço definido",
         status: "em_estoque",
         nota_fiscal: form.nota_fiscal,
+        data_aquisicao: dataEntrada.toISOString().split("T")[0],
         observacoes: form.observacoes,
         cliente_id: "00000000-0000-0000-0000-000000000000",
       }).select("id").single();
