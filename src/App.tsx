@@ -87,6 +87,7 @@ const AppRoutes = () => {
       <Route path="/pneus" element={<ProtectedLayout session={session}><PneusPage /></ProtectedLayout>} />
       <Route path="/pneu/:rg" element={<ProtectedLayout session={session}><PneuProfilePage /></ProtectedLayout>} />
       <Route path="/estoque" element={<ProtectedLayout session={session}><EstoquePage /></ProtectedLayout>} />
+      <Route path="/enderecamento" element={<ProtectedLayout session={session}><EnderecamentoPage /></ProtectedLayout>} />
       <Route path="/recapagem" element={<ProtectedLayout session={session}><RecapagemPage /></ProtectedLayout>} />
       <Route path="/manutencao" element={<ProtectedLayout session={session}><ManutencaoPage /></ProtectedLayout>} />
       <Route path="/alertas" element={<ProtectedLayout session={session}><AlertasPage /></ProtectedLayout>} />
