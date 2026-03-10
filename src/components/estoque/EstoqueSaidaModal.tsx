@@ -82,6 +82,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
         tipo_movimentacao: motivo,
         origem: "estoque",
         destino: motivo,
+        data_movimentacao: dataSaida.toISOString().split("T")[0],
         veiculo_destino_id: motivo === "instalacao" ? veiculoId || null : null,
         posicao_destino: posicao || null,
         km_no_momento: kmAtual ? Number(kmAtual) : null,
