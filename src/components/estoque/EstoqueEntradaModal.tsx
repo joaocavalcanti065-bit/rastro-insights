@@ -47,6 +47,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
     sulco_entrada: 16, pressao_entrada: 110, local_fisico: "", condicao: "novo",
     observacoes: "", tipo_eixo: "tracao", tipo_aplicacao: "rodoviario",
   });
+  const [dataEntrada, setDataEntrada] = useState(new Date());
   const [sugestaoLocal, setSugestaoLocal] = useState<string | null>(null);
 
   // Fetch storage locations for auto-suggest
