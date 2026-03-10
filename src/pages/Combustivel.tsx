@@ -469,14 +469,11 @@ const Combustivel = () => {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Data do Abastecimento *</Label>
-                  <Input
-                    type="date"
-                    value={form.data_abastecimento}
-                    onChange={(e) => setForm({ ...form, data_abastecimento: e.target.value })}
-                  />
-                </div>
+                <RetroactiveDatePicker
+                  date={form.data_abastecimento ? new Date(form.data_abastecimento + "T12:00:00") : new Date()}
+                  onDateChange={(d) => setForm({ ...form, data_abastecimento: format(d, "yyyy-MM-dd") })}
+                  label="Data do Abastecimento *"
+                />
 
                 <div className="space-y-2">
                   <Label>Tipo de Combustível</Label>

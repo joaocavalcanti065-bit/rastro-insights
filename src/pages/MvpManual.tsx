@@ -1012,7 +1012,11 @@ export default function MvpManual() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2"><Label>Data</Label><Input type="date" value={movForm.data} onChange={e => setMovForm(prev => ({ ...prev, data: e.target.value }))} /></div>
+                  <RetroactiveDatePicker
+                    date={movForm.data ? new Date(movForm.data + "T12:00:00") : new Date()}
+                    onDateChange={(d) => setMovForm(prev => ({ ...prev, data: format(d, "yyyy-MM-dd") }))}
+                    label="Data"
+                  />
                 </div>
 
                 {movForm.tipo === 'estoque_para_veiculo' && (
