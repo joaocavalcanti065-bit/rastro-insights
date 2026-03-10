@@ -145,6 +145,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
     setPneuId(""); setMotivo("instalacao"); setVeiculoId(""); setPosicao("");
     setKmAtual(""); setObservacoes(""); setCompradorNome(""); setCompradorDoc("");
     setValorVenda(""); setFormaPagamento("pix"); setTipoComprador("pf");
+    setDataSaida(new Date());
   };
 
   return (
