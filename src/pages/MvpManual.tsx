@@ -15,6 +15,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
+import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 
@@ -759,7 +760,11 @@ export default function MvpManual() {
                   )}
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <div className="space-y-2"><Label>Data *</Label><Input type="date" value={dataMedicao} onChange={e => setDataMedicao(e.target.value)} required /></div>
+                  <RetroactiveDatePicker
+                    date={dataMedicao ? new Date(dataMedicao + "T12:00:00") : new Date()}
+                    onDateChange={(d) => setDataMedicao(format(d, "yyyy-MM-dd"))}
+                    label="Data *"
+                  />
                   <div className="space-y-2">
                     <Label>Posição *</Label>
                     <Select value={posicaoPneu} onValueChange={setPosicaoPneu}>
@@ -1007,7 +1012,11 @@ export default function MvpManual() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2"><Label>Data</Label><Input type="date" value={movForm.data} onChange={e => setMovForm(prev => ({ ...prev, data: e.target.value }))} /></div>
+                  <RetroactiveDatePicker
+                    date={movForm.data ? new Date(movForm.data + "T12:00:00") : new Date()}
+                    onDateChange={(d) => setMovForm(prev => ({ ...prev, data: format(d, "yyyy-MM-dd") }))}
+                    label="Data"
+                  />
                 </div>
 
                 {movForm.tipo === 'estoque_para_veiculo' && (

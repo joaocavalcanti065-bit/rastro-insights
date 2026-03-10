@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 
 const MOTIVOS_SAIDA = [
   { value: "instalacao", label: "Instalação em veículo" },
@@ -40,6 +41,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
   const [compradorDoc, setCompradorDoc] = useState("");
   const [valorVenda, setValorVenda] = useState("");
   const [formaPagamento, setFormaPagamento] = useState("pix");
+  const [dataSaida, setDataSaida] = useState(new Date());
 
   const selected = pneus.find(p => p.id === pneuId);
 
@@ -65,7 +67,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
       const updateData: any = {
         status: statusMap[motivo] || "em_estoque",
         localizacao: locMap[motivo] || "estoque",
-        updated_at: new Date().toISOString(),
+        updated_at: dataSaida.toISOString(),
       };
       if (motivo === "instalacao" && veiculoId) {
         updateData.veiculo_id = veiculoId;
@@ -80,6 +82,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
         tipo_movimentacao: motivo,
         origem: "estoque",
         destino: motivo,
+        data_movimentacao: dataSaida.toISOString().split("T")[0],
         veiculo_destino_id: motivo === "instalacao" ? veiculoId || null : null,
         posicao_destino: posicao || null,
         km_no_momento: kmAtual ? Number(kmAtual) : null,
@@ -111,7 +114,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
         await supabase.from("recapagens").insert({
           pneu_id: pneuId,
           numero_ciclo: ciclo,
-          data_envio: new Date().toISOString().split("T")[0],
+          data_envio: dataSaida.toISOString().split("T")[0],
           status: "aguardando",
           observacoes,
         });
@@ -142,6 +145,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
     setPneuId(""); setMotivo("instalacao"); setVeiculoId(""); setPosicao("");
     setKmAtual(""); setObservacoes(""); setCompradorNome(""); setCompradorDoc("");
     setValorVenda(""); setFormaPagamento("pix"); setTipoComprador("pf");
+    setDataSaida(new Date());
   };
 
   return (
@@ -233,6 +237,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
           )}
 
           <div><Label>Observações</Label><Input value={observacoes} onChange={e => setObservacoes(e.target.value)} /></div>
+          <RetroactiveDatePicker date={dataSaida} onDateChange={setDataSaida} label="Data da Saída" />
 
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => { onClose(); resetForm(); }}>Cancelar</Button>

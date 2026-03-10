@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { MapPin, Sparkles } from "lucide-react";
+import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
 const MOTIVOS = [
@@ -46,6 +47,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
     sulco_entrada: 16, pressao_entrada: 110, local_fisico: "", condicao: "novo",
     observacoes: "", tipo_eixo: "tracao", tipo_aplicacao: "rodoviario",
   });
+  const [dataEntrada, setDataEntrada] = useState(new Date());
   const [sugestaoLocal, setSugestaoLocal] = useState<string | null>(null);
 
   // Fetch storage locations for auto-suggest
@@ -124,6 +126,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
         local_atual: form.local_fisico || "Sem endereço definido",
         status: "em_estoque",
         nota_fiscal: form.nota_fiscal,
+        data_aquisicao: dataEntrada.toISOString().split("T")[0],
         observacoes: form.observacoes,
         cliente_id: "00000000-0000-0000-0000-000000000000",
       }).select("id").single();
@@ -135,6 +138,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
           tipo_movimentacao: "entrada_estoque",
           origem: form.motivo,
           destino: "estoque",
+          data_movimentacao: dataEntrada.toISOString().split("T")[0],
           sulco_no_momento: form.sulco_entrada,
           pressao_no_momento: form.pressao_entrada,
           observacoes: form.observacoes || `Entrada: ${MOTIVOS.find(m => m.value === form.motivo)?.label}`,
@@ -199,6 +203,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
                 <div><Label>Nota Fiscal</Label><Input value={form.nota_fiscal} onChange={e => set("nota_fiscal", e.target.value)} /></div>
                 <div><Label>Custo (R$)</Label><Input type="number" value={form.custo_aquisicao} onChange={e => set("custo_aquisicao", Number(e.target.value))} /></div>
               </div>
+              <RetroactiveDatePicker date={dataEntrada} onDateChange={setDataEntrada} label="Data da Entrada" />
             </>
           )}
           {step === 3 && (
