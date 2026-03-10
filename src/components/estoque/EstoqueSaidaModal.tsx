@@ -41,6 +41,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
   const [compradorDoc, setCompradorDoc] = useState("");
   const [valorVenda, setValorVenda] = useState("");
   const [formaPagamento, setFormaPagamento] = useState("pix");
+  const [dataSaida, setDataSaida] = useState(new Date());
 
   const selected = pneus.find(p => p.id === pneuId);
 
