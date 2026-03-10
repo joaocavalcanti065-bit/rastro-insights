@@ -67,7 +67,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
       const updateData: any = {
         status: statusMap[motivo] || "em_estoque",
         localizacao: locMap[motivo] || "estoque",
-        updated_at: new Date().toISOString(),
+        updated_at: dataSaida.toISOString(),
       };
       if (motivo === "instalacao" && veiculoId) {
         updateData.veiculo_id = veiculoId;
