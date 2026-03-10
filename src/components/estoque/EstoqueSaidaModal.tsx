@@ -114,7 +114,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
         await supabase.from("recapagens").insert({
           pneu_id: pneuId,
           numero_ciclo: ciclo,
-          data_envio: new Date().toISOString().split("T")[0],
+          data_envio: dataSaida.toISOString().split("T")[0],
           status: "aguardando",
           observacoes,
         });
