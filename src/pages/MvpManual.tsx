@@ -760,7 +760,11 @@ export default function MvpManual() {
                   )}
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <div className="space-y-2"><Label>Data *</Label><Input type="date" value={dataMedicao} onChange={e => setDataMedicao(e.target.value)} required /></div>
+                  <RetroactiveDatePicker
+                    date={dataMedicao ? new Date(dataMedicao + "T12:00:00") : new Date()}
+                    onDateChange={(d) => setDataMedicao(format(d, "yyyy-MM-dd"))}
+                    label="Data *"
+                  />
                   <div className="space-y-2">
                     <Label>Posição *</Label>
                     <Select value={posicaoPneu} onValueChange={setPosicaoPneu}>
