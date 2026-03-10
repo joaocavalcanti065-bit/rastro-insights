@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Frota from "./pages/Frota";
 import PneusPage from "./pages/PneusPage";
 import EstoquePage from "./pages/EstoquePage";
+import EnderecamentoPage from "./pages/EnderecamentoPage";
 import RecapagemPage from "./pages/RecapagemPage";
 import ManutencaoPage from "./pages/ManutencaoPage";
 import AlertasPage from "./pages/AlertasPage";
