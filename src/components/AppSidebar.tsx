@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Truck, Circle, Package, RefreshCw,
+  LayoutDashboard, Truck, Circle, Package, MapPin, RefreshCw,
   Wrench, Bell, FileText, Settings, Link2, Cog, LogOut
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
