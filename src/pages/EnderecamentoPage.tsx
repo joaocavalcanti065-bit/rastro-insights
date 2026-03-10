@@ -55,7 +55,7 @@ export default function EnderecamentoPage() {
   const { data: pneus } = useQuery({
     queryKey: ["pneus-estoque-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("pneus").select("id, local_atual, medida").eq("localizacao", "estoque");
+      const { data } = await supabase.from("pneus").select("id, id_unico, local_atual, medida, marca, sulco_atual, status").eq("localizacao", "estoque");
       return data || [];
     },
   });
