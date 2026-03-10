@@ -237,6 +237,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
           )}
 
           <div><Label>Observações</Label><Input value={observacoes} onChange={e => setObservacoes(e.target.value)} /></div>
+          <RetroactiveDatePicker date={dataSaida} onDateChange={setDataSaida} label="Data da Saída" />
 
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => { onClose(); resetForm(); }}>Cancelar</Button>

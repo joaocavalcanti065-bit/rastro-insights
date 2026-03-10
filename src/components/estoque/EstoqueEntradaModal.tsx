@@ -203,6 +203,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
                 <div><Label>Nota Fiscal</Label><Input value={form.nota_fiscal} onChange={e => set("nota_fiscal", e.target.value)} /></div>
                 <div><Label>Custo (R$)</Label><Input type="number" value={form.custo_aquisicao} onChange={e => set("custo_aquisicao", Number(e.target.value))} /></div>
               </div>
+              <RetroactiveDatePicker date={dataEntrada} onDateChange={setDataEntrada} label="Data da Entrada" />
             </>
           )}
           {step === 3 && (
