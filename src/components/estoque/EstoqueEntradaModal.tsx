@@ -138,6 +138,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
           tipo_movimentacao: "entrada_estoque",
           origem: form.motivo,
           destino: "estoque",
+          data_movimentacao: dataEntrada.toISOString().split("T")[0],
           sulco_no_momento: form.sulco_entrada,
           pressao_no_momento: form.pressao_entrada,
           observacoes: form.observacoes || `Entrada: ${MOTIVOS.find(m => m.value === form.motivo)?.label}`,
