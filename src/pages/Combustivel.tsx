@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Fuel, TrendingUp, DollarSign, AlertTriangle, Plus, Trash2, RefreshCw, Gauge } from "lucide-react";
+import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
+import { format } from "date-fns";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
 interface Cliente {
