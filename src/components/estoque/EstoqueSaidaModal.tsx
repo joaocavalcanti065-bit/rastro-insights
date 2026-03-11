@@ -303,8 +303,10 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos, p
               disabled={!pneuId || mutation.isPending}
               variant={motivo === "descarte" ? "destructive" : "default"}
             >
-              {mutation.isPending ? "Registrando..." : "Confirmar Saída"}
-            </Button>
+              {mutation.isPending ? "Registrando..." :
+               isPreset && motivo === "instalacao" ? "Confirmar Instalação" :
+               isPreset && motivo === "recapagem" ? "Confirmar Envio para Recapagem" :
+               "Confirmar Saída"}
           </div>
         </div>
       </DialogContent>
