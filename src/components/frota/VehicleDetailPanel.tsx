@@ -15,6 +15,7 @@ import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend } from "recharts";
 import { Truck, Circle, Fuel, Wrench, Plus, Gauge, DollarSign, Ruler } from "lucide-react";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
