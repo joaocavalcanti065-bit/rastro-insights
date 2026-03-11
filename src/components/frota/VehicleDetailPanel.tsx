@@ -75,6 +75,19 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
     },
   });
 
+  // ---- Medições de pneus ----
+  const { data: medicoes = [] } = useQuery({
+    queryKey: ["medicoes-veiculo", veiculo.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("coleta_manual_pneus")
+        .select("*")
+        .eq("veiculo_id", veiculo.id)
+        .order("data_medicao", { ascending: false });
+      return data || [];
+    },
+  });
+
   return (
     <>
       <DialogHeader>
