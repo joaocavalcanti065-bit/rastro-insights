@@ -645,6 +645,7 @@ function ManutencaoForm({ veiculoId, onSuccess }: { veiculoId: string; onSuccess
 
 // ===================== MEDIÇÃO FORM =====================
 function MedicaoForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; clienteId: string; onSuccess: () => void }) {
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({
     posicao_pneu: "", sulco_atual: "", pressao_atual: "", pressao_recomendada: "110",
     km_atual: "", observacoes: "", data_medicao: new Date(),
