@@ -24,6 +24,7 @@ import IntegracoesPage from "./pages/IntegracoesPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import ResetPassword from "./pages/ResetPassword";
 import PneuProfilePage from "./pages/PneuProfilePage";
+import EficienciaPage from "./pages/EficienciaPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,7 @@ const AppRoutes = () => {
       <Route path="/recapagem" element={<ProtectedLayout session={session}><RecapagemPage /></ProtectedLayout>} />
       <Route path="/manutencao" element={<ProtectedLayout session={session}><ManutencaoPage /></ProtectedLayout>} />
       <Route path="/alertas" element={<ProtectedLayout session={session}><AlertasPage /></ProtectedLayout>} />
+      <Route path="/eficiencia" element={<ProtectedLayout session={session}><EficienciaPage /></ProtectedLayout>} />
       <Route path="/relatorios" element={<ProtectedLayout session={session}><RelatoriosPage /></ProtectedLayout>} />
       <Route path="/cadastros" element={<ProtectedLayout session={session}><CadastrosPage /></ProtectedLayout>} />
       <Route path="/integracoes" element={<ProtectedLayout session={session}><IntegracoesPage /></ProtectedLayout>} />
