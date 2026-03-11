@@ -695,6 +695,51 @@ function MedicaoForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; c
           km_atual: kmAtual,
         }).eq("id", selectedPneuId);
       }
+
+      // ---- Auto-generate alerts ----
+      const pneuLabel = selectedPneu?.id_unico || form.posicao_pneu || "Pneu";
+      const alertas: { tipo_alerta: string; mensagem: string; gravidade: string; acao_sugerida: string; pneu_id?: string; veiculo_id: string }[] = [];
+
+      // Sulco crítico < 3mm
+      if (sulcoAtual < 3) {
+        alertas.push({
+          tipo_alerta: "sulco_critico",
+          mensagem: `${pneuLabel}: Sulco em ${sulcoAtual}mm — abaixo do limite de segurança (3mm)`,
+          gravidade: "critica",
+          acao_sugerida: "Substituir pneu imediatamente ou enviar para recapagem",
+          pneu_id: selectedPneuId || undefined,
+          veiculo_id: veiculoId,
+        });
+      } else if (sulcoAtual < 5) {
+        alertas.push({
+          tipo_alerta: "sulco_atencao",
+          mensagem: `${pneuLabel}: Sulco em ${sulcoAtual}mm — próximo do limite crítico`,
+          gravidade: "atencao",
+          acao_sugerida: "Planejar substituição ou recapagem nas próximas semanas",
+          pneu_id: selectedPneuId || undefined,
+          veiculo_id: veiculoId,
+        });
+      }
+
+      // Pressão com desvio > 10%
+      const desvioPressao = Math.abs(pressaoAtual - pressaoRecomendada) / pressaoRecomendada;
+      if (desvioPressao > 0.10) {
+        const direcao = pressaoAtual > pressaoRecomendada ? "acima" : "abaixo";
+        const desvioPercent = (desvioPressao * 100).toFixed(0);
+        alertas.push({
+          tipo_alerta: "pressao_desvio",
+          mensagem: `${pneuLabel}: Pressão em ${pressaoAtual} psi — ${desvioPercent}% ${direcao} do ideal (${pressaoRecomendada} psi)`,
+          gravidade: desvioPressao > 0.20 ? "critica" : "atencao",
+          acao_sugerida: direcao === "abaixo" ? "Calibrar pneu imediatamente para evitar desgaste irregular" : "Verificar calibragem — pressão excessiva pode causar estouros",
+          pneu_id: selectedPneuId || undefined,
+          veiculo_id: veiculoId,
+        });
+      }
+
+      // Insert alerts
+      if (alertas.length > 0) {
+        await supabase.from("alertas").insert(alertas);
+      }
     },
     onSuccess: () => {
       toast.success("Medição registrada!");
