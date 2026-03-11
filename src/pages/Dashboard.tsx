@@ -230,7 +230,7 @@ function TimelineChart({ data, label, color = "hsl(var(--primary))" }: { data: {
   );
 }
 
-const COLORS = ["hsl(239,84%,67%)", "hsl(142,76%,36%)", "hsl(38,92%,50%)", "hsl(0,84%,60%)", "hsl(280,60%,50%)"];
+const COLORS = ["hsl(215,60%,22%)", "hsl(199,89%,48%)", "hsl(160,60%,40%)", "hsl(38,92%,50%)", "hsl(0,72%,51%)"];
 
 type DetailType = "veiculos" | "pneus" | "operacao" | "estoque" | "recapagem" | "sucata" | "alertas" | "custo" | "combustivel" | null;
 
