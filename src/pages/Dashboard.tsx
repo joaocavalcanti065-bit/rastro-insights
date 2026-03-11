@@ -1002,27 +1002,34 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-sm text-muted-foreground -mt-4">Clique em qualquer card para ver o relatório detalhado</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-6 bg-data-watermark min-h-full">
+      {/* Header */}
+      <div className="space-y-1">
+        <h1 className="text-xl font-semibold tracking-tight">Painel de Controle</h1>
+        <p className="text-xs text-muted-foreground">Visão consolidada · Clique em qualquer indicador para análise detalhada</p>
+      </div>
+
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard title="Veículos" value={totalVeiculos} icon={Truck} color="bg-primary" onClick={() => setOpenDetail("veiculos")} />
-        <StatCard title="Pneus Cadastrados" value={totalPneus} icon={Circle} color="bg-primary" onClick={() => setOpenDetail("pneus")} />
+        <StatCard title="Pneus" value={totalPneus} icon={Circle} color="bg-primary" onClick={() => setOpenDetail("pneus")} />
         <StatCard title="Em Operação" value={emOperacao} icon={Circle} color="bg-success" onClick={() => setOpenDetail("operacao")} />
         <StatCard title="Em Estoque" value={emEstoque} icon={Package} color="bg-muted" onClick={() => setOpenDetail("estoque")} />
-        <StatCard title="Em Recapagem" value={emRecapagem} icon={RefreshCw} color="bg-warning" onClick={() => setOpenDetail("recapagem")} />
-        <StatCard title="Sucateados" value={sucateados} icon={Circle} color="bg-destructive" onClick={() => setOpenDetail("sucata")} />
-        <StatCard title="Alertas Críticos" value={alertasCriticos} icon={Bell} color="bg-destructive" onClick={() => setOpenDetail("alertas")} />
-        <StatCard title="Custo Acumulado" value={`R$ ${custoTotal.toLocaleString("pt-BR")}`} icon={DollarSign} color="bg-primary" onClick={() => setOpenDetail("custo")} />
+        <StatCard title="Recapagem" value={emRecapagem} icon={RefreshCw} color="bg-warning" onClick={() => setOpenDetail("recapagem")} />
+        <StatCard title="Sucata" value={sucateados} icon={Circle} color="bg-destructive" onClick={() => setOpenDetail("sucata")} />
+        <StatCard title="Alertas" value={alertasCriticos} icon={Bell} color="bg-destructive" onClick={() => setOpenDetail("alertas")} />
+        <StatCard title="Custo Total" value={`R$ ${custoTotal.toLocaleString("pt-BR")}`} icon={DollarSign} color="bg-primary" onClick={() => setOpenDetail("custo")} />
       </div>
 
       {/* Fuel Section */}
-      <h2 className="text-lg font-semibold mt-2">Combustível</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Abastecimentos" value={totalAbastecimentos} icon={Fuel} color="bg-warning" onClick={() => setOpenDetail("combustivel")} />
-        <StatCard title="Total Litros" value={`${totalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L`} icon={Droplets} color="bg-primary" onClick={() => setOpenDetail("combustivel")} />
-        <StatCard title="Gasto Total" value={`R$ ${totalGastoCombustivel.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`} icon={DollarSign} color="bg-destructive" onClick={() => setOpenDetail("combustivel")} />
-        <StatCard title="Média km/L" value={mediaKmPorLitro > 0 ? mediaKmPorLitro.toFixed(2) : "—"} icon={TrendingUp} color="bg-success" onClick={() => setOpenDetail("combustivel")} />
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Combustível</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard title="Abastecimentos" value={totalAbastecimentos} icon={Fuel} color="bg-warning" onClick={() => setOpenDetail("combustivel")} />
+          <StatCard title="Litros" value={`${totalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L`} icon={Droplets} color="bg-primary" onClick={() => setOpenDetail("combustivel")} />
+          <StatCard title="Gasto" value={`R$ ${totalGastoCombustivel.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`} icon={DollarSign} color="bg-destructive" onClick={() => setOpenDetail("combustivel")} />
+          <StatCard title="Média km/L" value={mediaKmPorLitro > 0 ? mediaKmPorLitro.toFixed(2) : "—"} icon={TrendingUp} color="bg-success" onClick={() => setOpenDetail("combustivel")} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
