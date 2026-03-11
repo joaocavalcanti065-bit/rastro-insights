@@ -88,7 +88,7 @@ export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate, onTransfe
                 <TableHead>Dias Parado</TableHead>
                 <TableHead>Custo</TableHead>
                 <TableHead>Status</TableHead>
-              </TableRow>
+                <TableHead className="w-12">Ações</TableHead>
             </TableHeader>
             <TableBody>
               {filtered.map(p => {
