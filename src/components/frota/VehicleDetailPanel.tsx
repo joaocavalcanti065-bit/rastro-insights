@@ -15,7 +15,7 @@ import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Truck, Circle, Fuel, Wrench, Plus, Gauge, DollarSign } from "lucide-react";
+import { Truck, Circle, Fuel, Wrench, Plus, Gauge, DollarSign, Ruler } from "lucide-react";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
 
@@ -75,6 +75,19 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
     },
   });
 
+  // ---- Medições de pneus ----
+  const { data: medicoes = [] } = useQuery({
+    queryKey: ["medicoes-veiculo", veiculo.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("coleta_manual_pneus")
+        .select("*")
+        .eq("veiculo_id", veiculo.id)
+        .order("data_medicao", { ascending: false });
+      return data || [];
+    },
+  });
+
   return (
     <>
       <DialogHeader>
@@ -88,9 +101,10 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
       </DialogHeader>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="resumo" className="text-xs">Resumo</TabsTrigger>
           <TabsTrigger value="pneu" className="text-xs">+ Pneu</TabsTrigger>
+          <TabsTrigger value="medicoes" className="text-xs">Medições</TabsTrigger>
           <TabsTrigger value="combustivel" className="text-xs">Combustível</TabsTrigger>
           <TabsTrigger value="manutencao" className="text-xs">Manutenção</TabsTrigger>
         </TabsList>
@@ -170,7 +184,48 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
           }} />
         </TabsContent>
 
-        {/* ===== COMBUSTÍVEL ===== */}
+        {/* ===== MEDIÇÕES ===== */}
+        <TabsContent value="medicoes" className="mt-4">
+          <MedicaoForm veiculoId={veiculo.id} clienteId={veiculo.cliente_id} onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["medicoes-veiculo", veiculo.id] });
+            queryClient.invalidateQueries({ queryKey: ["pneus-veiculo", veiculo.id] });
+            queryClient.invalidateQueries({ queryKey: ["pneus-frota-map", veiculo.id] });
+          }} />
+          {medicoes.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Histórico de Medições</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Data</TableHead>
+                      <TableHead className="text-xs">Posição</TableHead>
+                      <TableHead className="text-xs">Sulco</TableHead>
+                      <TableHead className="text-xs">Pressão</TableHead>
+                      <TableHead className="text-xs">Km</TableHead>
+                      <TableHead className="text-xs">Obs</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {medicoes.map((m: any) => (
+                      <TableRow key={m.id}>
+                        <TableCell className="text-xs">{m.data_medicao}</TableCell>
+                        <TableCell className="text-xs font-mono">{m.posicao_pneu}</TableCell>
+                        <TableCell className="text-xs">{m.sulco_atual}mm</TableCell>
+                        <TableCell className="text-xs">{m.pressao_atual} psi</TableCell>
+                        <TableCell className="text-xs">{m.km_atual?.toLocaleString()}</TableCell>
+                        <TableCell className="text-xs max-w-[100px] truncate">{m.observacoes || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         <TabsContent value="combustivel" className="mt-4">
           <CombustivelForm veiculoId={veiculo.id} clienteId={veiculo.cliente_id} onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["combustivel-veiculo", veiculo.id] });
@@ -578,6 +633,145 @@ function ManutencaoForm({ veiculoId, onSuccess }: { veiculoId: string; onSuccess
         </div>
         <Button className="w-full" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
           {mutation.isPending ? "Salvando..." : "Registrar Manutenção"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ===================== MEDIÇÃO FORM =====================
+function MedicaoForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; clienteId: string; onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    posicao_pneu: "", sulco_atual: "", pressao_atual: "", pressao_recomendada: "110",
+    km_atual: "", observacoes: "", data_medicao: new Date(),
+  });
+
+  const { data: pneusVeiculo = [] } = useQuery({
+    queryKey: ["pneus-medicao", veiculoId],
+    queryFn: async () => {
+      const { data } = await supabase.from("pneus").select("id, id_unico, posicao_atual, sulco_atual, pressao_ideal").eq("veiculo_id", veiculoId);
+      return data || [];
+    },
+  });
+
+  const [selectedPneuId, setSelectedPneuId] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!form.sulco_atual || !form.pressao_atual || !form.km_atual) throw new Error("Preencha sulco, pressão e km");
+      
+      const selectedPneu = pneusVeiculo.find((p: any) => p.id === selectedPneuId);
+      const sulcoAnterior = selectedPneu?.sulco_atual || null;
+      const sulcoAtual = Number(form.sulco_atual);
+      const pressaoAtual = Number(form.pressao_atual);
+      const pressaoRecomendada = Number(form.pressao_recomendada);
+      const kmAtual = Number(form.km_atual);
+
+      const { error } = await supabase.from("coleta_manual_pneus").insert({
+        veiculo_id: veiculoId,
+        cliente_id: clienteId,
+        posicao_pneu: form.posicao_pneu || selectedPneu?.posicao_atual || "N/D",
+        sulco_atual: sulcoAtual,
+        sulco_anterior: sulcoAnterior,
+        sulco_variacao: sulcoAnterior ? sulcoAnterior - sulcoAtual : null,
+        pressao_atual: pressaoAtual,
+        pressao_recomendada: pressaoRecomendada,
+        pressao_diferenca: pressaoAtual - pressaoRecomendada,
+        km_atual: kmAtual,
+        data_medicao: format(form.data_medicao, "yyyy-MM-dd"),
+        observacoes: form.observacoes || null,
+      });
+      if (error) throw error;
+
+      // Update pneu current values
+      if (selectedPneuId) {
+        await supabase.from("pneus").update({
+          sulco_atual: sulcoAtual,
+          pressao_atual: pressaoAtual,
+          km_atual: kmAtual,
+        }).eq("id", selectedPneuId);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Medição registrada!");
+      onSuccess();
+      setForm({ posicao_pneu: "", sulco_atual: "", pressao_atual: "", pressao_recomendada: "110", km_atual: "", observacoes: "", data_medicao: new Date() });
+      setSelectedPneuId("");
+    },
+    onError: (e: any) => toast.error(e.message || "Erro ao registrar medição"),
+  });
+
+  const handlePneuSelect = (pneuId: string) => {
+    setSelectedPneuId(pneuId);
+    const pneu = pneusVeiculo.find((p: any) => p.id === pneuId);
+    if (pneu) {
+      setForm(prev => ({
+        ...prev,
+        posicao_pneu: pneu.posicao_atual || "",
+        pressao_recomendada: String(pneu.pressao_ideal || 110),
+      }));
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2"><Ruler className="h-4 w-4" /> Registrar Medição de Sulco & Pressão</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Pneu</Label>
+            <Select value={selectedPneuId} onValueChange={handlePneuSelect}>
+              <SelectTrigger><SelectValue placeholder="Selecione o pneu" /></SelectTrigger>
+              <SelectContent>
+                {pneusVeiculo.map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.id_unico} {p.posicao_atual ? `(${p.posicao_atual})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Data da Medição</Label>
+            <RetroactiveDatePicker
+              date={form.data_medicao}
+              onDateChange={(d) => setForm({ ...form, data_medicao: d || new Date() })}
+              label=""
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs">Posição</Label>
+            <Input placeholder="Ex: D1E" value={form.posicao_pneu} onChange={e => setForm({ ...form, posicao_pneu: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Sulco Atual (mm) *</Label>
+            <Input type="number" step="0.1" placeholder="Ex: 12.5" value={form.sulco_atual} onChange={e => setForm({ ...form, sulco_atual: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Pressão Atual (psi) *</Label>
+            <Input type="number" placeholder="Ex: 105" value={form.pressao_atual} onChange={e => setForm({ ...form, pressao_atual: e.target.value })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Km Atual *</Label>
+            <Input type="number" placeholder="Ex: 150000" value={form.km_atual} onChange={e => setForm({ ...form, km_atual: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Pressão Recomendada (psi)</Label>
+            <Input type="number" value={form.pressao_recomendada} onChange={e => setForm({ ...form, pressao_recomendada: e.target.value })} />
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs">Observações</Label>
+          <Input placeholder="Desgaste irregular, calibragem pendente..." value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} />
+        </div>
+        <Button className="w-full" onClick={() => mutation.mutate()} disabled={!form.sulco_atual || !form.pressao_atual || !form.km_atual || mutation.isPending}>
+          {mutation.isPending ? "Salvando..." : "Registrar Medição"}
         </Button>
       </CardContent>
     </Card>
