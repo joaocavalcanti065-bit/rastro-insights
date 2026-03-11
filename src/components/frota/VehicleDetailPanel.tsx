@@ -15,7 +15,7 @@ import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Truck, Circle, Fuel, Wrench, Plus, Gauge, DollarSign } from "lucide-react";
+import { Truck, Circle, Fuel, Wrench, Plus, Gauge, DollarSign, Ruler } from "lucide-react";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
 
