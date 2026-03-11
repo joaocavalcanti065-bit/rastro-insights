@@ -45,7 +45,7 @@ export default function PneuProfilePage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("movimentacoes_pneus")
-        .select("*")
+        .select("*, veiculo_destino:veiculo_destino_id(id, placa, frota, modelo), veiculo_origem:veiculo_origem_id(id, placa, frota, modelo)")
         .eq("pneu_id", pneu!.id)
         .order("data_movimentacao", { ascending: false });
       return data || [];
