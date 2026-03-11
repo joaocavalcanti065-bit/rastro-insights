@@ -193,6 +193,9 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
             queryClient.invalidateQueries({ queryKey: ["pneus-frota-map", veiculo.id] });
           }} />
           {medicoes.length > 0 && (
+            <MedicoesCharts medicoes={medicoes} />
+          )}
+          {medicoes.length > 0 && (
             <Card className="mt-4">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Histórico de Medições</CardTitle>
