@@ -225,6 +225,10 @@ export default function EficienciaPage() {
               <SelectItem value="medida">Por Medida</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" onClick={handleCheckCpkAlerts} disabled={checkingAlerts} className="gap-2">
+            {checkingAlerts ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
+            Verificar alertas CPK
+          </Button>
         </div>
       </div>
 
