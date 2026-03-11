@@ -27,6 +27,7 @@ export default function EstoquePage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [inventarioOpen, setInventarioOpen] = useState(false);
   const [view, setView] = useState<"medida" | "lista">("medida");
+  const [saidaPreset, setSaidaPreset] = useState<{ pneuId?: string; motivo?: string }>({});
 
   const { data: pneus, isLoading, refetch } = useQuery({
     queryKey: ["pneus-estoque-all"],
