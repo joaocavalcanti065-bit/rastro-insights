@@ -26,6 +26,8 @@ interface PneuTrend {
 }
 
 export default function CpkTrendPanel() {
+  const [periodo, setPeriodo] = useState("12");
+
   const { data: pneus, isLoading } = useQuery({
     queryKey: ["cpk-trend-pneus"],
     queryFn: async () => {
@@ -43,25 +45,19 @@ export default function CpkTrendPanel() {
   const { trendData, brands } = useMemo(() => {
     if (!pneus || pneus.length === 0) return { trendData: [], brands: [] };
 
-    // Group tires by month of creation and calculate cumulative CPK by brand
     const allBrands = [...new Set(pneus.map((p) => p.marca))].sort();
-
-    // Generate monthly timeline from earliest tire to now
-    const dates = pneus.map((p) => new Date(p.created_at));
-    const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
     const now = new Date();
+    const mesesFiltro = Number(periodo);
+    const dataInicio = new Date(now.getFullYear(), now.getMonth() - mesesFiltro, 1);
 
-    // Generate months
     const months: Date[] = [];
-    const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    const cursor = new Date(dataInicio);
     while (cursor <= now) {
       months.push(new Date(cursor));
       cursor.setMonth(cursor.getMonth() + 1);
     }
-    // Ensure at least current month
     if (months.length === 0) months.push(new Date(now.getFullYear(), now.getMonth(), 1));
 
-    // For each month, calculate cumulative CPK per brand (all tires created up to that month)
     const data = months.map((month) => {
       const endOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59);
       const label = `${String(month.getMonth() + 1).padStart(2, "0")}/${month.getFullYear()}`;
@@ -91,7 +87,7 @@ export default function CpkTrendPanel() {
     });
 
     return { trendData: data, brands: allBrands };
-  }, [pneus]);
+  }, [pneus, periodo]);
 
   if (isLoading) {
     return (
