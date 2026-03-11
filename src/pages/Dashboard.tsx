@@ -236,14 +236,14 @@ type DetailType = "veiculos" | "pneus" | "operacao" | "estoque" | "recapagem" | 
 
 function StatCard({ title, value, icon: Icon, color, onClick }: { title: string; value: string | number; icon: any; color: string; onClick?: () => void }) {
   return (
-    <Card className="cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]" onClick={onClick}>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className={`rounded-xl p-3 ${color}`}>
-          <Icon className="h-5 w-5 text-primary-foreground" />
+    <Card className="cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.98] border-border/50" onClick={onClick}>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className={`rounded-lg p-2.5 ${color}`}>
+          <Icon className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{title}</p>
+          <p className="text-xl font-bold tracking-tight">{value}</p>
         </div>
       </CardContent>
     </Card>
