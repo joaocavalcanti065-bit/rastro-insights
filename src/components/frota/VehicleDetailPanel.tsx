@@ -101,9 +101,10 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
       </DialogHeader>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="resumo" className="text-xs">Resumo</TabsTrigger>
           <TabsTrigger value="pneu" className="text-xs">+ Pneu</TabsTrigger>
+          <TabsTrigger value="medicoes" className="text-xs">Medições</TabsTrigger>
           <TabsTrigger value="combustivel" className="text-xs">Combustível</TabsTrigger>
           <TabsTrigger value="manutencao" className="text-xs">Manutenção</TabsTrigger>
         </TabsList>
