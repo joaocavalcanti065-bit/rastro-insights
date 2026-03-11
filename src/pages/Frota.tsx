@@ -52,6 +52,18 @@ export default function Frota() {
     },
   });
 
+  const { data: alertasAtivos } = useQuery({
+    queryKey: ["alertas-frota-ativos"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("alertas")
+        .select("id, veiculo_id, pneu_id, tipo_alerta, gravidade, mensagem")
+        .eq("ativo", true)
+        .in("gravidade", ["critico", "atencao"]);
+      return data || [];
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: async () => {
       // Get or create default client
