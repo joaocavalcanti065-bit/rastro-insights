@@ -307,6 +307,7 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos, p
                isPreset && motivo === "instalacao" ? "Confirmar Instalação" :
                isPreset && motivo === "recapagem" ? "Confirmar Envio para Recapagem" :
                "Confirmar Saída"}
+            </Button>
           </div>
         </div>
       </DialogContent>
