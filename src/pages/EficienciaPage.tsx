@@ -10,6 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import CpkTrendPanel from "@/components/eficiencia/CpkTrendPanel";
 
 interface PneuRow {
   id: string;
