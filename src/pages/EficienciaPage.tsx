@@ -51,6 +51,24 @@ interface GroupData {
 export default function EficienciaPage() {
   const [groupBy, setGroupBy] = useState<"marca" | "modelo" | "medida">("marca");
   const [filterMedida, setFilterMedida] = useState<string>("all");
+  const [checkingAlerts, setCheckingAlerts] = useState(false);
+
+  const handleCheckCpkAlerts = async () => {
+    setCheckingAlerts(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-cpk-alerts");
+      if (error) throw error;
+      if (data?.alerts_created > 0) {
+        toast.warning(`${data.alerts_created} alerta(s) de CPK elevado criado(s)! Threshold: R$ ${data.threshold}/km`);
+      } else {
+        toast.success(`Nenhuma marca com CPK acima do dobro da média (R$ ${data?.threshold}/km).`);
+      }
+    } catch (err: any) {
+      toast.error("Erro ao verificar alertas: " + (err.message || "erro desconhecido"));
+    } finally {
+      setCheckingAlerts(false);
+    }
+  };
 
   const { data: pneus, isLoading } = useQuery({
     queryKey: ["eficiencia-pneus"],
