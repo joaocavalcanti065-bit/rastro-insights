@@ -125,7 +125,19 @@ export default function EstoquePage() {
               <EstoqueVisaoMedida pneus={pneus} reservedIds={reservedIds} onEntrada={() => setEntradaOpen(true)} onReservar={() => setReservaOpen(true)} />
             </TabsContent>
             <TabsContent value="lista">
-              <EstoqueListaCompleta pneus={pneus} reservedIds={reservedIds} onNavigate={(rg) => navigate(`/pneu/${rg}`)} />
+              <EstoqueListaCompleta
+                pneus={pneus}
+                reservedIds={reservedIds}
+                onNavigate={(rg) => navigate(`/pneu/${rg}`)}
+                onTransferToVehicle={(pneuId) => {
+                  setSaidaPreset({ pneuId, motivo: "instalacao" });
+                  setSaidaOpen(true);
+                }}
+                onTransferToRetread={(pneuId) => {
+                  setSaidaPreset({ pneuId, motivo: "recapagem" });
+                  setSaidaOpen(true);
+                }}
+              />
             </TabsContent>
           </Tabs>
         </>
