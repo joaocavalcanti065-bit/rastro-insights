@@ -184,7 +184,48 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
           }} />
         </TabsContent>
 
-        {/* ===== COMBUSTÍVEL ===== */}
+        {/* ===== MEDIÇÕES ===== */}
+        <TabsContent value="medicoes" className="mt-4">
+          <MedicaoForm veiculoId={veiculo.id} clienteId={veiculo.cliente_id} onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["medicoes-veiculo", veiculo.id] });
+            queryClient.invalidateQueries({ queryKey: ["pneus-veiculo", veiculo.id] });
+            queryClient.invalidateQueries({ queryKey: ["pneus-frota-map", veiculo.id] });
+          }} />
+          {medicoes.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Histórico de Medições</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Data</TableHead>
+                      <TableHead className="text-xs">Posição</TableHead>
+                      <TableHead className="text-xs">Sulco</TableHead>
+                      <TableHead className="text-xs">Pressão</TableHead>
+                      <TableHead className="text-xs">Km</TableHead>
+                      <TableHead className="text-xs">Obs</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {medicoes.map((m: any) => (
+                      <TableRow key={m.id}>
+                        <TableCell className="text-xs">{m.data_medicao}</TableCell>
+                        <TableCell className="text-xs font-mono">{m.posicao_pneu}</TableCell>
+                        <TableCell className="text-xs">{m.sulco_atual}mm</TableCell>
+                        <TableCell className="text-xs">{m.pressao_atual} psi</TableCell>
+                        <TableCell className="text-xs">{m.km_atual?.toLocaleString()}</TableCell>
+                        <TableCell className="text-xs max-w-[100px] truncate">{m.observacoes || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         <TabsContent value="combustivel" className="mt-4">
           <CombustivelForm veiculoId={veiculo.id} clienteId={veiculo.cliente_id} onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["combustivel-veiculo", veiculo.id] });
