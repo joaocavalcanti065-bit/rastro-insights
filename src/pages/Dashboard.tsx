@@ -230,20 +230,20 @@ function TimelineChart({ data, label, color = "hsl(var(--primary))" }: { data: {
   );
 }
 
-const COLORS = ["hsl(239,84%,67%)", "hsl(142,76%,36%)", "hsl(38,92%,50%)", "hsl(0,84%,60%)", "hsl(280,60%,50%)"];
+const COLORS = ["hsl(215,60%,22%)", "hsl(199,89%,48%)", "hsl(160,60%,40%)", "hsl(38,92%,50%)", "hsl(0,72%,51%)"];
 
 type DetailType = "veiculos" | "pneus" | "operacao" | "estoque" | "recapagem" | "sucata" | "alertas" | "custo" | "combustivel" | null;
 
 function StatCard({ title, value, icon: Icon, color, onClick }: { title: string; value: string | number; icon: any; color: string; onClick?: () => void }) {
   return (
-    <Card className="cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]" onClick={onClick}>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className={`rounded-xl p-3 ${color}`}>
-          <Icon className="h-5 w-5 text-primary-foreground" />
+    <Card className="cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.98] border-border/50" onClick={onClick}>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className={`rounded-lg p-2.5 ${color}`}>
+          <Icon className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{title}</p>
+          <p className="text-xl font-bold tracking-tight">{value}</p>
         </div>
       </CardContent>
     </Card>
@@ -965,35 +965,38 @@ export default function Dashboard() {
 
   if (!hasData) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="space-y-6 bg-data-watermark min-h-full">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight">Painel de Controle</h1>
+          <p className="text-xs text-muted-foreground">Configure seu portal para começar a monitorar</p>
+        </div>
         <EmptyState
           icon={BarChart3}
-          title="Bem-vindo à Rastro"
-          description="Comece cadastrando sua frota e seus pneus. Após o cadastro, seu dashboard será automaticamente preenchido com métricas e análises em tempo real."
+          title="Bem-vindo ao Rastro Insights"
+          description="Comece cadastrando sua frota e seus pneus. Seu painel será preenchido automaticamente com métricas e análises em tempo real."
           actionLabel="Cadastrar Veículo"
           onAction={() => window.location.href = "/frota"}
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-dashed border-2">
-            <CardContent className="p-6 text-center">
-              <Truck className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-              <p className="font-medium">1. Cadastre sua Frota</p>
-              <p className="text-sm text-muted-foreground mt-1">Adicione seus veículos com tipo e placa</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Card className="border-dashed border border-border/50">
+            <CardContent className="p-5 text-center">
+              <Truck className="h-5 w-5 mx-auto mb-3 text-muted-foreground" strokeWidth={1.5} />
+              <p className="text-sm font-medium">1. Cadastre sua Frota</p>
+              <p className="text-xs text-muted-foreground mt-1">Adicione veículos com tipo e placa</p>
             </CardContent>
           </Card>
-          <Card className="border-dashed border-2">
-            <CardContent className="p-6 text-center">
-              <Circle className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-              <p className="font-medium">2. Cadastre seus Pneus</p>
-              <p className="text-sm text-muted-foreground mt-1">Cada pneu recebe um QR Code único</p>
+          <Card className="border-dashed border border-border/50">
+            <CardContent className="p-5 text-center">
+              <Circle className="h-5 w-5 mx-auto mb-3 text-muted-foreground" strokeWidth={1.5} />
+              <p className="text-sm font-medium">2. Cadastre seus Pneus</p>
+              <p className="text-xs text-muted-foreground mt-1">Cada pneu recebe um QR Code único</p>
             </CardContent>
           </Card>
-          <Card className="border-dashed border-2">
-            <CardContent className="p-6 text-center">
-              <BarChart3 className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-              <p className="font-medium">3. Acompanhe Aqui</p>
-              <p className="text-sm text-muted-foreground mt-1">KPIs, alertas e economia em tempo real</p>
+          <Card className="border-dashed border border-border/50">
+            <CardContent className="p-5 text-center">
+              <BarChart3 className="h-5 w-5 mx-auto mb-3 text-muted-foreground" strokeWidth={1.5} />
+              <p className="text-sm font-medium">3. Acompanhe Aqui</p>
+              <p className="text-xs text-muted-foreground mt-1">KPIs, alertas e economia em tempo real</p>
             </CardContent>
           </Card>
         </div>
@@ -1002,37 +1005,45 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-sm text-muted-foreground -mt-4">Clique em qualquer card para ver o relatório detalhado</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-6 bg-data-watermark min-h-full">
+      {/* Header */}
+      <div className="space-y-1">
+        <h1 className="text-xl font-semibold tracking-tight">Painel de Controle</h1>
+        <p className="text-xs text-muted-foreground">Visão consolidada · Clique em qualquer indicador para análise detalhada</p>
+      </div>
+
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard title="Veículos" value={totalVeiculos} icon={Truck} color="bg-primary" onClick={() => setOpenDetail("veiculos")} />
-        <StatCard title="Pneus Cadastrados" value={totalPneus} icon={Circle} color="bg-primary" onClick={() => setOpenDetail("pneus")} />
+        <StatCard title="Pneus" value={totalPneus} icon={Circle} color="bg-primary" onClick={() => setOpenDetail("pneus")} />
         <StatCard title="Em Operação" value={emOperacao} icon={Circle} color="bg-success" onClick={() => setOpenDetail("operacao")} />
         <StatCard title="Em Estoque" value={emEstoque} icon={Package} color="bg-muted" onClick={() => setOpenDetail("estoque")} />
-        <StatCard title="Em Recapagem" value={emRecapagem} icon={RefreshCw} color="bg-warning" onClick={() => setOpenDetail("recapagem")} />
-        <StatCard title="Sucateados" value={sucateados} icon={Circle} color="bg-destructive" onClick={() => setOpenDetail("sucata")} />
-        <StatCard title="Alertas Críticos" value={alertasCriticos} icon={Bell} color="bg-destructive" onClick={() => setOpenDetail("alertas")} />
-        <StatCard title="Custo Acumulado" value={`R$ ${custoTotal.toLocaleString("pt-BR")}`} icon={DollarSign} color="bg-primary" onClick={() => setOpenDetail("custo")} />
+        <StatCard title="Recapagem" value={emRecapagem} icon={RefreshCw} color="bg-warning" onClick={() => setOpenDetail("recapagem")} />
+        <StatCard title="Sucata" value={sucateados} icon={Circle} color="bg-destructive" onClick={() => setOpenDetail("sucata")} />
+        <StatCard title="Alertas" value={alertasCriticos} icon={Bell} color="bg-destructive" onClick={() => setOpenDetail("alertas")} />
+        <StatCard title="Custo Total" value={`R$ ${custoTotal.toLocaleString("pt-BR")}`} icon={DollarSign} color="bg-primary" onClick={() => setOpenDetail("custo")} />
       </div>
 
       {/* Fuel Section */}
-      <h2 className="text-lg font-semibold mt-2">Combustível</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Abastecimentos" value={totalAbastecimentos} icon={Fuel} color="bg-warning" onClick={() => setOpenDetail("combustivel")} />
-        <StatCard title="Total Litros" value={`${totalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L`} icon={Droplets} color="bg-primary" onClick={() => setOpenDetail("combustivel")} />
-        <StatCard title="Gasto Total" value={`R$ ${totalGastoCombustivel.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`} icon={DollarSign} color="bg-destructive" onClick={() => setOpenDetail("combustivel")} />
-        <StatCard title="Média km/L" value={mediaKmPorLitro > 0 ? mediaKmPorLitro.toFixed(2) : "—"} icon={TrendingUp} color="bg-success" onClick={() => setOpenDetail("combustivel")} />
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Combustível</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard title="Abastecimentos" value={totalAbastecimentos} icon={Fuel} color="bg-warning" onClick={() => setOpenDetail("combustivel")} />
+          <StatCard title="Litros" value={`${totalLitros.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} L`} icon={Droplets} color="bg-primary" onClick={() => setOpenDetail("combustivel")} />
+          <StatCard title="Gasto" value={`R$ ${totalGastoCombustivel.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`} icon={DollarSign} color="bg-destructive" onClick={() => setOpenDetail("combustivel")} />
+          <StatCard title="Média km/L" value={mediaKmPorLitro > 0 ? mediaKmPorLitro.toFixed(2) : "—"} icon={TrendingUp} color="bg-success" onClick={() => setOpenDetail("combustivel")} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {statusDistribution.length > 0 && (
-          <Card>
-            <CardHeader><CardTitle className="text-base">Distribuição de Pneus</CardTitle></CardHeader>
-            <CardContent className="h-64">
+          <Card className="border-border/50">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Distribuição de Pneus</CardTitle></CardHeader>
+            <CardContent className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={statusDistribution} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                  <Pie data={statusDistribution} cx="50%" cy="50%" outerRadius={75} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
                     {statusDistribution.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
@@ -1042,12 +1053,12 @@ export default function Dashboard() {
           </Card>
         )}
         {economiaRecapagem > 0 && (
-          <Card>
-            <CardHeader><CardTitle className="text-base">Economia com Recapagem</CardTitle></CardHeader>
-            <CardContent className="flex flex-col items-center justify-center h-64">
-              <TrendingDown className="h-12 w-12 text-success mb-4" />
-              <p className="text-4xl font-bold text-success">R$ {economiaRecapagem.toLocaleString("pt-BR")}</p>
-              <p className="text-sm text-muted-foreground mt-2">Estimativa vs. compra de pneus novos</p>
+          <Card className="border-border/50">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Economia com Recapagem</CardTitle></CardHeader>
+            <CardContent className="flex flex-col items-center justify-center h-56">
+              <TrendingDown className="h-10 w-10 text-success mb-3" strokeWidth={1.5} />
+              <p className="text-3xl font-bold text-success tracking-tight">R$ {economiaRecapagem.toLocaleString("pt-BR")}</p>
+              <p className="text-xs text-muted-foreground mt-2">Estimativa vs. compra de pneus novos</p>
             </CardContent>
           </Card>
         )}
@@ -1068,12 +1079,12 @@ export default function Dashboard() {
 }
 
 function DetailTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
-  if (rows.length === 0) return <p className="text-sm text-muted-foreground text-center py-4">Nenhum registro encontrado.</p>;
+  if (rows.length === 0) return <p className="text-xs text-muted-foreground text-center py-4">Nenhum registro encontrado.</p>;
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead><tr className="bg-muted">{headers.map(h => <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground">{h}</th>)}</tr></thead>
-        <tbody>{rows.map((row, i) => <tr key={i} className="border-t">{row.map((cell, j) => <td key={j} className="px-3 py-2">{cell}</td>)}</tr>)}</tbody>
+    <div className="overflow-x-auto rounded-lg border border-border/50">
+      <table className="w-full text-xs">
+        <thead><tr className="bg-muted/50">{headers.map(h => <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground uppercase tracking-wide text-[10px]">{h}</th>)}</tr></thead>
+        <tbody>{rows.map((row, i) => <tr key={i} className="border-t border-border/30">{row.map((cell, j) => <td key={j} className="px-3 py-2">{cell}</td>)}</tr>)}</tbody>
       </table>
     </div>
   );

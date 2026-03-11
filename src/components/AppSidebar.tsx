@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Truck, Circle, Package, MapPin, RefreshCw,
-  Wrench, Bell, FileText, Settings, Link2, Cog, LogOut
+  Wrench, Bell, FileText, Settings, Link2, Cog, LogOut, Activity
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,12 +42,14 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-6">
-            <div className="flex items-center gap-2">
-              <img src={logoRastro} alt="Logo Rastro" className="h-10 w-auto rounded" />
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-sidebar-primary/10 flex items-center justify-center shrink-0">
+                <Activity className="h-5 w-5 text-sidebar-primary" strokeWidth={1.5} />
+              </div>
               {open && (
                 <div className="flex flex-col">
-                  <span className="font-bold text-base leading-tight">Rastro</span>
-                  <span className="text-[10px] text-sidebar-foreground/60 leading-tight">Pneus, Estoque e Recapagem</span>
+                  <span className="font-semibold text-sm tracking-tight text-sidebar-foreground">Rastro Insights</span>
+                  <span className="text-[10px] text-sidebar-foreground/50 tracking-wide uppercase">Inteligência Logística</span>
                 </div>
               )}
             </div>
@@ -60,14 +62,14 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm ${
+                        `flex items-center gap-3 px-4 py-2 rounded-md transition-all text-[13px] ${
                           isActive
                             ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                         }`
                       }
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
+                      <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
                       {open && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -77,10 +79,10 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-3">
-        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive" onClick={handleLogout}>
-          <LogOut className="h-4 w-4" />
-          {open && <span>Sair</span>}
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
+        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sidebar-foreground/50 hover:text-destructive text-xs" onClick={handleLogout}>
+          <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
+          {open && <span>Encerrar sessão</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
