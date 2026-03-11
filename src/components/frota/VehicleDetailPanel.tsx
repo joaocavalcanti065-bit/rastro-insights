@@ -742,8 +742,23 @@ function MedicaoForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; c
       }
     },
     onSuccess: () => {
+      const sulcoVal = Number(form.sulco_atual);
+      const pressaoVal = Number(form.pressao_atual);
+      const pressaoRec = Number(form.pressao_recomendada);
+      const desvio = Math.abs(pressaoVal - pressaoRec) / pressaoRec;
+
+      if (sulcoVal < 3) {
+        toast.warning(`⚠️ Sulco crítico: ${sulcoVal}mm — abaixo do limite de segurança!`);
+      } else if (sulcoVal < 5) {
+        toast.warning(`Sulco em atenção: ${sulcoVal}mm — próximo do limite`);
+      }
+      if (desvio > 0.10) {
+        toast.warning(`⚠️ Pressão com desvio de ${(desvio * 100).toFixed(0)}% do ideal!`);
+      }
+
       toast.success("Medição registrada!");
       onSuccess();
+      queryClient.invalidateQueries({ queryKey: ["alertas"] });
       setForm({ posicao_pneu: "", sulco_atual: "", pressao_atual: "", pressao_recomendada: "110", km_atual: "", observacoes: "", data_medicao: new Date() });
       setSelectedPneuId("");
     },
