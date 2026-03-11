@@ -16,7 +16,7 @@ interface Props {
   onTransferToRetread?: (pneuId: string) => void;
 }
 
-export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate }: Props) {
+export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate, onTransferToVehicle, onTransferToRetread }: Props) {
   const [search, setSearch] = useState("");
   const [filterMedida, setFilterMedida] = useState("all");
   const [filterCondicao, setFilterCondicao] = useState("all");
