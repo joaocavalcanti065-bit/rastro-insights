@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { VehicleTireLayout } from "@/components/VehicleTireLayout";
+import { VehicleDetailPanel } from "@/components/frota/VehicleDetailPanel";
 import { toast } from "sonner";
 import { Truck, Plus, AlertTriangle, Eye, X } from "lucide-react";
 
