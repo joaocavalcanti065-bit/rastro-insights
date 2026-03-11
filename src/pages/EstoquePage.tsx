@@ -27,6 +27,7 @@ export default function EstoquePage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [inventarioOpen, setInventarioOpen] = useState(false);
   const [view, setView] = useState<"medida" | "lista">("medida");
+  const [saidaPreset, setSaidaPreset] = useState<{ pneuId?: string; motivo?: string }>({});
 
   const { data: pneus, isLoading, refetch } = useQuery({
     queryKey: ["pneus-estoque-all"],
@@ -124,7 +125,19 @@ export default function EstoquePage() {
               <EstoqueVisaoMedida pneus={pneus} reservedIds={reservedIds} onEntrada={() => setEntradaOpen(true)} onReservar={() => setReservaOpen(true)} />
             </TabsContent>
             <TabsContent value="lista">
-              <EstoqueListaCompleta pneus={pneus} reservedIds={reservedIds} onNavigate={(rg) => navigate(`/pneu/${rg}`)} />
+              <EstoqueListaCompleta
+                pneus={pneus}
+                reservedIds={reservedIds}
+                onNavigate={(rg) => navigate(`/pneu/${rg}`)}
+                onTransferToVehicle={(pneuId) => {
+                  setSaidaPreset({ pneuId, motivo: "instalacao" });
+                  setSaidaOpen(true);
+                }}
+                onTransferToRetread={(pneuId) => {
+                  setSaidaPreset({ pneuId, motivo: "recapagem" });
+                  setSaidaOpen(true);
+                }}
+              />
             </TabsContent>
           </Tabs>
         </>
@@ -132,7 +145,7 @@ export default function EstoquePage() {
 
       {/* Modals */}
       <EstoqueEntradaModal open={entradaOpen} onClose={() => setEntradaOpen(false)} onSuccess={refetch} />
-      <EstoqueSaidaModal open={saidaOpen} onClose={() => setSaidaOpen(false)} onSuccess={refetch} pneus={pneus || []} veiculos={veiculos || []} />
+      <EstoqueSaidaModal open={saidaOpen} onClose={() => { setSaidaOpen(false); setSaidaPreset({}); }} onSuccess={refetch} pneus={pneus || []} veiculos={veiculos || []} presetPneuId={saidaPreset.pneuId} presetMotivo={saidaPreset.motivo} />
       <EstoqueReservaModal open={reservaOpen} onClose={() => setReservaOpen(false)} onSuccess={refetch} pneus={pneus || []} reservedIds={reservedIds} veiculos={veiculos || []} />
       <EstoqueCurvaABC open={abcOpen} onClose={() => setAbcOpen(false)} pneus={pneus || []} />
       <EstoqueInventarioModal open={inventarioOpen} onClose={() => setInventarioOpen(false)} pneus={pneus || []} onSuccess={refetch} />

@@ -5,15 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileSpreadsheet } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, FileSpreadsheet, MoreHorizontal, Truck, RefreshCw } from "lucide-react";
 
 interface Props {
   pneus: any[];
   reservedIds: Set<string>;
   onNavigate: (rg: string) => void;
+  onTransferToVehicle?: (pneuId: string) => void;
+  onTransferToRetread?: (pneuId: string) => void;
 }
 
-export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate }: Props) {
+export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate, onTransferToVehicle, onTransferToRetread }: Props) {
   const [search, setSearch] = useState("");
   const [filterMedida, setFilterMedida] = useState("all");
   const [filterCondicao, setFilterCondicao] = useState("all");
@@ -85,6 +88,7 @@ export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate }: Props) 
                 <TableHead>Dias Parado</TableHead>
                 <TableHead>Custo</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-12">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -131,6 +135,25 @@ export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate }: Props) 
                       ) : (
                         <Badge variant="secondary" className="text-xs">Disponível</Badge>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onTransferToVehicle?.(p.id); }}>
+                            <Truck className="h-4 w-4 mr-2" />
+                            Instalar em Veículo
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onTransferToRetread?.(p.id); }}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Enviar para Recapagem
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 );

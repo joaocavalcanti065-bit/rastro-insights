@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,9 +25,11 @@ interface Props {
   onSuccess: () => void;
   pneus: any[];
   veiculos: any[];
+  presetPneuId?: string;
+  presetMotivo?: string;
 }
 
-export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }: Props) {
+export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos, presetPneuId, presetMotivo }: Props) {
   const queryClient = useQueryClient();
   const [pneuId, setPneuId] = useState("");
   const [motivo, setMotivo] = useState("instalacao");
@@ -42,6 +44,13 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }:
   const [valorVenda, setValorVenda] = useState("");
   const [formaPagamento, setFormaPagamento] = useState("pix");
   const [dataSaida, setDataSaida] = useState(new Date());
+
+  useEffect(() => {
+    if (open) {
+      if (presetPneuId) setPneuId(presetPneuId);
+      if (presetMotivo) setMotivo(presetMotivo);
+    }
+  }, [open, presetPneuId, presetMotivo]);
 
   const selected = pneus.find(p => p.id === pneuId);
 
