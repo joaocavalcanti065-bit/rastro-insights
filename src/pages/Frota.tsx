@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { VehicleTireLayout } from "@/components/VehicleTireLayout";
+import { VehicleDetailPanel } from "@/components/frota/VehicleDetailPanel";
 import { toast } from "sonner";
 import { Truck, Plus, AlertTriangle, Eye, X } from "lucide-react";
 
@@ -158,47 +159,9 @@ export default function Frota() {
 
       {/* Vehicle detail modal */}
       <Dialog open={!!selectedVeiculo} onOpenChange={() => setSelectedVeiculo(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {selectedV && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-3">
-                  <Truck className="h-5 w-5 text-primary" />
-                  {selectedV.placa} — {selectedV.tipo_veiculo}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-3 text-sm">
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <span className="text-muted-foreground text-xs">Modelo</span>
-                    <p className="font-medium">{selectedV.modelo || "—"}</p>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <span className="text-muted-foreground text-xs">Categoria</span>
-                    <p className="font-medium">{selectedV.categoria}</p>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <span className="text-muted-foreground text-xs">Eixos</span>
-                    <p className="font-medium">{selectedV.quantidade_eixos}</p>
-                  </div>
-                </div>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Mapa de Pneus</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <VehicleTireLayout
-                      tipoVeiculo={selectedV.tipo_veiculo || "Truck"}
-                      quantidadeEixos={selectedV.quantidade_eixos || 3}
-                      possuiEstepe={selectedV.possui_estepe || false}
-                      quantidadeEstepes={selectedV.quantidade_estepes || 0}
-                      pneus={selectedPneus}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </>
+            <VehicleDetailPanel veiculo={selectedV} onClose={() => setSelectedVeiculo(null)} />
           )}
         </DialogContent>
       </Dialog>

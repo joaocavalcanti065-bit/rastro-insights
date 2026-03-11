@@ -1,0 +1,585 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VehicleTireLayout } from "@/components/VehicleTireLayout";
+import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { Truck, Circle, Fuel, Wrench, Plus, Gauge, DollarSign } from "lucide-react";
+
+const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
+
+interface VehicleDetailPanelProps {
+  veiculo: any;
+  onClose: () => void;
+}
+
+export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps) {
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("resumo");
+
+  // ---- Pneus do veículo ----
+  const { data: pneus = [] } = useQuery({
+    queryKey: ["pneus-veiculo", veiculo.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("pneus").select("*").eq("veiculo_id", veiculo.id);
+      return data || [];
+    },
+  });
+
+  // ---- Todos os pneus (para o mapa) ----
+  const { data: pneusMap = [] } = useQuery({
+    queryKey: ["pneus-frota-map", veiculo.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pneus")
+        .select("id, id_unico, veiculo_id, posicao_atual, sulco_atual, sulco_inicial, pressao_atual, pressao_ideal, marca, medida, status")
+        .eq("veiculo_id", veiculo.id);
+      return data || [];
+    },
+  });
+
+  // ---- Combustível ----
+  const { data: abastecimentos = [] } = useQuery({
+    queryKey: ["combustivel-veiculo", veiculo.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("coleta_manual_combustivel")
+        .select("*")
+        .eq("veiculo_id", veiculo.id)
+        .order("data_abastecimento", { ascending: false });
+      return data || [];
+    },
+  });
+
+  // ---- Manutenções ----
+  const { data: manutencoes = [] } = useQuery({
+    queryKey: ["manutencoes-veiculo", veiculo.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("manutencoes")
+        .select("*")
+        .eq("veiculo_id", veiculo.id)
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+  });
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-3">
+          <Truck className="h-5 w-5 text-primary" />
+          {veiculo.placa} — {veiculo.tipo_veiculo}
+        </DialogTitle>
+        <DialogDescription>
+          {veiculo.modelo || "Veículo"} • {veiculo.categoria} • {veiculo.quantidade_eixos} eixos
+        </DialogDescription>
+      </DialogHeader>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
+        <TabsList className="w-full grid grid-cols-4">
+          <TabsTrigger value="resumo" className="text-xs">Resumo</TabsTrigger>
+          <TabsTrigger value="pneu" className="text-xs">+ Pneu</TabsTrigger>
+          <TabsTrigger value="combustivel" className="text-xs">Combustível</TabsTrigger>
+          <TabsTrigger value="manutencao" className="text-xs">Manutenção</TabsTrigger>
+        </TabsList>
+
+        {/* ===== RESUMO ===== */}
+        <TabsContent value="resumo" className="space-y-4 mt-4">
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div className="bg-muted/50 rounded-lg p-3">
+              <span className="text-muted-foreground text-xs">Modelo</span>
+              <p className="font-medium">{veiculo.modelo || "—"}</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-3">
+              <span className="text-muted-foreground text-xs">Categoria</span>
+              <p className="font-medium">{veiculo.categoria}</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-3">
+              <span className="text-muted-foreground text-xs">Pneus</span>
+              <p className="font-medium">{pneusMap.length} / {veiculo.total_pneus}</p>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Mapa de Pneus</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <VehicleTireLayout
+                tipoVeiculo={veiculo.tipo_veiculo || "Truck"}
+                quantidadeEixos={veiculo.quantidade_eixos || 3}
+                possuiEstepe={veiculo.possui_estepe || false}
+                quantidadeEstepes={veiculo.quantidade_estepes || 0}
+                pneus={pneusMap}
+              />
+            </CardContent>
+          </Card>
+
+          {pneus.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Pneus Instalados</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">ID</TableHead>
+                      <TableHead className="text-xs">Marca</TableHead>
+                      <TableHead className="text-xs">Medida</TableHead>
+                      <TableHead className="text-xs">Sulco</TableHead>
+                      <TableHead className="text-xs">Posição</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pneus.map((p: any) => (
+                      <TableRow key={p.id}>
+                        <TableCell className="text-xs font-mono">{p.id_unico}</TableCell>
+                        <TableCell className="text-xs">{p.marca}</TableCell>
+                        <TableCell className="text-xs">{p.medida}</TableCell>
+                        <TableCell className="text-xs">{p.sulco_atual}mm</TableCell>
+                        <TableCell className="text-xs">{p.posicao_atual || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ===== CADASTRAR PNEU ===== */}
+        <TabsContent value="pneu" className="mt-4">
+          <PneuForm veiculoId={veiculo.id} clienteId={veiculo.cliente_id} onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["pneus-veiculo", veiculo.id] });
+            queryClient.invalidateQueries({ queryKey: ["pneus-frota-map", veiculo.id] });
+            queryClient.invalidateQueries({ queryKey: ["pneus"] });
+            setActiveTab("resumo");
+          }} />
+        </TabsContent>
+
+        {/* ===== COMBUSTÍVEL ===== */}
+        <TabsContent value="combustivel" className="mt-4">
+          <CombustivelForm veiculoId={veiculo.id} clienteId={veiculo.cliente_id} onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["combustivel-veiculo", veiculo.id] });
+          }} />
+          {abastecimentos.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Histórico de Abastecimentos</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Data</TableHead>
+                      <TableHead className="text-xs">Km</TableHead>
+                      <TableHead className="text-xs">Litros</TableHead>
+                      <TableHead className="text-xs">Valor</TableHead>
+                      <TableHead className="text-xs">Consumo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {abastecimentos.map((a: any) => (
+                      <TableRow key={a.id}>
+                        <TableCell className="text-xs">{a.data_abastecimento}</TableCell>
+                        <TableCell className="text-xs">{a.km_atual?.toLocaleString()}</TableCell>
+                        <TableCell className="text-xs">{a.litros_abastecidos}L</TableCell>
+                        <TableCell className="text-xs">R$ {a.valor_total_pago?.toFixed(2)}</TableCell>
+                        <TableCell className="text-xs">
+                          {a.consumo_km_por_litro ? `${a.consumo_km_por_litro.toFixed(2)} km/l` : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ===== MANUTENÇÃO ===== */}
+        <TabsContent value="manutencao" className="mt-4">
+          <ManutencaoForm veiculoId={veiculo.id} onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["manutencoes-veiculo", veiculo.id] });
+          }} />
+          {manutencoes.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Histórico de Manutenções</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Data</TableHead>
+                      <TableHead className="text-xs">Tipo</TableHead>
+                      <TableHead className="text-xs">Custo</TableHead>
+                      <TableHead className="text-xs">Observações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {manutencoes.map((m: any) => (
+                      <TableRow key={m.id}>
+                        <TableCell className="text-xs">{format(new Date(m.created_at), "dd/MM/yyyy")}</TableCell>
+                        <TableCell className="text-xs capitalize">{m.tipo}</TableCell>
+                        <TableCell className="text-xs">R$ {m.custo?.toFixed(2) || "0.00"}</TableCell>
+                        <TableCell className="text-xs max-w-[150px] truncate">{m.observacoes || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+    </>
+  );
+}
+
+// ===================== PNEU FORM =====================
+function PneuForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; clienteId: string; onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    id_unico: "", marca: "Michelin", modelo_pneu: "", medida: "295/80 R22.5",
+    dot: "", sulco_inicial: "16", pressao_ideal: "110", custo_aquisicao: "3200",
+    posicao_atual: "", data_aquisicao: new Date(),
+  });
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!form.id_unico) throw new Error("ID único obrigatório");
+      const qrCode = `RASTRO-${form.id_unico}-${Date.now()}`;
+      const { error } = await supabase.from("pneus").insert({
+        id_unico: form.id_unico,
+        marca: form.marca,
+        modelo_pneu: form.modelo_pneu,
+        medida: form.medida,
+        dot: form.dot,
+        sulco_inicial: Number(form.sulco_inicial),
+        sulco_atual: Number(form.sulco_inicial),
+        pressao_ideal: Number(form.pressao_ideal),
+        custo_aquisicao: Number(form.custo_aquisicao),
+        custo_acumulado: Number(form.custo_aquisicao),
+        data_aquisicao: format(form.data_aquisicao, "yyyy-MM-dd"),
+        posicao_atual: form.posicao_atual || null,
+        veiculo_id: veiculoId,
+        localizacao: "veiculo",
+        status: "instalado",
+        qr_code: qrCode,
+        cliente_id: clienteId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Pneu cadastrado e vinculado ao veículo!");
+      onSuccess();
+      setForm({ id_unico: "", marca: "Michelin", modelo_pneu: "", medida: "295/80 R22.5", dot: "", sulco_inicial: "16", pressao_ideal: "110", custo_aquisicao: "3200", posicao_atual: "", data_aquisicao: new Date() });
+    },
+    onError: (e: any) => toast.error(e.message || "Erro ao cadastrar pneu"),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2"><Plus className="h-4 w-4" /> Cadastrar Pneu neste Veículo</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">ID Único / Nº Fogo *</Label>
+            <Input placeholder="Ex: P-001" value={form.id_unico} onChange={e => setForm({ ...form, id_unico: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Data de Aquisição</Label>
+            <RetroactiveDatePicker
+              date={form.data_aquisicao}
+              onDateChange={(d) => setForm({ ...form, data_aquisicao: d || new Date() })}
+              label=""
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Marca</Label>
+            <Select value={form.marca} onValueChange={v => setForm({ ...form, marca: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{MARCAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Modelo</Label>
+            <Input placeholder="Ex: XZE2+" value={form.modelo_pneu} onChange={e => setForm({ ...form, modelo_pneu: e.target.value })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs">Medida</Label>
+            <Input value={form.medida} onChange={e => setForm({ ...form, medida: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">DOT</Label>
+            <Input placeholder="2524" value={form.dot} onChange={e => setForm({ ...form, dot: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Posição</Label>
+            <Input placeholder="Ex: D1E" value={form.posicao_atual} onChange={e => setForm({ ...form, posicao_atual: e.target.value })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs">Sulco Inicial (mm)</Label>
+            <Input type="number" value={form.sulco_inicial} onChange={e => setForm({ ...form, sulco_inicial: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Pressão Ideal (psi)</Label>
+            <Input type="number" value={form.pressao_ideal} onChange={e => setForm({ ...form, pressao_ideal: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Custo (R$)</Label>
+            <Input type="number" value={form.custo_aquisicao} onChange={e => setForm({ ...form, custo_aquisicao: e.target.value })} />
+          </div>
+        </div>
+        <Button className="w-full" onClick={() => mutation.mutate()} disabled={!form.id_unico || mutation.isPending}>
+          {mutation.isPending ? "Salvando..." : "Cadastrar Pneu"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ===================== COMBUSTÍVEL FORM =====================
+function CombustivelForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; clienteId: string; onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    data_abastecimento: new Date(),
+    km_atual: "", km_anterior: "",
+    litros_abastecidos: "", valor_total_pago: "",
+    tipo_combustivel: "Diesel S10", posto: "", observacoes: "",
+  });
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const kmAtual = Number(form.km_atual);
+      const kmAnterior = form.km_anterior ? Number(form.km_anterior) : null;
+      const litros = Number(form.litros_abastecidos);
+      const valor = Number(form.valor_total_pago);
+      const kmRodado = kmAnterior ? kmAtual - kmAnterior : null;
+      const consumo = kmRodado && litros ? kmRodado / litros : null;
+      const custoKm = kmRodado && valor ? valor / kmRodado : null;
+      const precoLitro = litros ? valor / litros : null;
+
+      const { error } = await supabase.from("coleta_manual_combustivel").insert({
+        veiculo_id: veiculoId,
+        cliente_id: clienteId,
+        data_abastecimento: format(form.data_abastecimento, "yyyy-MM-dd"),
+        km_atual: kmAtual,
+        km_anterior: kmAnterior,
+        km_rodado: kmRodado,
+        litros_abastecidos: litros,
+        valor_total_pago: valor,
+        preco_litro: precoLitro,
+        consumo_km_por_litro: consumo,
+        custo_por_km: custoKm,
+        tipo_combustivel: form.tipo_combustivel,
+        posto: form.posto || null,
+        observacoes: form.observacoes || null,
+        status_eficiencia: consumo ? (consumo >= 3 ? "bom" : consumo >= 2 ? "regular" : "critico") : null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Abastecimento registrado!");
+      onSuccess();
+      setForm({ data_abastecimento: new Date(), km_atual: "", km_anterior: "", litros_abastecidos: "", valor_total_pago: "", tipo_combustivel: "Diesel S10", posto: "", observacoes: "" });
+    },
+    onError: () => toast.error("Erro ao registrar abastecimento"),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2"><Fuel className="h-4 w-4" /> Registrar Abastecimento</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Data</Label>
+            <RetroactiveDatePicker
+              date={form.data_abastecimento}
+              onDateChange={(d) => setForm({ ...form, data_abastecimento: d || new Date() })}
+              label=""
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Combustível</Label>
+            <Select value={form.tipo_combustivel} onValueChange={v => setForm({ ...form, tipo_combustivel: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Diesel S10">Diesel S10</SelectItem>
+                <SelectItem value="Diesel S500">Diesel S500</SelectItem>
+                <SelectItem value="Gasolina">Gasolina</SelectItem>
+                <SelectItem value="Etanol">Etanol</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Km Atual *</Label>
+            <Input type="number" placeholder="Ex: 150000" value={form.km_atual} onChange={e => setForm({ ...form, km_atual: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Km Anterior</Label>
+            <Input type="number" placeholder="Ex: 149500" value={form.km_anterior} onChange={e => setForm({ ...form, km_anterior: e.target.value })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Litros *</Label>
+            <Input type="number" placeholder="Ex: 200" value={form.litros_abastecidos} onChange={e => setForm({ ...form, litros_abastecidos: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Valor Total (R$) *</Label>
+            <Input type="number" placeholder="Ex: 1200" value={form.valor_total_pago} onChange={e => setForm({ ...form, valor_total_pago: e.target.value })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Posto</Label>
+            <Input placeholder="Nome do posto" value={form.posto} onChange={e => setForm({ ...form, posto: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Observações</Label>
+            <Input placeholder="Opcional" value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} />
+          </div>
+        </div>
+        <Button className="w-full" onClick={() => mutation.mutate()} disabled={!form.km_atual || !form.litros_abastecidos || !form.valor_total_pago || mutation.isPending}>
+          {mutation.isPending ? "Salvando..." : "Registrar Abastecimento"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ===================== MANUTENÇÃO FORM =====================
+function ManutencaoForm({ veiculoId, onSuccess }: { veiculoId: string; onSuccess: () => void }) {
+  const [form, setForm] = useState({
+    tipo: "inspecao", causa: "", custo: "", km_no_momento: "", ordem_servico: "", observacoes: "",
+    data: new Date(),
+  });
+
+  const { data: pneusVeiculo = [] } = useQuery({
+    queryKey: ["pneus-manut", veiculoId],
+    queryFn: async () => {
+      const { data } = await supabase.from("pneus").select("id, id_unico").eq("veiculo_id", veiculoId);
+      return data || [];
+    },
+  });
+
+  const [pneuId, setPneuId] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("manutencoes").insert({
+        veiculo_id: veiculoId,
+        pneu_id: pneuId || null,
+        tipo: form.tipo,
+        causa: form.causa || null,
+        custo: form.custo ? Number(form.custo) : 0,
+        km_no_momento: form.km_no_momento ? Number(form.km_no_momento) : null,
+        ordem_servico: form.ordem_servico || null,
+        observacoes: form.observacoes || null,
+        created_at: form.data.toISOString(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Manutenção registrada!");
+      onSuccess();
+      setForm({ tipo: "inspecao", causa: "", custo: "", km_no_momento: "", ordem_servico: "", observacoes: "", data: new Date() });
+      setPneuId("");
+    },
+    onError: () => toast.error("Erro ao registrar manutenção"),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2"><Wrench className="h-4 w-4" /> Registrar Manutenção</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Data</Label>
+            <RetroactiveDatePicker
+              date={form.data}
+              onDateChange={(d) => setForm({ ...form, data: d || new Date() })}
+              label=""
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Tipo</Label>
+            <Select value={form.tipo} onValueChange={v => setForm({ ...form, tipo: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="inspecao">Inspeção</SelectItem>
+                <SelectItem value="reparo">Reparo</SelectItem>
+                <SelectItem value="troca">Troca</SelectItem>
+                <SelectItem value="rodizio">Rodízio</SelectItem>
+                <SelectItem value="calibragem">Calibragem</SelectItem>
+                <SelectItem value="alinhamento">Alinhamento</SelectItem>
+                <SelectItem value="balanceamento">Balanceamento</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Pneu (opcional)</Label>
+            <Select value={pneuId} onValueChange={setPneuId}>
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                {pneusVeiculo.map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>{p.id_unico}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Km no Momento</Label>
+            <Input type="number" value={form.km_no_momento} onChange={e => setForm({ ...form, km_no_momento: e.target.value })} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Custo (R$)</Label>
+            <Input type="number" value={form.custo} onChange={e => setForm({ ...form, custo: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs">Ordem de Serviço</Label>
+            <Input value={form.ordem_servico} onChange={e => setForm({ ...form, ordem_servico: e.target.value })} />
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs">Causa / Observações</Label>
+          <Textarea rows={2} value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} />
+        </div>
+        <Button className="w-full" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          {mutation.isPending ? "Salvando..." : "Registrar Manutenção"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
