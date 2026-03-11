@@ -15,6 +15,7 @@ import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Legend } from "recharts";
 import { Truck, Circle, Fuel, Wrench, Plus, Gauge, DollarSign, Ruler } from "lucide-react";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
@@ -191,6 +192,9 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
             queryClient.invalidateQueries({ queryKey: ["pneus-veiculo", veiculo.id] });
             queryClient.invalidateQueries({ queryKey: ["pneus-frota-map", veiculo.id] });
           }} />
+          {medicoes.length > 0 && (
+            <MedicoesCharts medicoes={medicoes} />
+          )}
           {medicoes.length > 0 && (
             <Card className="mt-4">
               <CardHeader className="pb-2">
@@ -775,5 +779,114 @@ function MedicaoForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; c
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+// ===================== MEDIÇÕES CHARTS =====================
+const CHART_COLORS = [
+  "hsl(215, 60%, 45%)",
+  "hsl(174, 62%, 42%)",
+  "hsl(30, 80%, 55%)",
+  "hsl(280, 50%, 55%)",
+  "hsl(0, 65%, 55%)",
+  "hsl(120, 40%, 45%)",
+];
+
+function MedicoesCharts({ medicoes }: { medicoes: any[] }) {
+  // Group by position for multi-line charts
+  const positions = [...new Set(medicoes.map((m: any) => m.posicao_pneu))];
+
+  // Sort by date ascending for chart
+  const sorted = [...medicoes].sort((a, b) => a.data_medicao.localeCompare(b.data_medicao));
+
+  // Build chart data: each date has sulco/pressao per position
+  const dateMap = new Map<string, any>();
+  sorted.forEach((m: any) => {
+    const key = m.data_medicao;
+    if (!dateMap.has(key)) {
+      dateMap.set(key, { data: format(new Date(key + "T12:00:00"), "dd/MM") });
+    }
+    const entry = dateMap.get(key);
+    entry[`sulco_${m.posicao_pneu}`] = Number(m.sulco_atual);
+    entry[`pressao_${m.posicao_pneu}`] = Number(m.pressao_atual);
+  });
+  const chartData = Array.from(dateMap.values());
+
+  if (chartData.length < 1) return null;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      {/* Sulco Chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Ruler className="h-4 w-4" /> Evolução do Sulco (mm)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 25%)" />
+              <XAxis dataKey="data" tick={{ fontSize: 10, fill: "hsl(215, 20%, 60%)" }} />
+              <YAxis tick={{ fontSize: 10, fill: "hsl(215, 20%, 60%)" }} domain={[0, 'auto']} />
+              <RechartsTooltip
+                contentStyle={{ backgroundColor: "hsl(216, 40%, 12%)", border: "1px solid hsl(215, 20%, 25%)", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "hsl(215, 20%, 70%)" }}
+              />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <ReferenceLine y={3} stroke="hsl(0, 65%, 55%)" strokeDasharray="4 4" label={{ value: "Mín 3mm", fill: "hsl(0, 65%, 55%)", fontSize: 9 }} />
+              {positions.map((pos, i) => (
+                <Line
+                  key={pos}
+                  type="monotone"
+                  dataKey={`sulco_${pos}`}
+                  name={pos}
+                  stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Pressão Chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Gauge className="h-4 w-4" /> Evolução da Pressão (psi)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 25%)" />
+              <XAxis dataKey="data" tick={{ fontSize: 10, fill: "hsl(215, 20%, 60%)" }} />
+              <YAxis tick={{ fontSize: 10, fill: "hsl(215, 20%, 60%)" }} domain={['auto', 'auto']} />
+              <RechartsTooltip
+                contentStyle={{ backgroundColor: "hsl(216, 40%, 12%)", border: "1px solid hsl(215, 20%, 25%)", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "hsl(215, 20%, 70%)" }}
+              />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <ReferenceLine y={110} stroke="hsl(174, 62%, 42%)" strokeDasharray="4 4" label={{ value: "Ideal 110", fill: "hsl(174, 62%, 42%)", fontSize: 9 }} />
+              {positions.map((pos, i) => (
+                <Line
+                  key={pos}
+                  type="monotone"
+                  dataKey={`pressao_${pos}`}
+                  name={pos}
+                  stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
