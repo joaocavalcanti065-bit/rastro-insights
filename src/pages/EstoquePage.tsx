@@ -145,7 +145,7 @@ export default function EstoquePage() {
 
       {/* Modals */}
       <EstoqueEntradaModal open={entradaOpen} onClose={() => setEntradaOpen(false)} onSuccess={refetch} />
-      <EstoqueSaidaModal open={saidaOpen} onClose={() => setSaidaOpen(false)} onSuccess={refetch} pneus={pneus || []} veiculos={veiculos || []} />
+      <EstoqueSaidaModal open={saidaOpen} onClose={() => { setSaidaOpen(false); setSaidaPreset({}); }} onSuccess={refetch} pneus={pneus || []} veiculos={veiculos || []} presetPneuId={saidaPreset.pneuId} presetMotivo={saidaPreset.motivo} />
       <EstoqueReservaModal open={reservaOpen} onClose={() => setReservaOpen(false)} onSuccess={refetch} pneus={pneus || []} reservedIds={reservedIds} veiculos={veiculos || []} />
       <EstoqueCurvaABC open={abcOpen} onClose={() => setAbcOpen(false)} pneus={pneus || []} />
       <EstoqueInventarioModal open={inventarioOpen} onClose={() => setInventarioOpen(false)} pneus={pneus || []} onSuccess={refetch} />
