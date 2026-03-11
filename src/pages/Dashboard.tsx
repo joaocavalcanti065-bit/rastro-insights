@@ -965,35 +965,38 @@ export default function Dashboard() {
 
   if (!hasData) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="space-y-6 bg-data-watermark min-h-full">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight">Painel de Controle</h1>
+          <p className="text-xs text-muted-foreground">Configure seu portal para começar a monitorar</p>
+        </div>
         <EmptyState
           icon={BarChart3}
-          title="Bem-vindo à Rastro"
-          description="Comece cadastrando sua frota e seus pneus. Após o cadastro, seu dashboard será automaticamente preenchido com métricas e análises em tempo real."
+          title="Bem-vindo ao Rastro Insights"
+          description="Comece cadastrando sua frota e seus pneus. Seu painel será preenchido automaticamente com métricas e análises em tempo real."
           actionLabel="Cadastrar Veículo"
           onAction={() => window.location.href = "/frota"}
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-dashed border-2">
-            <CardContent className="p-6 text-center">
-              <Truck className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-              <p className="font-medium">1. Cadastre sua Frota</p>
-              <p className="text-sm text-muted-foreground mt-1">Adicione seus veículos com tipo e placa</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Card className="border-dashed border border-border/50">
+            <CardContent className="p-5 text-center">
+              <Truck className="h-5 w-5 mx-auto mb-3 text-muted-foreground" strokeWidth={1.5} />
+              <p className="text-sm font-medium">1. Cadastre sua Frota</p>
+              <p className="text-xs text-muted-foreground mt-1">Adicione veículos com tipo e placa</p>
             </CardContent>
           </Card>
-          <Card className="border-dashed border-2">
-            <CardContent className="p-6 text-center">
-              <Circle className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-              <p className="font-medium">2. Cadastre seus Pneus</p>
-              <p className="text-sm text-muted-foreground mt-1">Cada pneu recebe um QR Code único</p>
+          <Card className="border-dashed border border-border/50">
+            <CardContent className="p-5 text-center">
+              <Circle className="h-5 w-5 mx-auto mb-3 text-muted-foreground" strokeWidth={1.5} />
+              <p className="text-sm font-medium">2. Cadastre seus Pneus</p>
+              <p className="text-xs text-muted-foreground mt-1">Cada pneu recebe um QR Code único</p>
             </CardContent>
           </Card>
-          <Card className="border-dashed border-2">
-            <CardContent className="p-6 text-center">
-              <BarChart3 className="h-8 w-8 mx-auto mb-3 text-muted-foreground" />
-              <p className="font-medium">3. Acompanhe Aqui</p>
-              <p className="text-sm text-muted-foreground mt-1">KPIs, alertas e economia em tempo real</p>
+          <Card className="border-dashed border border-border/50">
+            <CardContent className="p-5 text-center">
+              <BarChart3 className="h-5 w-5 mx-auto mb-3 text-muted-foreground" strokeWidth={1.5} />
+              <p className="text-sm font-medium">3. Acompanhe Aqui</p>
+              <p className="text-xs text-muted-foreground mt-1">KPIs, alertas e economia em tempo real</p>
             </CardContent>
           </Card>
         </div>
