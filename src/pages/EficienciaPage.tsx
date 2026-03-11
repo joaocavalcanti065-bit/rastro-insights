@@ -333,6 +333,9 @@ export default function EficienciaPage() {
         </Card>
       </div>
 
+      {/* CPK Trend */}
+      <CpkTrendPanel />
+
       {/* Ranking Table */}
       <Card>
         <CardHeader className="pb-3">
