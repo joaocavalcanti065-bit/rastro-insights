@@ -1032,14 +1032,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {statusDistribution.length > 0 && (
-          <Card>
-            <CardHeader><CardTitle className="text-base">Distribuição de Pneus</CardTitle></CardHeader>
-            <CardContent className="h-64">
+          <Card className="border-border/50">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Distribuição de Pneus</CardTitle></CardHeader>
+            <CardContent className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={statusDistribution} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                  <Pie data={statusDistribution} cx="50%" cy="50%" outerRadius={75} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
                     {statusDistribution.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
@@ -1049,12 +1050,12 @@ export default function Dashboard() {
           </Card>
         )}
         {economiaRecapagem > 0 && (
-          <Card>
-            <CardHeader><CardTitle className="text-base">Economia com Recapagem</CardTitle></CardHeader>
-            <CardContent className="flex flex-col items-center justify-center h-64">
-              <TrendingDown className="h-12 w-12 text-success mb-4" />
-              <p className="text-4xl font-bold text-success">R$ {economiaRecapagem.toLocaleString("pt-BR")}</p>
-              <p className="text-sm text-muted-foreground mt-2">Estimativa vs. compra de pneus novos</p>
+          <Card className="border-border/50">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Economia com Recapagem</CardTitle></CardHeader>
+            <CardContent className="flex flex-col items-center justify-center h-56">
+              <TrendingDown className="h-10 w-10 text-success mb-3" strokeWidth={1.5} />
+              <p className="text-3xl font-bold text-success tracking-tight">R$ {economiaRecapagem.toLocaleString("pt-BR")}</p>
+              <p className="text-xs text-muted-foreground mt-2">Estimativa vs. compra de pneus novos</p>
             </CardContent>
           </Card>
         )}
