@@ -21,6 +21,7 @@ const navItems = [
   { title: "Recapagem", url: "/recapagem", icon: RefreshCw },
   { title: "Manutenção", url: "/manutencao", icon: Wrench },
   { title: "Alertas", url: "/alertas", icon: Bell },
+  { title: "Eficiência", url: "/eficiencia", icon: BarChart3 },
   { title: "Relatórios", url: "/relatorios", icon: FileText },
   { title: "Cadastros", url: "/cadastros", icon: Settings },
   { title: "Integrações", url: "/integracoes", icon: Link2 },
