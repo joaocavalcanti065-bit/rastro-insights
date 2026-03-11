@@ -45,6 +45,13 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos, p
   const [formaPagamento, setFormaPagamento] = useState("pix");
   const [dataSaida, setDataSaida] = useState(new Date());
 
+  useEffect(() => {
+    if (open) {
+      if (presetPneuId) setPneuId(presetPneuId);
+      if (presetMotivo) setMotivo(presetMotivo);
+    }
+  }, [open, presetPneuId, presetMotivo]);
+
   const selected = pneus.find(p => p.id === pneuId);
 
   const mutation = useMutation({
