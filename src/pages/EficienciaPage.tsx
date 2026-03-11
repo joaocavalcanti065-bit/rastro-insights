@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, Legend } from "recharts";
-import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3 } from "lucide-react";
+import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 
 interface PneuRow {
   id: string;
@@ -49,6 +51,24 @@ interface GroupData {
 export default function EficienciaPage() {
   const [groupBy, setGroupBy] = useState<"marca" | "modelo" | "medida">("marca");
   const [filterMedida, setFilterMedida] = useState<string>("all");
+  const [checkingAlerts, setCheckingAlerts] = useState(false);
+
+  const handleCheckCpkAlerts = async () => {
+    setCheckingAlerts(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-cpk-alerts");
+      if (error) throw error;
+      if (data?.alerts_created > 0) {
+        toast.warning(`${data.alerts_created} alerta(s) de CPK elevado criado(s)! Threshold: R$ ${data.threshold}/km`);
+      } else {
+        toast.success(`Nenhuma marca com CPK acima do dobro da média (R$ ${data?.threshold}/km).`);
+      }
+    } catch (err: any) {
+      toast.error("Erro ao verificar alertas: " + (err.message || "erro desconhecido"));
+    } finally {
+      setCheckingAlerts(false);
+    }
+  };
 
   const { data: pneus, isLoading } = useQuery({
     queryKey: ["eficiencia-pneus"],
@@ -205,6 +225,10 @@ export default function EficienciaPage() {
               <SelectItem value="medida">Por Medida</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" onClick={handleCheckCpkAlerts} disabled={checkingAlerts} className="gap-2">
+            {checkingAlerts ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
+            Verificar alertas CPK
+          </Button>
         </div>
       </div>
 
