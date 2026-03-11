@@ -5,12 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileSpreadsheet } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, FileSpreadsheet, MoreHorizontal, Truck, RefreshCw } from "lucide-react";
 
 interface Props {
   pneus: any[];
   reservedIds: Set<string>;
   onNavigate: (rg: string) => void;
+  onTransferToVehicle?: (pneuId: string) => void;
+  onTransferToRetread?: (pneuId: string) => void;
 }
 
 export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate }: Props) {
