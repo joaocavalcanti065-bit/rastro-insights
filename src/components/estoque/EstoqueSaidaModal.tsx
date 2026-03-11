@@ -157,34 +157,82 @@ export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos, p
     setDataSaida(new Date());
   };
 
+  const isPreset = !!(presetPneuId && presetMotivo);
+  const motivoLabel = MOTIVOS_SAIDA.find(m => m.value === motivo)?.label || motivo;
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { onClose(); resetForm(); } }}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Registrar Saída</DialogTitle>
+          <DialogTitle>
+            {isPreset && motivo === "instalacao" ? "Instalar Pneu em Veículo" :
+             isPreset && motivo === "recapagem" ? "Enviar Pneu para Recapagem" :
+             "Registrar Saída"}
+          </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4">
-          <div>
-            <Label>Selecionar Pneu</Label>
-            <Select value={pneuId} onValueChange={setPneuId}>
-              <SelectTrigger><SelectValue placeholder="Buscar pneu..." /></SelectTrigger>
-              <SelectContent>
-                {pneus.map(p => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {(p as any).rg_code || p.id_unico} — {p.marca} {p.medida}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Banner com info do pneu quando vem de ação rápida */}
+          {isPreset && selected && (
+            <div className="p-3 rounded-lg bg-primary/10 border border-primary/30 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                {motivo === "instalacao" ? "🚛" : "🔄"}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {(selected as any).rg_code || selected.id_unico}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {selected.marca} · {selected.medida} · Sulco: {selected.sulco_atual}mm → <span className="text-primary font-medium">{motivoLabel}</span>
+                </p>
+              </div>
+            </div>
+          )}
 
-          <div>
-            <Label>Motivo da Saída</Label>
-            <Select value={motivo} onValueChange={setMotivo}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{MOTIVOS_SAIDA.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
+          {/* Seletor de pneu - escondido se preset */}
+          {!isPreset && (
+            <div>
+              <Label>Selecionar Pneu</Label>
+              <Select value={pneuId} onValueChange={setPneuId}>
+                <SelectTrigger><SelectValue placeholder="Buscar pneu..." /></SelectTrigger>
+                <SelectContent>
+                  {pneus.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {(p as any).rg_code || p.id_unico} — {p.marca} {p.medida}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Motivo - escondido se preset */}
+          {!isPreset && (
+            <div>
+              <Label>Motivo da Saída</Label>
+              <Select value={motivo} onValueChange={setMotivo}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{MOTIVOS_SAIDA.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {motivo === "instalacao" && (
+            <>
+              <div>
+                <Label>Veículo de Destino</Label>
+                <Select value={veiculoId} onValueChange={setVeiculoId}>
+                  <SelectTrigger><SelectValue placeholder="Selecionar veículo" /></SelectTrigger>
+                  <SelectContent>
+                    {veiculos.map(v => <SelectItem key={v.id} value={v.id}>{v.placa} — {v.frota || ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Posição no Veículo</Label><Input value={posicao} onChange={e => setPosicao(e.target.value)} placeholder="Ex: DD1" /></div>
+                <div><Label>Km Atual Veículo</Label><Input type="number" value={kmAtual} onChange={e => setKmAtual(e.target.value)} /></div>
+              </div>
+            </>
+          )}
 
           {motivo === "instalacao" && (
             <>
