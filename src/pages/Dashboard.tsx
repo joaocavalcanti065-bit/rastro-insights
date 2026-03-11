@@ -1079,12 +1079,12 @@ export default function Dashboard() {
 }
 
 function DetailTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
-  if (rows.length === 0) return <p className="text-sm text-muted-foreground text-center py-4">Nenhum registro encontrado.</p>;
+  if (rows.length === 0) return <p className="text-xs text-muted-foreground text-center py-4">Nenhum registro encontrado.</p>;
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead><tr className="bg-muted">{headers.map(h => <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground">{h}</th>)}</tr></thead>
-        <tbody>{rows.map((row, i) => <tr key={i} className="border-t">{row.map((cell, j) => <td key={j} className="px-3 py-2">{cell}</td>)}</tr>)}</tbody>
+    <div className="overflow-x-auto rounded-lg border border-border/50">
+      <table className="w-full text-xs">
+        <thead><tr className="bg-muted/50">{headers.map(h => <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground uppercase tracking-wide text-[10px]">{h}</th>)}</tr></thead>
+        <tbody>{rows.map((row, i) => <tr key={i} className="border-t border-border/30">{row.map((cell, j) => <td key={j} className="px-3 py-2">{cell}</td>)}</tr>)}</tbody>
       </table>
     </div>
   );
