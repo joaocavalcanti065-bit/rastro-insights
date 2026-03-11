@@ -24,6 +24,7 @@ import IntegracoesPage from "./pages/IntegracoesPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import ResetPassword from "./pages/ResetPassword";
 import PneuProfilePage from "./pages/PneuProfilePage";
+import EficienciaPage from "./pages/EficienciaPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
