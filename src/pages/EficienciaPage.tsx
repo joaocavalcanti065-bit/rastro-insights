@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, Legend } from "recharts";
-import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3 } from "lucide-react";
+import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 
 interface PneuRow {
   id: string;
