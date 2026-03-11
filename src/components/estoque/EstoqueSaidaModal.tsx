@@ -25,9 +25,11 @@ interface Props {
   onSuccess: () => void;
   pneus: any[];
   veiculos: any[];
+  presetPneuId?: string;
+  presetMotivo?: string;
 }
 
-export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos }: Props) {
+export function EstoqueSaidaModal({ open, onClose, onSuccess, pneus, veiculos, presetPneuId, presetMotivo }: Props) {
   const queryClient = useQueryClient();
   const [pneuId, setPneuId] = useState("");
   const [motivo, setMotivo] = useState("instalacao");
