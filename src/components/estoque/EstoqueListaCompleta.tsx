@@ -89,6 +89,7 @@ export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate, onTransfe
                 <TableHead>Custo</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-12">Ações</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(p => {
@@ -134,6 +135,25 @@ export function EstoqueListaCompleta({ pneus, reservedIds, onNavigate, onTransfe
                       ) : (
                         <Badge variant="secondary" className="text-xs">Disponível</Badge>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onTransferToVehicle?.(p.id); }}>
+                            <Truck className="h-4 w-4 mr-2" />
+                            Instalar em Veículo
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onTransferToRetread?.(p.id); }}>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Enviar para Recapagem
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 );
