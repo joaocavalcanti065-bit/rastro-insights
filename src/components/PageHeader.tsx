@@ -8,23 +8,23 @@ export function PageHeader() {
   const { darkMode, toggleDarkMode } = useAppStore();
 
   return (
-    <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card shrink-0">
+    <header className="h-12 border-b border-border flex items-center justify-between px-4 bg-card/80 backdrop-blur-sm shrink-0">
       <div className="flex items-center gap-3">
         <SidebarTrigger />
         <div className="relative hidden md:block">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
           <Input
             placeholder="Buscar placa, pneu, QR Code..."
-            className="pl-9 w-64 h-9 text-sm bg-muted border-0"
+            className="pl-8 w-64 h-7 text-xs bg-muted/50 border-0 rounded-md"
           />
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={toggleDarkMode}>
-          {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleDarkMode}>
+          {darkMode ? <Sun className="h-3.5 w-3.5" strokeWidth={1.5} /> : <Moon className="h-3.5 w-3.5" strokeWidth={1.5} />}
         </Button>
-        <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-          <Bell className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 relative">
+          <Bell className="h-3.5 w-3.5" strokeWidth={1.5} />
         </Button>
       </div>
     </header>
