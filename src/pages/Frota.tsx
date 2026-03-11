@@ -53,6 +53,17 @@ export default function Frota() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      // Get or create default client
+      let clienteId: string;
+      const { data: existingClientes } = await supabase.from("clientes").select("id").limit(1);
+      if (existingClientes && existingClientes.length > 0) {
+        clienteId = existingClientes[0].id;
+      } else {
+        const { data: newCliente, error: clienteError } = await supabase.from("clientes").insert({ nome: "Minha Empresa" }).select("id").single();
+        if (clienteError || !newCliente) throw clienteError || new Error("Erro ao criar cliente");
+        clienteId = newCliente.id;
+      }
+
       const tipoInfo = TIPOS_VEICULO.find(t => t.value === form.tipo_veiculo);
       const totalRodantes = tipoInfo?.pneus || 10;
       const { error } = await supabase.from("veiculos").insert({
@@ -65,7 +76,7 @@ export default function Frota() {
         quantidade_estepes: form.quantidade_estepes,
         total_pneus_rodantes: totalRodantes,
         total_pneus: totalRodantes + form.quantidade_estepes,
-        cliente_id: "00000000-0000-0000-0000-000000000000",
+        cliente_id: clienteId,
       });
       if (error) throw error;
     },
