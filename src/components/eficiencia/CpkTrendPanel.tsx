@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { TrendingUp } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const BRAND_COLORS = [
   "hsl(var(--chart-1))",
@@ -25,6 +26,8 @@ interface PneuTrend {
 }
 
 export default function CpkTrendPanel() {
+  const [periodo, setPeriodo] = useState("12");
+
   const { data: pneus, isLoading } = useQuery({
     queryKey: ["cpk-trend-pneus"],
     queryFn: async () => {
@@ -42,25 +45,19 @@ export default function CpkTrendPanel() {
   const { trendData, brands } = useMemo(() => {
     if (!pneus || pneus.length === 0) return { trendData: [], brands: [] };
 
-    // Group tires by month of creation and calculate cumulative CPK by brand
     const allBrands = [...new Set(pneus.map((p) => p.marca))].sort();
-
-    // Generate monthly timeline from earliest tire to now
-    const dates = pneus.map((p) => new Date(p.created_at));
-    const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
     const now = new Date();
+    const mesesFiltro = Number(periodo);
+    const dataInicio = new Date(now.getFullYear(), now.getMonth() - mesesFiltro, 1);
 
-    // Generate months
     const months: Date[] = [];
-    const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    const cursor = new Date(dataInicio);
     while (cursor <= now) {
       months.push(new Date(cursor));
       cursor.setMonth(cursor.getMonth() + 1);
     }
-    // Ensure at least current month
     if (months.length === 0) months.push(new Date(now.getFullYear(), now.getMonth(), 1));
 
-    // For each month, calculate cumulative CPK per brand (all tires created up to that month)
     const data = months.map((month) => {
       const endOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59);
       const label = `${String(month.getMonth() + 1).padStart(2, "0")}/${month.getFullYear()}`;
@@ -90,7 +87,7 @@ export default function CpkTrendPanel() {
     });
 
     return { trendData: data, brands: allBrands };
-  }, [pneus]);
+  }, [pneus, periodo]);
 
   if (isLoading) {
     return (
@@ -109,13 +106,27 @@ export default function CpkTrendPanel() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          Tendência Histórica de CPK por Marca
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Evolução do custo por km acumulado ao longo do tempo (baseado na data de aquisição)
-        </CardDescription>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Tendência Histórica de CPK por Marca
+            </CardTitle>
+            <CardDescription className="text-xs mt-1">
+              Evolução do custo por km acumulado ao longo do tempo
+            </CardDescription>
+          </div>
+          <Select value={periodo} onValueChange={setPeriodo}>
+            <SelectTrigger className="w-[150px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3">Últimos 3 meses</SelectItem>
+              <SelectItem value="6">Últimos 6 meses</SelectItem>
+              <SelectItem value="12">Últimos 12 meses</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={320}>
