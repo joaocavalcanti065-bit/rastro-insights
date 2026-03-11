@@ -184,13 +184,30 @@ export default function Frota() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {veiculos.map((v) => {
             const pneusVeiculo = pneus?.filter(p => p.veiculo_id === v.id) || [];
-            const alertasVeiculo = pneusVeiculo.filter(p => p.status === "em_inspecao" || p.status === "aguardando_manutencao");
+            const pneuIds = new Set(pneusVeiculo.map(p => p.id));
+            // Alerts directly on vehicle OR on its installed tires
+            const alertasVeiculo = (alertasAtivos || []).filter(a =>
+              a.veiculo_id === v.id || (a.pneu_id && pneuIds.has(a.pneu_id))
+            );
+            const criticos = alertasVeiculo.filter(a => a.gravidade === "critico");
+            const atencao = alertasVeiculo.filter(a => a.gravidade === "atencao");
+            const hasCritico = criticos.length > 0;
+
             return (
-              <Card key={v.id} className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => setSelectedVeiculo(v.id)}>
+              <Card
+                key={v.id}
+                className={`hover:border-primary/50 transition-colors cursor-pointer ${hasCritico ? "border-destructive/60 shadow-[0_0_12px_-3px] shadow-destructive/30" : atencao.length > 0 ? "border-yellow-500/40" : ""}`}
+                onClick={() => setSelectedVeiculo(v.id)}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg">{v.placa}</CardTitle>
                     <div className="flex items-center gap-2">
+                      {hasCritico && (
+                        <Badge variant="destructive" className="text-xs animate-pulse">
+                          <AlertTriangle className="h-3 w-3 mr-1" />{criticos.length} crítico(s)
+                        </Badge>
+                      )}
                       <Badge variant={v.status === "ativo" ? "default" : "secondary"}>{v.status || "ativo"}</Badge>
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     </div>
@@ -211,9 +228,19 @@ export default function Frota() {
                       <span>{pneusVeiculo.length} / {v.total_pneus}</span>
                     </div>
                     {alertasVeiculo.length > 0 && (
-                      <div className="flex items-center gap-1 text-warning mt-2">
-                        <AlertTriangle className="h-3 w-3" />
-                        <span className="text-xs">{alertasVeiculo.length} alerta(s)</span>
+                      <div className="mt-2 space-y-1">
+                        {criticos.length > 0 && (
+                          <div className="flex items-center gap-1 text-destructive">
+                            <AlertTriangle className="h-3 w-3" />
+                            <span className="text-xs font-medium">{criticos.length} alerta(s) crítico(s)</span>
+                          </div>
+                        )}
+                        {atencao.length > 0 && (
+                          <div className="flex items-center gap-1 text-yellow-500">
+                            <AlertTriangle className="h-3 w-3" />
+                            <span className="text-xs">{atencao.length} alerta(s) de atenção</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
