@@ -106,13 +106,27 @@ export default function CpkTrendPanel() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          Tendência Histórica de CPK por Marca
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Evolução do custo por km acumulado ao longo do tempo (baseado na data de aquisição)
-        </CardDescription>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Tendência Histórica de CPK por Marca
+            </CardTitle>
+            <CardDescription className="text-xs mt-1">
+              Evolução do custo por km acumulado ao longo do tempo
+            </CardDescription>
+          </div>
+          <Select value={periodo} onValueChange={setPeriodo}>
+            <SelectTrigger className="w-[150px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3">Últimos 3 meses</SelectItem>
+              <SelectItem value="6">Últimos 6 meses</SelectItem>
+              <SelectItem value="12">Últimos 12 meses</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={320}>
