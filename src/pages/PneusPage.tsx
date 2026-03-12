@@ -129,10 +129,7 @@ export default function PneusPage() {
                   <>
                     <div><Label>ID Único (Ex: 001P)</Label><Input value={form.id_unico} onChange={e => setForm({ ...form, id_unico: e.target.value })} /></div>
                     <div><Label>Marca</Label>
-                      <Select value={form.marca} onValueChange={v => setForm({ ...form, marca: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>{MARCAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                      </Select>
+                      <CreatableSelect value={form.marca} onValueChange={v => setForm({ ...form, marca: v })} options={MARCAS} placeholder="Selecione ou digite" searchPlaceholder="Buscar marca..." />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div><Label>Modelo</Label><Input value={form.modelo_pneu} onChange={e => setForm({ ...form, modelo_pneu: e.target.value })} /></div>
