@@ -84,6 +84,7 @@ export default function Frota() {
         placa: form.placa.toUpperCase(),
         tipo_veiculo: form.tipo_veiculo,
         modelo: form.modelo,
+        marca: form.marca || null,
         categoria: form.categoria,
         quantidade_eixos: form.quantidade_eixos,
         possui_estepe: form.possui_estepe,
