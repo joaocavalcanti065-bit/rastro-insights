@@ -909,10 +909,7 @@ export default function MvpManual() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label>Marca *</Label>
-                    <Select value={novoPneu.marca} onValueChange={v => setNovoPneu(prev => ({ ...prev, marca: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{MARCAS_PNEU.map(m => (<SelectItem key={m} value={m}>{m}</SelectItem>))}</SelectContent>
-                    </Select>
+                    <CreatableSelect value={novoPneu.marca} onValueChange={v => setNovoPneu(prev => ({ ...prev, marca: v }))} options={MARCAS_PNEU} placeholder="Selecione ou digite" searchPlaceholder="Buscar marca..." />
                   </div>
                   <div className="space-y-2"><Label>Modelo</Label><Input value={novoPneu.modelo_pneu} onChange={e => setNovoPneu(prev => ({ ...prev, modelo_pneu: e.target.value }))} placeholder="X Line Energy Z" /></div>
                   <div className="space-y-2"><Label>Medida</Label><Input value={novoPneu.medida} onChange={e => setNovoPneu(prev => ({ ...prev, medida: e.target.value }))} placeholder="295/80 R22.5" /></div>
