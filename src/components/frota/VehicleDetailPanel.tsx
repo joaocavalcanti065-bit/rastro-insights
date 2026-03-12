@@ -113,7 +113,11 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
 
         {/* ===== RESUMO ===== */}
         <TabsContent value="resumo" className="space-y-4 mt-4">
-          <div className="grid grid-cols-3 gap-3 text-sm">
+          <div className="grid grid-cols-4 gap-3 text-sm">
+            <div className="bg-muted/50 rounded-lg p-3">
+              <span className="text-muted-foreground text-xs">Marca</span>
+              <p className="font-medium">{veiculo.marca || "—"}</p>
+            </div>
             <div className="bg-muted/50 rounded-lg p-3">
               <span className="text-muted-foreground text-xs">Modelo</span>
               <p className="font-medium">{veiculo.modelo || "—"}</p>
