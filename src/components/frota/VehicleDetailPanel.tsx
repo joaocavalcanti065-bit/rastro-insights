@@ -373,10 +373,7 @@ function PneuForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; clie
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-xs">Marca</Label>
-            <Select value={form.marca} onValueChange={v => setForm({ ...form, marca: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{MARCAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-            </Select>
+            <CreatableSelect value={form.marca} onValueChange={v => setForm({ ...form, marca: v })} options={MARCAS} placeholder="Selecione ou digite" searchPlaceholder="Buscar marca..." />
           </div>
           <div>
             <Label className="text-xs">Modelo</Label>
