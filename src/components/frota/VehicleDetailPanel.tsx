@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CreatableSelect } from "@/components/ui/creatable-select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -373,10 +374,7 @@ function PneuForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; clie
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-xs">Marca</Label>
-            <Select value={form.marca} onValueChange={v => setForm({ ...form, marca: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{MARCAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-            </Select>
+            <CreatableSelect value={form.marca} onValueChange={v => setForm({ ...form, marca: v })} options={MARCAS} placeholder="Selecione ou digite" searchPlaceholder="Buscar marca..." />
           </div>
           <div>
             <Label className="text-xs">Modelo</Label>

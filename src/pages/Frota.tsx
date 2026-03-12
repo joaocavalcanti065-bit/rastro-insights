@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CreatableSelect } from "@/components/ui/creatable-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +34,7 @@ export default function Frota() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedVeiculo, setSelectedVeiculo] = useState<string | null>(null);
-  const [form, setForm] = useState({ placa: "", tipo_veiculo: "", modelo: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
+  const [form, setForm] = useState({ placa: "", tipo_veiculo: "", modelo: "", marca: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
 
   const { data: veiculos, isLoading } = useQuery({
     queryKey: ["veiculos"],
@@ -83,6 +84,7 @@ export default function Frota() {
         placa: form.placa.toUpperCase(),
         tipo_veiculo: form.tipo_veiculo,
         modelo: form.modelo,
+        marca: form.marca || null,
         categoria: form.categoria,
         quantidade_eixos: form.quantidade_eixos,
         possui_estepe: form.possui_estepe,
@@ -97,7 +99,7 @@ export default function Frota() {
       queryClient.invalidateQueries({ queryKey: ["veiculos"] });
       toast.success("Veículo cadastrado com sucesso!");
       setOpen(false);
-      setForm({ placa: "", tipo_veiculo: "", modelo: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
+      setForm({ placa: "", tipo_veiculo: "", modelo: "", marca: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
     },
     onError: () => toast.error("Erro ao cadastrar veículo"),
   });
@@ -130,6 +132,16 @@ export default function Frota() {
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>Placa</Label><Input placeholder="ABC-1234" value={form.placa} onChange={e => setForm({ ...form, placa: e.target.value })} /></div>
                 <div><Label>Modelo</Label><Input placeholder="Scania P310" value={form.modelo} onChange={e => setForm({ ...form, modelo: e.target.value })} /></div>
+              </div>
+              <div>
+                <Label>Marca do Veículo</Label>
+                <CreatableSelect
+                  value={form.marca}
+                  onValueChange={v => setForm({ ...form, marca: v })}
+                  options={["Scania", "Volvo", "Mercedes-Benz", "DAF", "MAN", "Iveco", "Ford", "Volkswagen", "Toyota", "Hyundai", "Fiat"]}
+                  placeholder="Selecione ou digite a marca"
+                  searchPlaceholder="Buscar marca..."
+                />
               </div>
               <div>
                 <Label>Tipo de Veículo</Label>
