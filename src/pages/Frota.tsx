@@ -99,7 +99,7 @@ export default function Frota() {
       queryClient.invalidateQueries({ queryKey: ["veiculos"] });
       toast.success("Veículo cadastrado com sucesso!");
       setOpen(false);
-      setForm({ placa: "", tipo_veiculo: "", modelo: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
+      setForm({ placa: "", tipo_veiculo: "", modelo: "", marca: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
     },
     onError: () => toast.error("Erro ao cadastrar veículo"),
   });
