@@ -98,7 +98,7 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
           {veiculo.placa} — {veiculo.tipo_veiculo}
         </DialogTitle>
         <DialogDescription>
-          {veiculo.modelo || "Veículo"} • {veiculo.categoria} • {veiculo.quantidade_eixos} eixos
+          {[veiculo.marca, veiculo.modelo].filter(Boolean).join(" ") || "Veículo"} • {veiculo.categoria} • {veiculo.quantidade_eixos} eixos
         </DialogDescription>
       </DialogHeader>
 
