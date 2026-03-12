@@ -231,6 +231,12 @@ export default function Frota() {
                       <span className="text-muted-foreground">Tipo</span>
                       <span>{v.tipo_veiculo}</span>
                     </div>
+                    {v.marca && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Marca</span>
+                        <span className="font-medium">{v.marca}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Modelo</span>
                       <span>{v.modelo || "—"}</span>
