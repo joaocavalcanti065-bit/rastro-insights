@@ -34,7 +34,7 @@ export default function Frota() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedVeiculo, setSelectedVeiculo] = useState<string | null>(null);
-  const [form, setForm] = useState({ placa: "", tipo_veiculo: "", modelo: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
+  const [form, setForm] = useState({ placa: "", tipo_veiculo: "", modelo: "", marca: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
 
   const { data: veiculos, isLoading } = useQuery({
     queryKey: ["veiculos"],
