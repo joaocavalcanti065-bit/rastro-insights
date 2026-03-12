@@ -134,6 +134,16 @@ export default function Frota() {
                 <div><Label>Modelo</Label><Input placeholder="Scania P310" value={form.modelo} onChange={e => setForm({ ...form, modelo: e.target.value })} /></div>
               </div>
               <div>
+                <Label>Marca do Veículo</Label>
+                <CreatableSelect
+                  value={form.marca}
+                  onValueChange={v => setForm({ ...form, marca: v })}
+                  options={["Scania", "Volvo", "Mercedes-Benz", "DAF", "MAN", "Iveco", "Ford", "Volkswagen", "Toyota", "Hyundai", "Fiat"]}
+                  placeholder="Selecione ou digite a marca"
+                  searchPlaceholder="Buscar marca..."
+                />
+              </div>
+              <div>
                 <Label>Tipo de Veículo</Label>
                 <Select value={form.tipo_veiculo} onValueChange={v => setForm({ ...form, tipo_veiculo: v })}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
