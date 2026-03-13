@@ -286,9 +286,14 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
                 <p><span className="text-muted-foreground">ID:</span> {form.id_unico || "(auto)"}</p>
                 <p><span className="text-muted-foreground">Marca:</span> {form.marca} — {form.medida}</p>
                 <p><span className="text-muted-foreground">Motivo:</span> {MOTIVOS.find(m => m.value === form.motivo)?.label}</p>
-                <p><span className="text-muted-foreground">Condição:</span> {form.condicao}</p>
+                <p><span className="text-muted-foreground">Condição:</span> {form.condicao === "carcaca" ? "Carcaça" : form.condicao}</p>
                 <p><span className="text-muted-foreground">Sulco:</span> {form.sulco_entrada}mm | Pressão: {form.pressao_entrada} PSI</p>
                 <p><span className="text-muted-foreground">Custo:</span> R$ {form.custo_aquisicao.toLocaleString("pt-BR")}</p>
+                {form.valor_venda_sugerido > 0 && (
+                  <p><span className="text-muted-foreground">Venda:</span> R$ {form.valor_venda_sugerido.toLocaleString("pt-BR")}
+                    {margemCusto !== null && <span className={Number(margemCusto) >= 0 ? " text-green-600" : " text-red-600"}> ({Number(margemCusto) >= 0 ? "+" : ""}{margemCusto}%)</span>}
+                  </p>
+                )}
                 <p className="flex items-center gap-1">
                   <span className="text-muted-foreground">Local:</span>
                   <MapPin className="h-3 w-3" />
