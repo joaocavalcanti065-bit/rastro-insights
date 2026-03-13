@@ -46,7 +46,12 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
     dot: "", motivo: "compra_nova", nota_fiscal: "", custo_aquisicao: 3200,
     sulco_entrada: 16, pressao_entrada: 110, local_fisico: "", condicao: "novo",
     observacoes: "", tipo_eixo: "tracao", tipo_aplicacao: "rodoviario",
+    valor_venda_sugerido: 0,
   });
+
+  const margemCusto = form.custo_aquisicao > 0 && form.valor_venda_sugerido > 0
+    ? (((form.valor_venda_sugerido - form.custo_aquisicao) / form.custo_aquisicao) * 100).toFixed(1)
+    : null;
   const [dataEntrada, setDataEntrada] = useState(new Date());
   const [sugestaoLocal, setSugestaoLocal] = useState<string | null>(null);
 
