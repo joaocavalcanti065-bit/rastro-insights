@@ -237,6 +237,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
                     <SelectItem value="novo">Novo</SelectItem>
                     <SelectItem value="recapado">Recapado</SelectItem>
                     <SelectItem value="usado_bom">Usado em bom estado</SelectItem>
+                    <SelectItem value="carcaca">Carcaça</SelectItem>
                     <SelectItem value="inspecao">Para inspeção</SelectItem>
                   </SelectContent>
                 </Select>
