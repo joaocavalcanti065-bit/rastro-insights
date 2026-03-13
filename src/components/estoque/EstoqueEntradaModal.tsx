@@ -207,7 +207,22 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Nota Fiscal</Label><Input value={form.nota_fiscal} onChange={e => set("nota_fiscal", e.target.value)} /></div>
-                <div><Label>Custo (R$)</Label><Input type="number" value={form.custo_aquisicao} onChange={e => set("custo_aquisicao", Number(e.target.value))} /></div>
+                <div><Label>Custo Aquisição (R$)</Label><Input type="number" value={form.custo_aquisicao} onChange={e => set("custo_aquisicao", Number(e.target.value))} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Valor de Venda (R$)</Label><Input type="number" value={form.valor_venda_sugerido} onChange={e => set("valor_venda_sugerido", Number(e.target.value))} placeholder="0" /></div>
+                <div>
+                  <Label>Margem de Custo</Label>
+                  <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted text-sm">
+                    {margemCusto !== null ? (
+                      <span className={Number(margemCusto) >= 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                        {Number(margemCusto) >= 0 ? "+" : ""}{margemCusto}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </div>
+                </div>
               </div>
               <RetroactiveDatePicker date={dataEntrada} onDateChange={setDataEntrada} label="Data da Entrada" />
             </>
