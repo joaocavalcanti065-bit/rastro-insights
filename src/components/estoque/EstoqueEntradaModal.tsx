@@ -46,7 +46,12 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
     dot: "", motivo: "compra_nova", nota_fiscal: "", custo_aquisicao: 3200,
     sulco_entrada: 16, pressao_entrada: 110, local_fisico: "", condicao: "novo",
     observacoes: "", tipo_eixo: "tracao", tipo_aplicacao: "rodoviario",
+    valor_venda_sugerido: 0,
   });
+
+  const margemCusto = form.custo_aquisicao > 0 && form.valor_venda_sugerido > 0
+    ? (((form.valor_venda_sugerido - form.custo_aquisicao) / form.custo_aquisicao) * 100).toFixed(1)
+    : null;
   const [dataEntrada, setDataEntrada] = useState(new Date());
   const [sugestaoLocal, setSugestaoLocal] = useState<string | null>(null);
 
@@ -114,7 +119,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
         modelo_pneu: form.modelo_pneu,
         medida: form.medida,
         dot: form.dot,
-        tipo_pneu: form.condicao === "novo" ? "novo" : "recapado",
+        tipo_pneu: form.condicao === "novo" ? "novo" : form.condicao === "carcaca" ? "carcaca" : "recapado",
         tipo_eixo: form.tipo_eixo,
         tipo_aplicacao: form.tipo_aplicacao,
         sulco_inicial: form.sulco_entrada,
@@ -122,9 +127,10 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
         pressao_ideal: form.pressao_entrada,
         custo_aquisicao: form.custo_aquisicao,
         custo_acumulado: form.custo_aquisicao,
+        valor_venda_sugerido: form.valor_venda_sugerido > 0 ? form.valor_venda_sugerido : null,
         localizacao: "estoque",
         local_atual: form.local_fisico || "Sem endereço definido",
-        status: "em_estoque",
+        status: form.condicao === "carcaca" ? "carcaca" : "em_estoque",
         nota_fiscal: form.nota_fiscal,
         data_aquisicao: dataEntrada.toISOString().split("T")[0],
         observacoes: form.observacoes,
@@ -201,7 +207,22 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Nota Fiscal</Label><Input value={form.nota_fiscal} onChange={e => set("nota_fiscal", e.target.value)} /></div>
-                <div><Label>Custo (R$)</Label><Input type="number" value={form.custo_aquisicao} onChange={e => set("custo_aquisicao", Number(e.target.value))} /></div>
+                <div><Label>Custo Aquisição (R$)</Label><Input type="number" value={form.custo_aquisicao} onChange={e => set("custo_aquisicao", Number(e.target.value))} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Valor de Venda (R$)</Label><Input type="number" value={form.valor_venda_sugerido} onChange={e => set("valor_venda_sugerido", Number(e.target.value))} placeholder="0" /></div>
+                <div>
+                  <Label>Margem de Custo</Label>
+                  <div className="h-10 flex items-center px-3 rounded-md border border-input bg-muted text-sm">
+                    {margemCusto !== null ? (
+                      <span className={Number(margemCusto) >= 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                        {Number(margemCusto) >= 0 ? "+" : ""}{margemCusto}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </div>
+                </div>
               </div>
               <RetroactiveDatePicker date={dataEntrada} onDateChange={setDataEntrada} label="Data da Entrada" />
             </>
@@ -216,6 +237,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
                     <SelectItem value="novo">Novo</SelectItem>
                     <SelectItem value="recapado">Recapado</SelectItem>
                     <SelectItem value="usado_bom">Usado em bom estado</SelectItem>
+                    <SelectItem value="carcaca">Carcaça</SelectItem>
                     <SelectItem value="inspecao">Para inspeção</SelectItem>
                   </SelectContent>
                 </Select>
@@ -264,9 +286,14 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
                 <p><span className="text-muted-foreground">ID:</span> {form.id_unico || "(auto)"}</p>
                 <p><span className="text-muted-foreground">Marca:</span> {form.marca} — {form.medida}</p>
                 <p><span className="text-muted-foreground">Motivo:</span> {MOTIVOS.find(m => m.value === form.motivo)?.label}</p>
-                <p><span className="text-muted-foreground">Condição:</span> {form.condicao}</p>
+                <p><span className="text-muted-foreground">Condição:</span> {form.condicao === "carcaca" ? "Carcaça" : form.condicao}</p>
                 <p><span className="text-muted-foreground">Sulco:</span> {form.sulco_entrada}mm | Pressão: {form.pressao_entrada} PSI</p>
                 <p><span className="text-muted-foreground">Custo:</span> R$ {form.custo_aquisicao.toLocaleString("pt-BR")}</p>
+                {form.valor_venda_sugerido > 0 && (
+                  <p><span className="text-muted-foreground">Venda:</span> R$ {form.valor_venda_sugerido.toLocaleString("pt-BR")}
+                    {margemCusto !== null && <span className={Number(margemCusto) >= 0 ? " text-green-600" : " text-red-600"}> ({Number(margemCusto) >= 0 ? "+" : ""}{margemCusto}%)</span>}
+                  </p>
+                )}
                 <p className="flex items-center gap-1">
                   <span className="text-muted-foreground">Local:</span>
                   <MapPin className="h-3 w-3" />
