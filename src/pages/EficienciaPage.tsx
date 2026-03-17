@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, Legend, LineChart, Line } from "recharts";
-import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2, Zap, CheckCircle2, AlertTriangle, Fuel, Droplets } from "lucide-react";
+import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2, Zap, CheckCircle2, AlertTriangle, Fuel, Droplets, Truck, PieChart } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import CpkTrendPanel from "@/components/eficiencia/CpkTrendPanel";
