@@ -53,6 +53,8 @@ export default function EficienciaPage() {
   const [groupBy, setGroupBy] = useState<"marca" | "modelo" | "medida">("marca");
   const [filterMedida, setFilterMedida] = useState<string>("all");
   const [checkingAlerts, setCheckingAlerts] = useState(false);
+  const [calculando, setCalculando] = useState(false);
+  const [autoCalcResult, setAutoCalcResult] = useState<any>(null);
 
   const handleCheckCpkAlerts = async () => {
     setCheckingAlerts(true);
