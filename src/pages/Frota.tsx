@@ -10,11 +10,12 @@ import { CreatableSelect } from "@/components/ui/creatable-select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/EmptyState";
 import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { VehicleDetailPanel } from "@/components/frota/VehicleDetailPanel";
 import { toast } from "sonner";
-import { Truck, Plus, AlertTriangle, Eye, X } from "lucide-react";
+import { Truck, Plus, AlertTriangle, Eye, Gauge, Ruler, ShieldCheck, Trash2 } from "lucide-react";
 
 const TIPOS_VEICULO = [
   { label: "Carro / SUV / Van", value: "Carro", pneus: 4 },
@@ -197,13 +198,38 @@ export default function Frota() {
           {veiculos.map((v) => {
             const pneusVeiculo = pneus?.filter(p => p.veiculo_id === v.id) || [];
             const pneuIds = new Set(pneusVeiculo.map(p => p.id));
-            // Alerts directly on vehicle OR on its installed tires
             const alertasVeiculo = (alertasAtivos || []).filter(a =>
               a.veiculo_id === v.id || (a.pneu_id && pneuIds.has(a.pneu_id))
             );
             const criticos = alertasVeiculo.filter(a => a.gravidade === "critico");
             const atencao = alertasVeiculo.filter(a => a.gravidade === "atencao");
             const hasCritico = criticos.length > 0;
+
+            // Tire health aggregation
+            const pneusComSulco = pneusVeiculo.filter(p => p.sulco_atual != null);
+            const pneusComPressao = pneusVeiculo.filter(p => p.pressao_atual != null);
+            const LIMITE_SEGURANCA = 3;
+
+            const avgSulco = pneusComSulco.length > 0
+              ? pneusComSulco.reduce((s, p) => s + Number(p.sulco_atual), 0) / pneusComSulco.length
+              : null;
+            const minSulco = pneusComSulco.length > 0
+              ? Math.min(...pneusComSulco.map(p => Number(p.sulco_atual)))
+              : null;
+            const avgPressao = pneusComPressao.length > 0
+              ? pneusComPressao.reduce((s, p) => s + Number(p.pressao_atual), 0) / pneusComPressao.length
+              : null;
+
+            // Life status per tire
+            const pneusDescarte = pneusComSulco.filter(p => Number(p.sulco_atual) <= LIMITE_SEGURANCA);
+            const pneusAtencaoSulco = pneusComSulco.filter(p => Number(p.sulco_atual) > LIMITE_SEGURANCA && Number(p.sulco_atual) <= 5);
+            const pneusOk = pneusComSulco.filter(p => Number(p.sulco_atual) > 5);
+
+            // Sulco % relative to initial (average)
+            const avgSulcoInicial = pneusComSulco.length > 0
+              ? pneusComSulco.reduce((s, p) => s + Number(p.sulco_inicial || 16), 0) / pneusComSulco.length
+              : 16;
+            const vidaPercent = avgSulco != null ? Math.max(0, Math.min(100, ((avgSulco - LIMITE_SEGURANCA) / (avgSulcoInicial - LIMITE_SEGURANCA)) * 100)) : 0;
 
             return (
               <Card
@@ -217,7 +243,7 @@ export default function Frota() {
                     <div className="flex items-center gap-2">
                       {hasCritico && (
                         <Badge variant="destructive" className="text-xs animate-pulse">
-                          <AlertTriangle className="h-3 w-3 mr-1" />{criticos.length} crítico(s)
+                          <AlertTriangle className="h-3 w-3 mr-1" />{criticos.length}
                         </Badge>
                       )}
                       <Badge variant={v.status === "ativo" ? "default" : "secondary"}>{v.status || "ativo"}</Badge>
@@ -226,7 +252,7 @@ export default function Frota() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tipo</span>
                       <span>{v.tipo_veiculo}</span>
@@ -238,15 +264,78 @@ export default function Frota() {
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Modelo</span>
-                      <span>{v.modelo || "—"}</span>
-                    </div>
-                    <div className="flex justify-between">
                       <span className="text-muted-foreground">Pneus instalados</span>
                       <span>{pneusVeiculo.length} / {v.total_pneus}</span>
                     </div>
+
+                    {/* Tire Health Summary */}
+                    {pneusVeiculo.length > 0 && (
+                      <div className="border-t pt-3 space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1">
+                          <Gauge className="h-3 w-3" /> Saúde dos Pneus
+                        </div>
+
+                        {/* Sulco */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1">
+                            <Ruler className="h-3 w-3 text-muted-foreground" />
+                            <span>Sulco médio</span>
+                          </div>
+                          <span className={`font-semibold ${avgSulco != null && avgSulco <= LIMITE_SEGURANCA ? "text-destructive" : avgSulco != null && avgSulco <= 5 ? "text-yellow-500" : "text-primary"}`}>
+                            {avgSulco != null ? `${avgSulco.toFixed(1)}mm` : "—"}
+                          </span>
+                        </div>
+                        {minSulco != null && minSulco !== avgSulco && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground ml-4">Mín. sulco</span>
+                            <span className={`font-medium ${minSulco <= LIMITE_SEGURANCA ? "text-destructive" : minSulco <= 5 ? "text-yellow-500" : ""}`}>
+                              {minSulco.toFixed(1)}mm
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Pressão */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1">
+                            <Gauge className="h-3 w-3 text-muted-foreground" />
+                            <span>Pressão média</span>
+                          </div>
+                          <span className="font-semibold">{avgPressao != null ? `${avgPressao.toFixed(0)} PSI` : "—"}</span>
+                        </div>
+
+                        {/* Vida útil progress */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Vida útil restante</span>
+                            <span className="font-medium">{vidaPercent.toFixed(0)}%</span>
+                          </div>
+                          <Progress value={vidaPercent} className={`h-2 ${vidaPercent <= 15 ? "[&>div]:bg-destructive" : vidaPercent <= 35 ? "[&>div]:bg-yellow-500" : ""}`} />
+                        </div>
+
+                        {/* Life status badges */}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {pneusOk.length > 0 && (
+                            <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
+                              <ShieldCheck className="h-3 w-3" />{pneusOk.length} OK
+                            </Badge>
+                          )}
+                          {pneusAtencaoSulco.length > 0 && (
+                            <Badge variant="outline" className="text-[10px] gap-1 border-yellow-500/40 text-yellow-600">
+                              <AlertTriangle className="h-3 w-3" />{pneusAtencaoSulco.length} Atenção
+                            </Badge>
+                          )}
+                          {pneusDescarte.length > 0 && (
+                            <Badge variant="destructive" className="text-[10px] gap-1">
+                              <Trash2 className="h-3 w-3" />{pneusDescarte.length} Descarte
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Existing alerts */}
                     {alertasVeiculo.length > 0 && (
-                      <div className="mt-2 space-y-1">
+                      <div className="border-t pt-2 space-y-1">
                         {criticos.length > 0 && (
                           <div className="flex items-center gap-1 text-destructive">
                             <AlertTriangle className="h-3 w-3" />
