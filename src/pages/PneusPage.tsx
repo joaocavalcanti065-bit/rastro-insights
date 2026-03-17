@@ -20,6 +20,7 @@ import { QrScanner } from "@/components/QrScanner";
 import { ExcelImport } from "@/components/ExcelImport";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
+const MEDIDAS = ["295/80 R22.5", "275/80 R22.5", "215/75 R17.5", "235/75 R17.5", "1000 R20", "1100 R22", "12.00 R24", "385/65 R22.5", "11 R22.5", "12 R22.5", "315/80 R22.5"];
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   em_estoque: { label: "Em Estoque", variant: "secondary" },
   instalado: { label: "Instalado", variant: "default" },
