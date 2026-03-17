@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, Legend } from "recharts";
-import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2 } from "lucide-react";
+import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2, Zap, CheckCircle2, AlertTriangle, Fuel } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import CpkTrendPanel from "@/components/eficiencia/CpkTrendPanel";
@@ -53,6 +53,8 @@ export default function EficienciaPage() {
   const [groupBy, setGroupBy] = useState<"marca" | "modelo" | "medida">("marca");
   const [filterMedida, setFilterMedida] = useState<string>("all");
   const [checkingAlerts, setCheckingAlerts] = useState(false);
+  const [calculando, setCalculando] = useState(false);
+  const [autoCalcResult, setAutoCalcResult] = useState<any>(null);
 
   const handleCheckCpkAlerts = async () => {
     setCheckingAlerts(true);
@@ -68,6 +70,25 @@ export default function EficienciaPage() {
       toast.error("Erro ao verificar alertas: " + (err.message || "erro desconhecido"));
     } finally {
       setCheckingAlerts(false);
+    }
+  };
+
+  const handleAutoCalculate = async () => {
+    setCalculando(true);
+    setAutoCalcResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-calculate-mvp");
+      if (error) throw error;
+      setAutoCalcResult(data);
+      if (data?.total_alerts > 0) {
+        toast.warning(`${data.total_alerts} alerta(s) gerado(s) para ${data.vehicles_processed} veículo(s).`);
+      } else {
+        toast.success(`Cálculos concluídos para ${data?.vehicles_processed || 0} veículo(s). Sem alertas.`);
+      }
+    } catch (err: any) {
+      toast.error("Erro nos cálculos: " + (err.message || "erro desconhecido"));
+    } finally {
+      setCalculando(false);
     }
   };
 
@@ -230,8 +251,86 @@ export default function EficienciaPage() {
             {checkingAlerts ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
             Verificar alertas CPK
           </Button>
+          <Button size="sm" onClick={handleAutoCalculate} disabled={calculando} className="gap-2">
+            {calculando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            Calcular KPIs Automático
+          </Button>
         </div>
       </div>
+
+      {/* Auto-Calculation Results */}
+      {autoCalcResult && autoCalcResult.results && autoCalcResult.results.length > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Resultado dos Cálculos Automatizados
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {autoCalcResult.vehicles_processed} veículo(s) processado(s) · {autoCalcResult.total_alerts} alerta(s)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {autoCalcResult.results.map((r: any, idx: number) => (
+                <div key={idx} className="p-4 rounded-lg border bg-card space-y-3">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <Fuel className="h-4 w-4 text-primary" />
+                    {r.veiculo.placa} — {r.veiculo.modelo || "N/A"}
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div className="p-2 bg-muted rounded">
+                      <p className="text-[10px] text-muted-foreground">Consumo Médio</p>
+                      <p className="font-bold font-mono">{r.fuel_kpis.consolidated.avg_km_per_liter} km/L</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <p className="text-[10px] text-muted-foreground">Custo/km (Comb.)</p>
+                      <p className="font-bold font-mono">R$ {r.fuel_kpis.consolidated.avg_cost_per_km}</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <p className="text-[10px] text-muted-foreground">Sulco Médio</p>
+                      <p className="font-bold font-mono">{r.tire_kpis.tread_avg_mm} mm</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <p className="text-[10px] text-muted-foreground">Vida Restante</p>
+                      <p className="font-bold font-mono">{r.tire_kpis.tread_life_remaining_pct}%</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    {["conservador", "base", "agressivo"].map((cenario) => (
+                      <div key={cenario} className="p-2 bg-muted/50 rounded text-center">
+                        <p className="text-[10px] text-muted-foreground capitalize">{cenario}</p>
+                        <p className="font-bold font-mono">
+                          {(r.tire_kpis.wear_projection[cenario].km_remaining / 1000).toFixed(1)}k km
+                        </p>
+                        <p className="text-[9px] text-muted-foreground">
+                          {r.tire_kpis.wear_projection[cenario].rate_mm_per_1000km} mm/1000km
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {r.alerts && r.alerts.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 text-amber-500" />
+                        {r.alerts.length} alerta(s)
+                      </p>
+                      {r.alerts.map((a: any, i: number) => (
+                        <div key={i} className="text-xs p-2 rounded bg-muted/50 flex items-start gap-2">
+                          <Badge variant={a.gravidade === "critica" ? "destructive" : "secondary"} className="text-[9px] shrink-0">
+                            {a.gravidade}
+                          </Badge>
+                          <span>{a.mensagem}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
