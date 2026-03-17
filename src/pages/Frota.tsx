@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { VehicleDetailPanel } from "@/components/frota/VehicleDetailPanel";
 import { toast } from "sonner";
-import { Truck, Plus, AlertTriangle, Eye, Gauge, Ruler, ShieldCheck, Trash2 } from "lucide-react";
+import { Truck, Plus, AlertTriangle, Eye, Gauge, Ruler, ShieldCheck, Trash2, Route } from "lucide-react";
 
 const TIPOS_VEICULO = [
   { label: "Carro / SUV / Van", value: "Carro", pneus: 4 },
@@ -49,7 +49,7 @@ export default function Frota() {
   const { data: pneus } = useQuery({
     queryKey: ["pneus-frota"],
     queryFn: async () => {
-      const { data } = await supabase.from("pneus").select("id, id_unico, veiculo_id, posicao_atual, sulco_atual, sulco_inicial, pressao_atual, pressao_ideal, marca, medida, status");
+      const { data } = await supabase.from("pneus").select("id, id_unico, veiculo_id, posicao_atual, sulco_atual, sulco_inicial, pressao_atual, pressao_ideal, marca, medida, status, km_atual, km_inicial");
       return data || [];
     },
   });
@@ -225,6 +225,11 @@ export default function Frota() {
             const pneusAtencaoSulco = pneusComSulco.filter(p => Number(p.sulco_atual) > LIMITE_SEGURANCA && Number(p.sulco_atual) <= 5);
             const pneusOk = pneusComSulco.filter(p => Number(p.sulco_atual) > 5);
 
+            // KM rodado per tire
+            const pneusComKm = pneusVeiculo.filter(p => p.km_atual != null);
+            const totalKmFrota = pneusComKm.reduce((s, p) => s + (Number(p.km_atual) - Number(p.km_inicial || 0)), 0);
+            const avgKmPneu = pneusComKm.length > 0 ? totalKmFrota / pneusComKm.length : 0;
+
             // Sulco % relative to initial (average)
             const avgSulcoInicial = pneusComSulco.length > 0
               ? pneusComSulco.reduce((s, p) => s + Number(p.sulco_inicial || 16), 0) / pneusComSulco.length
@@ -302,6 +307,21 @@ export default function Frota() {
                           </div>
                           <span className="font-semibold">{avgPressao != null ? `${avgPressao.toFixed(0)} PSI` : "—"}</span>
                         </div>
+
+                        {/* KM Rodado */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1">
+                            <Route className="h-3 w-3 text-muted-foreground" />
+                            <span>KM rodado (total)</span>
+                          </div>
+                          <span className="font-semibold">{totalKmFrota > 0 ? `${totalKmFrota.toLocaleString("pt-BR")} km` : "—"}</span>
+                        </div>
+                        {pneusComKm.length > 1 && avgKmPneu > 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground ml-4">Média/pneu</span>
+                            <span className="font-medium">{avgKmPneu.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km</span>
+                          </div>
+                        )}
 
                         {/* Vida útil progress */}
                         <div className="space-y-1">
