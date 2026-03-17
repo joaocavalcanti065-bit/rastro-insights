@@ -73,6 +73,25 @@ export default function EficienciaPage() {
     }
   };
 
+  const handleAutoCalculate = async () => {
+    setCalculando(true);
+    setAutoCalcResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-calculate-mvp");
+      if (error) throw error;
+      setAutoCalcResult(data);
+      if (data?.total_alerts > 0) {
+        toast.warning(`${data.total_alerts} alerta(s) gerado(s) para ${data.vehicles_processed} veículo(s).`);
+      } else {
+        toast.success(`Cálculos concluídos para ${data?.vehicles_processed || 0} veículo(s). Sem alertas.`);
+      }
+    } catch (err: any) {
+      toast.error("Erro nos cálculos: " + (err.message || "erro desconhecido"));
+    } finally {
+      setCalculando(false);
+    }
+  };
+
   const { data: pneus, isLoading } = useQuery({
     queryKey: ["eficiencia-pneus"],
     queryFn: async () => {
