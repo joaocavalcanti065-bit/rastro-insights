@@ -137,7 +137,7 @@ export default function PneusPage() {
                       <div><Label>Modelo</Label><Input value={form.modelo_pneu} onChange={e => setForm({ ...form, modelo_pneu: e.target.value })} /></div>
                       <div><Label>DOT</Label><Input value={form.dot} onChange={e => setForm({ ...form, dot: e.target.value })} /></div>
                     </div>
-                    <div><Label>Medida</Label><Input value={form.medida} onChange={e => setForm({ ...form, medida: e.target.value })} /></div>
+                    <div><Label>Medida</Label><CreatableSelect value={form.medida} onValueChange={v => setForm({ ...form, medida: v })} options={MEDIDAS} placeholder="Selecione ou digite" searchPlaceholder="Buscar medida..." /></div>
                   </>
                 )}
                 {step === 2 && (

@@ -194,7 +194,7 @@ export function EstoqueEntradaModal({ open, onClose, onSuccess }: Props) {
                 <div><Label>Modelo</Label><Input value={form.modelo_pneu} onChange={e => set("modelo_pneu", e.target.value)} /></div>
                 <div><Label>DOT</Label><Input value={form.dot} onChange={e => set("dot", e.target.value)} placeholder="Ex: 3521" /></div>
               </div>
-              <div><Label>Medida</Label><Input value={form.medida} onChange={e => set("medida", e.target.value)} /></div>
+              <div><Label>Medida</Label><CreatableSelect value={form.medida} onValueChange={v => set("medida", v)} options={["295/80 R22.5", "275/80 R22.5", "215/75 R17.5", "235/75 R17.5", "1000 R20", "1100 R22", "12.00 R24", "385/65 R22.5", "11 R22.5", "12 R22.5", "315/80 R22.5"]} placeholder="Selecione ou digite" searchPlaceholder="Buscar medida..." /></div>
             </>
           )}
           {step === 2 && (
