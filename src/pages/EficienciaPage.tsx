@@ -473,25 +473,29 @@ export default function EficienciaPage() {
                 <p className="text-lg font-bold font-mono text-foreground">R$ {fuelKpis.avgPrecoLitro.toFixed(2)}</p>
               </div>
             </div>
-            {fuelKpis.chartData.length > 1 && (
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={fuelKpis.chartData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="data" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-                    formatter={(val: number, name: string) => {
-                      if (name === "km/L") return [`${val.toFixed(2)} km/L`, name];
-                      return [`R$ ${val.toFixed(3)}/km`, name];
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line yAxisId="left" type="monotone" dataKey="kmL" name="km/L" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4 }} />
-                  <Line yAxisId="right" type="monotone" dataKey="custoKm" name="R$/km" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
+            {fuelKpis.chartData.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Evolução: Consumo (km/L) × Custo por km</p>
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={fuelKpis.chartData} margin={{ top: 10, right: 30, bottom: 10, left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="data" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} label={{ value: "km/L", angle: -90, position: "insideLeft", style: { fontSize: 11, fill: "hsl(var(--muted-foreground))" } }} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} label={{ value: "R$/km", angle: 90, position: "insideRight", style: { fontSize: 11, fill: "hsl(var(--muted-foreground))" } }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--foreground))" }}
+                      labelStyle={{ color: "hsl(var(--foreground))" }}
+                      formatter={(val: number, name: string) => {
+                        if (name === "km/L") return [`${val.toFixed(2)} km/L`, name];
+                        return [`R$ ${val.toFixed(3)}/km`, name];
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12, color: "hsl(var(--foreground))" }} />
+                    <Line yAxisId="left" type="monotone" dataKey="kmL" name="km/L" stroke="hsl(var(--chart-2))" strokeWidth={2.5} dot={{ r: 5, fill: "hsl(var(--chart-2))" }} activeDot={{ r: 7 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="custoKm" name="R$/km" stroke="hsl(var(--chart-4))" strokeWidth={2.5} dot={{ r: 5, fill: "hsl(var(--chart-4))" }} activeDot={{ r: 7 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </CardContent>
         </Card>
