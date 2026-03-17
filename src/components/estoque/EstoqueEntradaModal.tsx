@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CreatableSelect } from "@/components/ui/creatable-select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { MapPin, Sparkles } from "lucide-react";
