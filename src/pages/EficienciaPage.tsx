@@ -6,8 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, Legend } from "recharts";
-import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2, Zap, CheckCircle2, AlertTriangle, Fuel } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, Legend, LineChart, Line } from "recharts";
+import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2, Zap, CheckCircle2, AlertTriangle, Fuel, Droplets } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import CpkTrendPanel from "@/components/eficiencia/CpkTrendPanel";
@@ -104,6 +104,49 @@ export default function EficienciaPage() {
       return (data || []) as PneuRow[];
     },
   });
+
+  const { data: fuelData } = useQuery({
+    queryKey: ["eficiencia-fuel"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("coleta_manual_combustivel")
+        .select("*, veiculos!coleta_manual_combustivel_veiculo_id_fkey(placa, modelo)")
+        .order("data_abastecimento", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const fuelKpis = useMemo(() => {
+    if (!fuelData || fuelData.length === 0) return null;
+    const withKm = fuelData.filter((f: any) => f.km_rodado && f.km_rodado > 0);
+    const totalKm = withKm.reduce((s: number, f: any) => s + Number(f.km_rodado), 0);
+    const totalLitros = withKm.reduce((s: number, f: any) => s + Number(f.litros_abastecidos), 0);
+    const totalCusto = withKm.reduce((s: number, f: any) => s + Number(f.valor_total_pago), 0);
+    const avgKmL = totalLitros > 0 ? totalKm / totalLitros : 0;
+    const avgCustoPorKm = totalKm > 0 ? totalCusto / totalKm : 0;
+    const avgPrecoLitro = fuelData.reduce((s: number, f: any) => s + Number(f.preco_litro || 0), 0) / fuelData.length;
+
+    const chartData = fuelData
+      .filter((f: any) => f.consumo_km_por_litro && f.consumo_km_por_litro > 0)
+      .map((f: any) => ({
+        data: new Date(f.data_abastecimento).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+        kmL: Number(Number(f.consumo_km_por_litro).toFixed(2)),
+        custoKm: Number(Number(f.custo_por_km || 0).toFixed(3)),
+        placa: (f.veiculos as any)?.placa || "—",
+      }));
+
+    return {
+      totalAbastecimentos: fuelData.length,
+      totalKm,
+      totalLitros,
+      totalCusto,
+      avgKmL,
+      avgCustoPorKm,
+      avgPrecoLitro,
+      chartData,
+    };
+  }, [fuelData]);
 
   const medidas = useMemo(() => {
     if (!pneus) return [];
@@ -328,6 +371,65 @@ export default function EficienciaPage() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Fuel Efficiency Section */}
+      {fuelKpis && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Droplets className="h-5 w-5 text-primary" />
+              Eficiência de Combustível
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {fuelKpis.totalAbastecimentos} abastecimento(s) registrados
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Consumo Médio</p>
+                <p className="text-lg font-bold font-mono text-foreground">{fuelKpis.avgKmL.toFixed(2)} <span className="text-xs font-normal">km/L</span></p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Custo/km (Comb.)</p>
+                <p className="text-lg font-bold font-mono text-foreground">R$ {fuelKpis.avgCustoPorKm.toFixed(3)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Km Total</p>
+                <p className="text-lg font-bold font-mono text-foreground">{fuelKpis.totalKm.toLocaleString("pt-BR")}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Litros Total</p>
+                <p className="text-lg font-bold font-mono text-foreground">{fuelKpis.totalLitros.toFixed(1)} L</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Preço Médio/L</p>
+                <p className="text-lg font-bold font-mono text-foreground">R$ {fuelKpis.avgPrecoLitro.toFixed(2)}</p>
+              </div>
+            </div>
+            {fuelKpis.chartData.length > 1 && (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={fuelKpis.chartData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="data" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
+                    formatter={(val: number, name: string) => {
+                      if (name === "km/L") return [`${val.toFixed(2)} km/L`, name];
+                      return [`R$ ${val.toFixed(3)}/km`, name];
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Line yAxisId="left" type="monotone" dataKey="kmL" name="km/L" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="custoKm" name="R$/km" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       )}
