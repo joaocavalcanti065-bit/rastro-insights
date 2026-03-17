@@ -1036,6 +1036,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Savings Panel */}
+      <SavingsPanel fuelData={combustivel || []} pneus={pneus || []} compact />
+
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {statusDistribution.length > 0 && (
