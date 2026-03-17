@@ -615,7 +615,7 @@ export default function EficienciaPage() {
                     contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
                     formatter={(val: number) => [`R$ ${val.toFixed(3)}`, "CPK"]}
                   />
-                  <Bar dataKey="cpk" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="cpk" radius={[0, 4, 4, 0]} fill="hsl(var(--chart-1))">
                     {chartData.map((_, i) => (
                       <Cell key={i} fill={i === 0 ? "hsl(var(--chart-2))" : i < 3 ? "hsl(var(--chart-1))" : "hsl(var(--chart-4))"} />
                     ))}
