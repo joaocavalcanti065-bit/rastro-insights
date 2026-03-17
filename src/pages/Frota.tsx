@@ -49,7 +49,7 @@ export default function Frota() {
   const { data: pneus } = useQuery({
     queryKey: ["pneus-frota"],
     queryFn: async () => {
-      const { data } = await supabase.from("pneus").select("id, id_unico, veiculo_id, posicao_atual, sulco_atual, sulco_inicial, pressao_atual, pressao_ideal, marca, medida, status");
+      const { data } = await supabase.from("pneus").select("id, id_unico, veiculo_id, posicao_atual, sulco_atual, sulco_inicial, pressao_atual, pressao_ideal, marca, medida, status, km_atual, km_inicial");
       return data || [];
     },
   });
