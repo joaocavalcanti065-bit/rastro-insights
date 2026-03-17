@@ -110,7 +110,7 @@ export default function EficienciaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("coleta_manual_combustivel")
-        .select("*, veiculos!coleta_manual_combustivel_veiculo_id_fkey(placa, modelo)")
+        .select("*")
         .order("data_abastecimento", { ascending: true });
       if (error) throw error;
       return data || [];
@@ -133,7 +133,7 @@ export default function EficienciaPage() {
         data: new Date(f.data_abastecimento).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
         kmL: Number(Number(f.consumo_km_por_litro).toFixed(2)),
         custoKm: Number(Number(f.custo_por_km || 0).toFixed(3)),
-        placa: (f.veiculos as any)?.placa || "—",
+        placa: f.veiculo_id || "—",
       }));
 
     return {
