@@ -20,6 +20,7 @@ import { QrScanner } from "@/components/QrScanner";
 import { ExcelImport } from "@/components/ExcelImport";
 
 const MARCAS = ["Michelin", "Pirelli", "Goodyear", "Continental", "Bridgestone", "Dunlop", "Xbri", "Firestone", "Vipal", "Bandag"];
+const MEDIDAS = ["295/80 R22.5", "275/80 R22.5", "215/75 R17.5", "235/75 R17.5", "1000 R20", "1100 R22", "12.00 R24", "385/65 R22.5", "11 R22.5", "12 R22.5", "315/80 R22.5"];
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   em_estoque: { label: "Em Estoque", variant: "secondary" },
   instalado: { label: "Instalado", variant: "default" },
@@ -136,7 +137,7 @@ export default function PneusPage() {
                       <div><Label>Modelo</Label><Input value={form.modelo_pneu} onChange={e => setForm({ ...form, modelo_pneu: e.target.value })} /></div>
                       <div><Label>DOT</Label><Input value={form.dot} onChange={e => setForm({ ...form, dot: e.target.value })} /></div>
                     </div>
-                    <div><Label>Medida</Label><Input value={form.medida} onChange={e => setForm({ ...form, medida: e.target.value })} /></div>
+                    <div><Label>Medida</Label><CreatableSelect value={form.medida} onValueChange={v => setForm({ ...form, medida: v })} options={MEDIDAS} placeholder="Selecione ou digite" searchPlaceholder="Buscar medida..." /></div>
                   </>
                 )}
                 {step === 2 && (

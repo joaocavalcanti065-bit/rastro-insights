@@ -912,7 +912,7 @@ export default function MvpManual() {
                     <CreatableSelect value={novoPneu.marca} onValueChange={v => setNovoPneu(prev => ({ ...prev, marca: v }))} options={MARCAS_PNEU} placeholder="Selecione ou digite" searchPlaceholder="Buscar marca..." />
                   </div>
                   <div className="space-y-2"><Label>Modelo</Label><Input value={novoPneu.modelo_pneu} onChange={e => setNovoPneu(prev => ({ ...prev, modelo_pneu: e.target.value }))} placeholder="X Line Energy Z" /></div>
-                  <div className="space-y-2"><Label>Medida</Label><Input value={novoPneu.medida} onChange={e => setNovoPneu(prev => ({ ...prev, medida: e.target.value }))} placeholder="295/80 R22.5" /></div>
+                  <div className="space-y-2"><Label>Medida</Label><CreatableSelect value={novoPneu.medida} onValueChange={v => setNovoPneu(prev => ({ ...prev, medida: v }))} options={["295/80 R22.5", "275/80 R22.5", "215/75 R17.5", "235/75 R17.5", "1000 R20", "1100 R22", "12.00 R24", "385/65 R22.5", "11 R22.5", "12 R22.5", "315/80 R22.5"]} placeholder="Selecione ou digite" searchPlaceholder="Buscar medida..." /></div>
                   <div className="space-y-2"><Label>Valor Aquisição (R$)</Label><Input type="number" value={novoPneu.valor_aquisicao} onChange={e => setNovoPneu(prev => ({ ...prev, valor_aquisicao: e.target.value }))} /></div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

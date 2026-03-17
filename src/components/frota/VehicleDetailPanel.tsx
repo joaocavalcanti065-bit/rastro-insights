@@ -388,7 +388,7 @@ function PneuForm({ veiculoId, clienteId, onSuccess }: { veiculoId: string; clie
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label className="text-xs">Medida</Label>
-            <Input value={form.medida} onChange={e => setForm({ ...form, medida: e.target.value })} />
+            <CreatableSelect value={form.medida} onValueChange={v => setForm({ ...form, medida: v })} options={["295/80 R22.5", "275/80 R22.5", "215/75 R17.5", "235/75 R17.5", "1000 R20", "1100 R22", "12.00 R24", "385/65 R22.5", "11 R22.5", "12 R22.5", "315/80 R22.5"]} placeholder="Selecione ou digite" searchPlaceholder="Buscar medida..." />
           </div>
           <div>
             <Label className="text-xs">DOT</Label>
