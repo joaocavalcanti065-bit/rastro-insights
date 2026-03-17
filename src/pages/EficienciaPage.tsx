@@ -110,7 +110,7 @@ export default function EficienciaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("coleta_manual_combustivel")
-        .select("*, veiculos!coleta_manual_combustivel_veiculo_id_fkey(placa, modelo)")
+        .select("*")
         .order("data_abastecimento", { ascending: true });
       if (error) throw error;
       return data || [];
