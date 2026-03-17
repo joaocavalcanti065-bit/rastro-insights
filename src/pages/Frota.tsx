@@ -322,7 +322,6 @@ export default function Frota() {
                             <span className="font-medium">{avgKmPneu.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km</span>
                           </div>
                         )}
-                        </div>
 
                         {/* Vida útil progress */}
                         <div className="space-y-1">
