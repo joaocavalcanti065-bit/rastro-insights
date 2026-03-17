@@ -117,7 +117,68 @@ export default function EficienciaPage() {
     },
   });
 
-  const fuelKpis = useMemo(() => {
+  const { data: veiculos } = useQuery({
+    queryKey: ["eficiencia-veiculos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("veiculos")
+        .select("id, placa, modelo, marca, km_medio_mensal");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: allPneusWithVeiculo } = useQuery({
+    queryKey: ["eficiencia-pneus-veiculo"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pneus")
+        .select("veiculo_id, custo_aquisicao, custo_acumulado, km_atual, km_inicial, sulco_atual, id_unico")
+        .neq("status", "sucata")
+        .neq("status", "extraviado")
+        .not("veiculo_id", "is", null);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const custoIntegrado = useMemo(() => {
+    if (!veiculos || veiculos.length === 0) return [];
+    return veiculos.map((v: any) => {
+      const vPneus = (allPneusWithVeiculo || []).filter((p: any) => p.veiculo_id === v.id);
+      const custoPneus = vPneus.reduce((s: number, p: any) => s + Number(p.custo_aquisicao || 0) + Number(p.custo_acumulado || 0), 0);
+      const kmPneus = vPneus.reduce((s: number, p: any) => s + Math.max(0, (p.km_atual || 0) - (p.km_inicial || 0)), 0);
+      const cpkPneu = kmPneus > 0 ? custoPneus / kmPneus : 0;
+
+      const vFuel = (fuelData || []).filter((f: any) => f.veiculo_id === v.id);
+      const custoComb = vFuel.reduce((s: number, f: any) => s + Number(f.valor_total_pago || 0), 0);
+      const kmComb = vFuel.reduce((s: number, f: any) => s + Number(f.km_rodado || 0), 0);
+      const cpkComb = kmComb > 0 ? custoComb / kmComb : 0;
+
+      const custoTotal = custoPneus + custoComb;
+      const kmRef = Math.max(kmPneus, kmComb) || 1;
+      const cpkTotal = kmRef > 0 ? custoTotal / kmRef : 0;
+      const percPneu = custoTotal > 0 ? (custoPneus / custoTotal) * 100 : 0;
+      const percComb = custoTotal > 0 ? (custoComb / custoTotal) * 100 : 0;
+
+      return {
+        id: v.id,
+        placa: v.placa,
+        modelo: v.modelo || "—",
+        qtdPneus: vPneus.length,
+        custoPneus,
+        cpkPneu,
+        custoComb,
+        cpkComb,
+        custoTotal,
+        cpkTotal,
+        percPneu,
+        percComb,
+        kmRef,
+      };
+    }).filter((v: any) => v.custoTotal > 0);
+  }, [veiculos, allPneusWithVeiculo, fuelData]);
+
     if (!fuelData || fuelData.length === 0) return null;
     const withKm = fuelData.filter((f: any) => f.km_rodado && f.km_rodado > 0);
     const totalKm = withKm.reduce((s: number, f: any) => s + Number(f.km_rodado), 0);
