@@ -308,6 +308,22 @@ export default function Frota() {
                           <span className="font-semibold">{avgPressao != null ? `${avgPressao.toFixed(0)} PSI` : "—"}</span>
                         </div>
 
+                        {/* KM Rodado */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1">
+                            <Route className="h-3 w-3 text-muted-foreground" />
+                            <span>KM rodado (total)</span>
+                          </div>
+                          <span className="font-semibold">{totalKmFrota > 0 ? `${totalKmFrota.toLocaleString("pt-BR")} km` : "—"}</span>
+                        </div>
+                        {pneusComKm.length > 1 && avgKmPneu > 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground ml-4">Média/pneu</span>
+                            <span className="font-medium">{avgKmPneu.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km</span>
+                          </div>
+                        )}
+                        </div>
+
                         {/* Vida útil progress */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs">
