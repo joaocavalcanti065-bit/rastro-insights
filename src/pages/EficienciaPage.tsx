@@ -179,6 +179,7 @@ export default function EficienciaPage() {
     }).filter((v: any) => v.custoTotal > 0);
   }, [veiculos, allPneusWithVeiculo, fuelData]);
 
+  const fuelKpis = useMemo(() => {
     if (!fuelData || fuelData.length === 0) return null;
     const withKm = fuelData.filter((f: any) => f.km_rodado && f.km_rodado > 0);
     const totalKm = withKm.reduce((s: number, f: any) => s + Number(f.km_rodado), 0);
