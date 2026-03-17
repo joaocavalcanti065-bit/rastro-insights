@@ -375,6 +375,65 @@ export default function EficienciaPage() {
         </Card>
       )}
 
+      {/* Fuel Efficiency Section */}
+      {fuelKpis && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Droplets className="h-5 w-5 text-primary" />
+              Eficiência de Combustível
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {fuelKpis.totalAbastecimentos} abastecimento(s) registrados
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Consumo Médio</p>
+                <p className="text-lg font-bold font-mono text-foreground">{fuelKpis.avgKmL.toFixed(2)} <span className="text-xs font-normal">km/L</span></p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Custo/km (Comb.)</p>
+                <p className="text-lg font-bold font-mono text-foreground">R$ {fuelKpis.avgCustoPorKm.toFixed(3)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Km Total</p>
+                <p className="text-lg font-bold font-mono text-foreground">{fuelKpis.totalKm.toLocaleString("pt-BR")}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Litros Total</p>
+                <p className="text-lg font-bold font-mono text-foreground">{fuelKpis.totalLitros.toFixed(1)} L</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted">
+                <p className="text-[10px] text-muted-foreground uppercase">Preço Médio/L</p>
+                <p className="text-lg font-bold font-mono text-foreground">R$ {fuelKpis.avgPrecoLitro.toFixed(2)}</p>
+              </div>
+            </div>
+            {fuelKpis.chartData.length > 1 && (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={fuelKpis.chartData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="data" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
+                    formatter={(val: number, name: string) => {
+                      if (name === "km/L") return [`${val.toFixed(2)} km/L`, name];
+                      return [`R$ ${val.toFixed(3)}/km`, name];
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Line yAxisId="left" type="monotone" dataKey="kmL" name="km/L" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="custoKm" name="R$/km" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KpiCard icon={Target} label="Pneus analisados" value={String(totalPneus)} />
