@@ -19,8 +19,8 @@ interface PneuRecord {
   km_atual: number | null;
   km_inicial: number | null;
   custo_aquisicao: number | null;
-  pressao_atual: number | null;
-  pressao_ideal: number | null;
+  pressao_atual?: number | null;
+  pressao_ideal?: number | null;
 }
 
 interface SavingsPanelProps {
