@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ScatterChart, Scatter, ZAxis, Legend, LineChart, Line } from "recharts";
-import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2, Zap, CheckCircle2, AlertTriangle, Fuel, Droplets } from "lucide-react";
+import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSign, Route, BarChart3, ShieldAlert, Loader2, Zap, CheckCircle2, AlertTriangle, Fuel, Droplets, Truck, PieChart } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import CpkTrendPanel from "@/components/eficiencia/CpkTrendPanel";
@@ -116,6 +116,68 @@ export default function EficienciaPage() {
       return data || [];
     },
   });
+
+  const { data: veiculos } = useQuery({
+    queryKey: ["eficiencia-veiculos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("veiculos")
+        .select("id, placa, modelo, marca, km_medio_mensal");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: allPneusWithVeiculo } = useQuery({
+    queryKey: ["eficiencia-pneus-veiculo"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pneus")
+        .select("veiculo_id, custo_aquisicao, custo_acumulado, km_atual, km_inicial, sulco_atual, id_unico")
+        .neq("status", "sucata")
+        .neq("status", "extraviado")
+        .not("veiculo_id", "is", null);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const custoIntegrado = useMemo(() => {
+    if (!veiculos || veiculos.length === 0) return [];
+    return veiculos.map((v: any) => {
+      const vPneus = (allPneusWithVeiculo || []).filter((p: any) => p.veiculo_id === v.id);
+      const custoPneus = vPneus.reduce((s: number, p: any) => s + Number(p.custo_aquisicao || 0) + Number(p.custo_acumulado || 0), 0);
+      const kmPneus = vPneus.reduce((s: number, p: any) => s + Math.max(0, (p.km_atual || 0) - (p.km_inicial || 0)), 0);
+      const cpkPneu = kmPneus > 0 ? custoPneus / kmPneus : 0;
+
+      const vFuel = (fuelData || []).filter((f: any) => f.veiculo_id === v.id);
+      const custoComb = vFuel.reduce((s: number, f: any) => s + Number(f.valor_total_pago || 0), 0);
+      const kmComb = vFuel.reduce((s: number, f: any) => s + Number(f.km_rodado || 0), 0);
+      const cpkComb = kmComb > 0 ? custoComb / kmComb : 0;
+
+      const custoTotal = custoPneus + custoComb;
+      const kmRef = Math.max(kmPneus, kmComb) || 1;
+      const cpkTotal = kmRef > 0 ? custoTotal / kmRef : 0;
+      const percPneu = custoTotal > 0 ? (custoPneus / custoTotal) * 100 : 0;
+      const percComb = custoTotal > 0 ? (custoComb / custoTotal) * 100 : 0;
+
+      return {
+        id: v.id,
+        placa: v.placa,
+        modelo: v.modelo || "—",
+        qtdPneus: vPneus.length,
+        custoPneus,
+        cpkPneu,
+        custoComb,
+        cpkComb,
+        custoTotal,
+        cpkTotal,
+        percPneu,
+        percComb,
+        kmRef,
+      };
+    }).filter((v: any) => v.custoTotal > 0);
+  }, [veiculos, allPneusWithVeiculo, fuelData]);
 
   const fuelKpis = useMemo(() => {
     if (!fuelData || fuelData.length === 0) return null;
@@ -430,6 +492,69 @@ export default function EficienciaPage() {
                 </LineChart>
               </ResponsiveContainer>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Integrated Cost Panel */}
+      {custoIntegrado.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Truck className="h-5 w-5 text-primary" />
+              Custo Total Integrado por Veículo
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Pneus + Combustível — visão consolidada de custos operacionais
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {custoIntegrado.map((v: any) => (
+                <div key={v.id} className="p-4 rounded-lg border bg-card space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-primary" />
+                      <span className="font-bold text-foreground">{v.placa}</span>
+                      <span className="text-xs text-muted-foreground">{v.modelo}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Custo Total</p>
+                      <p className="text-lg font-bold font-mono text-foreground">R$ {v.custoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="p-3 rounded-lg bg-muted">
+                      <p className="text-[10px] text-muted-foreground uppercase">Custo Pneus</p>
+                      <p className="font-bold font-mono text-sm text-foreground">R$ {v.custoPneus.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                      <p className="text-[10px] text-muted-foreground">{v.qtdPneus} pneu(s) · CPK R$ {v.cpkPneu.toFixed(3)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted">
+                      <p className="text-[10px] text-muted-foreground uppercase">Custo Combustível</p>
+                      <p className="font-bold font-mono text-sm text-foreground">R$ {v.custoComb.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                      <p className="text-[10px] text-muted-foreground">CPK R$ {v.cpkComb.toFixed(3)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted">
+                      <p className="text-[10px] text-muted-foreground uppercase">CPK Integrado</p>
+                      <p className="font-bold font-mono text-sm text-primary">R$ {v.cpkTotal.toFixed(3)}/km</p>
+                      <p className="text-[10px] text-muted-foreground">{v.kmRef.toLocaleString("pt-BR")} km ref.</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted">
+                      <p className="text-[10px] text-muted-foreground uppercase">Distribuição</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="h-2 rounded-full bg-chart-1" style={{ width: `${v.percPneu}%` }} />
+                        <div className="h-2 rounded-full bg-chart-4" style={{ width: `${v.percComb}%` }} />
+                      </div>
+                      <div className="flex justify-between text-[9px] text-muted-foreground mt-1">
+                        <span>🔧 {v.percPneu.toFixed(0)}%</span>
+                        <span>⛽ {v.percComb.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
