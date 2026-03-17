@@ -497,6 +497,9 @@ export default function EficienciaPage() {
         </Card>
       )}
 
+      {/* Savings Panel */}
+      <SavingsPanel fuelData={fuelData || []} pneus={pneus || []} />
+
       {/* Integrated Cost Panel */}
       {custoIntegrado.length > 0 && (
         <Card>
