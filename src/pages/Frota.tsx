@@ -225,6 +225,11 @@ export default function Frota() {
             const pneusAtencaoSulco = pneusComSulco.filter(p => Number(p.sulco_atual) > LIMITE_SEGURANCA && Number(p.sulco_atual) <= 5);
             const pneusOk = pneusComSulco.filter(p => Number(p.sulco_atual) > 5);
 
+            // KM rodado per tire
+            const pneusComKm = pneusVeiculo.filter(p => p.km_atual != null);
+            const totalKmFrota = pneusComKm.reduce((s, p) => s + (Number(p.km_atual) - Number(p.km_inicial || 0)), 0);
+            const avgKmPneu = pneusComKm.length > 0 ? totalKmFrota / pneusComKm.length : 0;
+
             // Sulco % relative to initial (average)
             const avgSulcoInicial = pneusComSulco.length > 0
               ? pneusComSulco.reduce((s, p) => s + Number(p.sulco_inicial || 16), 0) / pneusComSulco.length
