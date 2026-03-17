@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Wrench, Plus } from "lucide-react";
+import { Wrench, Plus, Truck } from "lucide-react";
 
 const TIPOS = ["alinhamento", "balanceamento", "rodizio", "calibragem", "troca", "inspecao", "reparo"];
 const CAUSAS = ["desgaste_irregular", "pressao_inadequada", "falha_mecanica", "impacto", "preventivo"];
@@ -21,29 +21,60 @@ const CAUSAS = ["desgaste_irregular", "pressao_inadequada", "falha_mecanica", "i
 export default function ManutencaoPage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ pneu_id: "", tipo: "inspecao", causa: "preventivo", custo: 0, km: 0, obs: "" });
+  const [form, setForm] = useState({
+    veiculo_id: "",
+    pneu_id: "",
+    tipo: "inspecao",
+    causa: "preventivo",
+    custo: 0,
+    km: 0,
+    obs: "",
+  });
 
   const { data: manutencoes, isLoading } = useQuery({
     queryKey: ["manutencoes"],
     queryFn: async () => {
-      const { data } = await supabase.from("manutencoes").select("*, pneus(id_unico, marca)").order("created_at", { ascending: false });
+      const { data } = await supabase
+        .from("manutencoes")
+        .select("*, pneus(id_unico, marca), veiculos:veiculo_id(placa, modelo)")
+        .order("created_at", { ascending: false });
       return data || [];
     },
   });
 
-  const { data: pneusList } = useQuery({
-    queryKey: ["pneus-manut"],
+  const { data: veiculosList } = useQuery({
+    queryKey: ["veiculos-manut"],
     queryFn: async () => {
-      const { data } = await supabase.from("pneus").select("id, id_unico, marca");
+      const { data } = await supabase.from("veiculos").select("id, placa, modelo, marca");
       return data || [];
     },
   });
+
+  const { data: pneusAll } = useQuery({
+    queryKey: ["pneus-manut-all"],
+    queryFn: async () => {
+      const { data } = await supabase.from("pneus").select("id, id_unico, marca, veiculo_id, posicao_atual, localizacao");
+      return data || [];
+    },
+  });
+
+  // Filter pneus by selected vehicle (or show all if no vehicle selected)
+  const pneusFiltrados = useMemo(() => {
+    if (!pneusAll) return [];
+    if (!form.veiculo_id) return pneusAll;
+    return pneusAll.filter((p) => p.veiculo_id === form.veiculo_id);
+  }, [pneusAll, form.veiculo_id]);
 
   const createMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("manutencoes").insert({
-        pneu_id: form.pneu_id, tipo: form.tipo, causa: form.causa,
-        custo: form.custo, km_no_momento: form.km, observacoes: form.obs,
+        pneu_id: form.pneu_id || null,
+        veiculo_id: form.veiculo_id || null,
+        tipo: form.tipo,
+        causa: form.causa,
+        custo: form.custo,
+        km_no_momento: form.km,
+        observacoes: form.obs,
       });
       if (error) throw error;
     },
@@ -51,47 +82,151 @@ export default function ManutencaoPage() {
       queryClient.invalidateQueries({ queryKey: ["manutencoes"] });
       toast.success("Manutenção registrada!");
       setOpen(false);
+      setForm({ veiculo_id: "", pneu_id: "", tipo: "inspecao", causa: "preventivo", custo: 0, km: 0, obs: "" });
     },
     onError: () => toast.error("Erro ao registrar manutenção"),
   });
 
-  if (isLoading) return <div className="space-y-6"><h1 className="text-2xl font-bold">Manutenção</h1><Skeleton className="h-64 rounded-xl" /></div>;
+  if (isLoading)
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-foreground">Manutenção</h1>
+        <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Manutenção</h1>
+        <h1 className="text-2xl font-bold text-foreground">Manutenção</h1>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Registrar Serviço</Button></DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Nova Manutenção</DialogTitle></DialogHeader>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Registrar Serviço
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Nova Manutenção</DialogTitle>
+            </DialogHeader>
             <div className="grid gap-4">
-              <div><Label>Pneu</Label>
-                <Select value={form.pneu_id} onValueChange={v => setForm({ ...form, pneu_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>{pneusList?.map(p => <SelectItem key={p.id} value={p.id}>{p.id_unico} — {p.marca}</SelectItem>)}</SelectContent>
+              {/* Step 1: Select Vehicle */}
+              <div>
+                <Label className="flex items-center gap-1.5 mb-1.5">
+                  <Truck className="h-3.5 w-3.5 text-primary" />
+                  Veículo
+                </Label>
+                <Select
+                  value={form.veiculo_id}
+                  onValueChange={(v) => setForm({ ...form, veiculo_id: v, pneu_id: "" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o veículo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum (serviço avulso)</SelectItem>
+                    {veiculosList?.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.placa} — {v.marca} {v.modelo || ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
+
+              {/* Step 2: Select Tire (filtered by vehicle) */}
+              <div>
+                <Label className="flex items-center gap-1.5 mb-1.5">
+                  <Wrench className="h-3.5 w-3.5 text-primary" />
+                  Pneu
+                  {form.veiculo_id && form.veiculo_id !== "none" && (
+                    <span className="text-[10px] text-muted-foreground font-normal ml-1">
+                      ({pneusFiltrados.length} pneu(s) neste veículo)
+                    </span>
+                  )}
+                </Label>
+                <Select value={form.pneu_id} onValueChange={(v) => setForm({ ...form, pneu_id: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o pneu" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pneusFiltrados.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        {form.veiculo_id && form.veiculo_id !== "none"
+                          ? "Nenhum pneu instalado neste veículo"
+                          : "Selecione um veículo primeiro ou escolha um pneu"}
+                      </div>
+                    ) : (
+                      pneusFiltrados.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.id_unico} — {p.marca}
+                          {p.posicao_atual ? ` (Pos: ${p.posicao_atual})` : ""}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Tipo</Label>
-                  <Select value={form.tipo} onValueChange={v => setForm({ ...form, tipo: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                <div>
+                  <Label>Tipo</Label>
+                  <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIPOS.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Causa</Label>
-                  <Select value={form.causa} onValueChange={v => setForm({ ...form, causa: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{CAUSAS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                <div>
+                  <Label>Causa</Label>
+                  <Select value={form.causa} onValueChange={(v) => setForm({ ...form, causa: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CAUSAS.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Custo (R$)</Label><Input type="number" value={form.custo} onChange={e => setForm({ ...form, custo: Number(e.target.value) })} /></div>
-                <div><Label>KM no Momento</Label><Input type="number" value={form.km} onChange={e => setForm({ ...form, km: Number(e.target.value) })} /></div>
+                <div>
+                  <Label>Custo (R$)</Label>
+                  <Input
+                    type="number"
+                    value={form.custo}
+                    onChange={(e) => setForm({ ...form, custo: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>KM no Momento</Label>
+                  <Input
+                    type="number"
+                    value={form.km}
+                    onChange={(e) => setForm({ ...form, km: Number(e.target.value) })}
+                  />
+                </div>
               </div>
-              <div><Label>Observações</Label><Textarea value={form.obs} onChange={e => setForm({ ...form, obs: e.target.value })} /></div>
-              <Button onClick={() => createMutation.mutate()} disabled={!form.pneu_id || createMutation.isPending}>
+              <div>
+                <Label>Observações</Label>
+                <Textarea value={form.obs} onChange={(e) => setForm({ ...form, obs: e.target.value })} />
+              </div>
+              <Button
+                onClick={() => createMutation.mutate()}
+                disabled={!form.pneu_id || createMutation.isPending}
+              >
                 {createMutation.isPending ? "Salvando..." : "Registrar"}
               </Button>
             </div>
@@ -100,7 +235,13 @@ export default function ManutencaoPage() {
       </div>
 
       {!manutencoes?.length ? (
-        <EmptyState icon={Wrench} title="Nenhuma manutenção registrada" description="Registre serviços como alinhamento, calibragem e rodízio para acompanhar o histórico." actionLabel="Registrar Serviço" onAction={() => setOpen(true)} />
+        <EmptyState
+          icon={Wrench}
+          title="Nenhuma manutenção registrada"
+          description="Registre serviços como alinhamento, calibragem e rodízio para acompanhar o histórico."
+          actionLabel="Registrar Serviço"
+          onAction={() => setOpen(true)}
+        />
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -108,6 +249,7 @@ export default function ManutencaoPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
+                  <TableHead>Veículo</TableHead>
                   <TableHead>Pneu</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Causa</TableHead>
@@ -116,11 +258,18 @@ export default function ManutencaoPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {manutencoes.map(m => (
+                {manutencoes.map((m: any) => (
                   <TableRow key={m.id}>
                     <TableCell>{new Date(m.created_at).toLocaleDateString("pt-BR")}</TableCell>
-                    <TableCell className="font-mono">{(m as any).pneus?.id_unico || "—"}</TableCell>
-                    <TableCell><Badge variant="outline">{m.tipo}</Badge></TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {m.veiculos?.placa || "—"}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {m.pneus?.id_unico || "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{m.tipo}</Badge>
+                    </TableCell>
                     <TableCell className="text-sm">{m.causa || "—"}</TableCell>
                     <TableCell>R$ {Number(m.custo || 0).toLocaleString("pt-BR")}</TableCell>
                     <TableCell>{m.km_no_momento?.toLocaleString() || "—"}</TableCell>
