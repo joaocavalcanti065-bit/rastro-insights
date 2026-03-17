@@ -105,6 +105,49 @@ export default function EficienciaPage() {
     },
   });
 
+  const { data: fuelData } = useQuery({
+    queryKey: ["eficiencia-fuel"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("coleta_manual_combustivel")
+        .select("*, veiculos!coleta_manual_combustivel_veiculo_id_fkey(placa, modelo)")
+        .order("data_abastecimento", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const fuelKpis = useMemo(() => {
+    if (!fuelData || fuelData.length === 0) return null;
+    const withKm = fuelData.filter((f: any) => f.km_rodado && f.km_rodado > 0);
+    const totalKm = withKm.reduce((s: number, f: any) => s + Number(f.km_rodado), 0);
+    const totalLitros = withKm.reduce((s: number, f: any) => s + Number(f.litros_abastecidos), 0);
+    const totalCusto = withKm.reduce((s: number, f: any) => s + Number(f.valor_total_pago), 0);
+    const avgKmL = totalLitros > 0 ? totalKm / totalLitros : 0;
+    const avgCustoPorKm = totalKm > 0 ? totalCusto / totalKm : 0;
+    const avgPrecoLitro = fuelData.reduce((s: number, f: any) => s + Number(f.preco_litro || 0), 0) / fuelData.length;
+
+    const chartData = fuelData
+      .filter((f: any) => f.consumo_km_por_litro && f.consumo_km_por_litro > 0)
+      .map((f: any) => ({
+        data: new Date(f.data_abastecimento).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+        kmL: Number(Number(f.consumo_km_por_litro).toFixed(2)),
+        custoKm: Number(Number(f.custo_por_km || 0).toFixed(3)),
+        placa: (f.veiculos as any)?.placa || "—",
+      }));
+
+    return {
+      totalAbastecimentos: fuelData.length,
+      totalKm,
+      totalLitros,
+      totalCusto,
+      avgKmL,
+      avgCustoPorKm,
+      avgPrecoLitro,
+      chartData,
+    };
+  }, [fuelData]);
+
   const medidas = useMemo(() => {
     if (!pneus) return [];
     return [...new Set(pneus.map(p => p.medida).filter(Boolean))].sort() as string[];
