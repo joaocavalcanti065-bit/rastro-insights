@@ -11,6 +11,7 @@ import { Trophy, Medal, Award, TrendingDown, TrendingUp, Target, Gauge, DollarSi
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import CpkTrendPanel from "@/components/eficiencia/CpkTrendPanel";
+import { SavingsPanel } from "@/components/eficiencia/SavingsPanel";
 
 interface PneuRow {
   id: string;
