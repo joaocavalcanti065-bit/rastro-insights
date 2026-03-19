@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Truck, Circle, Package, MapPin, RefreshCw,
-  Wrench, Bell, FileText, Settings, Link2, Cog, LogOut, Activity, BarChart3
+  Wrench, Bell, FileText, Settings, Link2, Cog, LogOut, Activity, BarChart3, Bot
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,7 @@ const navItems = [
   { title: "Manutenção", url: "/manutencao", icon: Wrench },
   { title: "Alertas", url: "/alertas", icon: Bell },
   { title: "Eficiência", url: "/eficiencia", icon: BarChart3 },
+  { title: "Assistente IA", url: "/assistente-ia", icon: Bot },
   { title: "Relatórios", url: "/relatorios", icon: FileText },
   { title: "Cadastros", url: "/cadastros", icon: Settings },
   { title: "Integrações", url: "/integracoes", icon: Link2 },
