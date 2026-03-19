@@ -16,10 +16,10 @@ type Msg = { role: "user" | "assistant"; content: string };
 type Conversation = { id: string; title: string; messages: Msg[] };
 
 const SUGGESTIONS = [
-  "Quais são as melhores práticas para aumentar a vida útil dos pneus?",
-  "Como interpretar o índice CPK da minha frota?",
-  "Sugira um plano de recapagem para reduzir custos",
-  "O que significa o código DOT de um pneu?",
+  "Qual o estado geral da minha frota hoje?",
+  "Quais pneus estão com sulco crítico e precisam de troca?",
+  "Gere um resumo executivo dos alertas ativos",
+  "Analise o custo por km dos meus pneus e sugira otimizações",
 ];
 
 async function streamChat({
