@@ -94,6 +94,7 @@ const AppRoutes = () => {
       <Route path="/manutencao" element={<ProtectedLayout session={session}><ManutencaoPage /></ProtectedLayout>} />
       <Route path="/alertas" element={<ProtectedLayout session={session}><AlertasPage /></ProtectedLayout>} />
       <Route path="/eficiencia" element={<ProtectedLayout session={session}><EficienciaPage /></ProtectedLayout>} />
+      <Route path="/assistente-ia" element={<ProtectedLayout session={session}><AssistenteIAPage /></ProtectedLayout>} />
       <Route path="/relatorios" element={<ProtectedLayout session={session}><RelatoriosPage /></ProtectedLayout>} />
       <Route path="/cadastros" element={<ProtectedLayout session={session}><CadastrosPage /></ProtectedLayout>} />
       <Route path="/integracoes" element={<ProtectedLayout session={session}><IntegracoesPage /></ProtectedLayout>} />
