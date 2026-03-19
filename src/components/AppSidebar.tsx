@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Truck, Circle, Package, MapPin, RefreshCw,
-  Wrench, Bell, FileText, Settings, Link2, Cog, LogOut, Activity, BarChart3
+  Wrench, Bell, FileText, Settings, Link2, Cog, LogOut, Activity, BarChart3, Bot
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
