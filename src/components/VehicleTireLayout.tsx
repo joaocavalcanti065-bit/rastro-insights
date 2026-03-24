@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 
 interface TireData {
   id: string;
@@ -28,7 +27,7 @@ type AxleType = "direcional" | "tracao" | "livre";
 interface AxleConfig {
   type: AxleType;
   label: string;
-  dual: boolean; // true = duplo (interno + externo)
+  dual: boolean;
 }
 
 function getAxleConfigs(tipo: string, eixos: number): AxleConfig[] {
@@ -54,8 +53,11 @@ function getAxleConfigs(tipo: string, eixos: number): AxleConfig[] {
     configs.push({ type: "livre", label: "Eixo 4 (Livre)", dual: true });
   } else if (tipo === "Cavalo Mecânico") {
     configs.push({ type: "tracao", label: "Eixo 2 (Tração)", dual: true });
+    // If more than 2 axles, add trailer/extra axles
+    for (let i = 3; i <= eixos; i++) {
+      configs.push({ type: "livre", label: `Eixo ${i} (Livre)`, dual: true });
+    }
   } else {
-    // Generic: first direcional already added, rest are dual
     for (let i = 2; i <= eixos; i++) {
       configs.push({
         type: i <= Math.ceil(eixos / 2) + 1 ? "tracao" : "livre",
@@ -69,35 +71,33 @@ function getAxleConfigs(tipo: string, eixos: number): AxleConfig[] {
 }
 
 function generatePositionCodes(axles: AxleConfig[]): string[][] {
-  // Each axle returns an array of position codes
-  // Convention: D=Direcional, T=Tração, L=Livre, number=axle, E=Esquerdo, D=Direito, I=Interno, X=Externo
   return axles.map((axle, idx) => {
     const num = idx + 1;
     const prefix = axle.type === "direcional" ? "D" : axle.type === "tracao" ? "T" : "L";
     if (axle.dual) {
-      // 4 tires: Left External, Left Internal, Right Internal, Right External
       return [
-        `${prefix}${num}EE`, // Esquerdo Externo
-        `${prefix}${num}EI`, // Esquerdo Interno
-        `${prefix}${num}DI`, // Direito Interno
-        `${prefix}${num}DE`, // Direito Externo
+        `${prefix}${num}EE`,
+        `${prefix}${num}EI`,
+        `${prefix}${num}DI`,
+        `${prefix}${num}DE`,
       ];
     }
-    // 2 tires: Left, Right
     return [`${prefix}${num}E`, `${prefix}${num}D`];
   });
 }
 
 function getSulcoColor(sulcoAtual: number | null, sulcoInicial: number | null): string {
-  if (sulcoAtual == null || sulcoInicial == null || sulcoInicial === 0) return "bg-muted text-muted-foreground";
-  const pct = (sulcoAtual / sulcoInicial) * 100;
+  if (sulcoAtual == null) return "bg-muted text-muted-foreground";
+  const ref = sulcoInicial && sulcoInicial > 0 ? sulcoInicial : 16;
+  const pct = (sulcoAtual / ref) * 100;
   if (pct >= 60) return "bg-emerald-500/20 text-emerald-400 border-emerald-500/50";
   if (pct >= 35) return "bg-amber-500/20 text-amber-400 border-amber-500/50";
   return "bg-red-500/20 text-red-400 border-red-500/50";
 }
 
 function getPressaoColor(pressaoAtual: number | null, pressaoIdeal: number | null): string {
-  if (pressaoAtual == null || pressaoIdeal == null || pressaoIdeal === 0) return "text-muted-foreground";
+  if (pressaoAtual == null) return "text-muted-foreground";
+  if (pressaoIdeal == null || pressaoIdeal === 0) return "text-muted-foreground";
   const desvio = Math.abs(pressaoAtual - pressaoIdeal) / pressaoIdeal;
   if (desvio <= 0.05) return "text-emerald-400";
   if (desvio <= 0.1) return "text-amber-400";
@@ -117,7 +117,7 @@ function TireSlot({
   const pressaoColor = tire ? getPressaoColor(tire.pressao_atual, tire.pressao_ideal) : "";
   const sulcoPct = tire?.sulco_inicial && tire.sulco_inicial > 0
     ? Math.round(((tire.sulco_atual || 0) / tire.sulco_inicial) * 100)
-    : null;
+    : tire?.sulco_atual != null ? Math.round(((tire.sulco_atual) / 16) * 100) : null;
 
   if (!tire) {
     return (
@@ -134,8 +134,7 @@ function TireSlot({
         <div
           className={`w-14 h-24 rounded-lg border-2 flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all hover:scale-105 ${sulcoColor} ${side === "right" ? "ml-1" : "mr-1"}`}
         >
-          <span className="text-[9px] font-mono font-bold truncate w-full text-center">{tire.id_unico}</span>
-          {/* Sulco bar */}
+          <span className="text-[9px] font-mono font-bold truncate w-full text-center">{tire.id_unico.split('-').pop()}</span>
           <div className="w-10 h-1.5 rounded-full bg-background/50 overflow-hidden">
             <div
               className="h-full rounded-full bg-current"
@@ -166,7 +165,6 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
   const axleConfigs = useMemo(() => getAxleConfigs(tipoVeiculo, quantidadeEixos), [tipoVeiculo, quantidadeEixos]);
   const positionGrid = useMemo(() => generatePositionCodes(axleConfigs), [axleConfigs]);
 
-  // Map pneus by posicao_atual
   const tireMap = useMemo(() => {
     const map: Record<string, TireData> = {};
     pneus.forEach((p) => {
@@ -175,12 +173,26 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
     return map;
   }, [pneus]);
 
+  const allPositionCodes = useMemo(() => {
+    const codes = new Set(positionGrid.flat());
+    if (possuiEstepe) {
+      for (let i = 1; i <= quantidadeEstepes; i++) codes.add(`EST${i}`);
+    }
+    return codes;
+  }, [positionGrid, possuiEstepe, quantidadeEstepes]);
+
+  const unmatchedTires = useMemo(() => {
+    return pneus.filter(p => p.posicao_atual && !allPositionCodes.has(p.posicao_atual) && !p.posicao_atual.startsWith("EST"));
+  }, [pneus, allPositionCodes]);
+
   const spareTires = pneus.filter(p => p.posicao_atual?.startsWith("EST"));
+
+  const totalSlots = positionGrid.flat().length + (possuiEstepe ? quantidadeEstepes : 0);
 
   return (
     <div className="flex flex-col items-center gap-2 py-4">
       {/* Legend */}
-      <div className="flex gap-4 text-[10px] mb-2">
+      <div className="flex flex-wrap gap-3 text-[10px] mb-2 justify-center">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/50" />
           <span className="text-muted-foreground">Bom (≥60%)</span>
@@ -201,16 +213,13 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
 
       {/* Vehicle body */}
       <div className="relative">
-        {/* Cab indicator */}
         <div className="flex justify-center mb-1">
           <div className="w-20 h-8 rounded-t-xl bg-muted/50 border border-b-0 border-muted-foreground/20 flex items-center justify-center">
             <span className="text-[9px] text-muted-foreground font-medium">CABINE</span>
           </div>
         </div>
 
-        {/* Chassis + axles */}
         <div className="relative flex flex-col items-center">
-          {/* Central chassis bar */}
           <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-16 bg-muted/30 border-x border-muted-foreground/15 rounded-b-lg z-0" />
 
           <div className="relative z-10 flex flex-col gap-6 py-2">
@@ -224,17 +233,12 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
                 <div key={axleIdx} className="flex flex-col items-center gap-1">
                   <span className="text-[9px] text-muted-foreground font-medium">{axle.label}</span>
                   <div className="flex items-center gap-0">
-                    {/* Left side */}
                     <div className="flex gap-0.5">
                       {leftPositions.map((pos) => (
                         <TireSlot key={pos} positionCode={pos} tire={tireMap[pos]} side="left" />
                       ))}
                     </div>
-
-                    {/* Axle bar */}
                     <div className="w-16 h-1 bg-muted-foreground/30 rounded-full" />
-
-                    {/* Right side */}
                     <div className="flex gap-0.5">
                       {rightPositions.map((pos) => (
                         <TireSlot key={pos} positionCode={pos} tire={tireMap[pos]} side="right" />
@@ -255,20 +259,41 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
               {Array.from({ length: quantidadeEstepes }).map((_, i) => {
                 const code = `EST${i + 1}`;
                 const tire = spareTires[i];
-                return (
-                  <TireSlot key={code} positionCode={code} tire={tire} side="left" />
-                );
+                return <TireSlot key={code} positionCode={code} tire={tire} side="left" />;
               })}
             </div>
           </div>
         )}
       </div>
 
+      {/* Unmatched tires */}
+      {unmatchedTires.length > 0 && (
+        <div className="mt-2 w-full border-t border-muted-foreground/15 pt-2">
+          <span className="text-[10px] text-amber-400 font-medium">
+            {unmatchedTires.length} pneu(s) sem posição mapeada:
+          </span>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {unmatchedTires.map((t) => (
+              <Tooltip key={t.id}>
+                <TooltipTrigger asChild>
+                  <div className="px-2 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-[9px] text-amber-400 cursor-help">
+                    {t.id_unico.split('-').pop()} ({t.posicao_atual}) — {t.sulco_atual ?? "—"}mm
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{t.id_unico} — {t.marca} — {t.posicao_atual}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Summary */}
       <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
         <span>{pneus.length} pneu(s) instalado(s)</span>
         <span>•</span>
-        <span>{positionGrid.flat().length + (possuiEstepe ? quantidadeEstepes : 0)} posição(ões)</span>
+        <span>{totalSlots} posição(ões)</span>
       </div>
     </div>
   );
