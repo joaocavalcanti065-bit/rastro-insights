@@ -35,7 +35,17 @@ export default function Frota() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedVeiculo, setSelectedVeiculo] = useState<string | null>(null);
+  const [selectedClienteId, setSelectedClienteId] = useState<string>("todos");
+  const [formClienteId, setFormClienteId] = useState<string>("");
   const [form, setForm] = useState({ placa: "", tipo_veiculo: "", modelo: "", marca: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
+
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes"],
+    queryFn: async () => {
+      const { data } = await supabase.from("clientes").select("id, nome, nome_fantasia").order("nome");
+      return data || [];
+    },
+  });
 
   const { data: veiculos, isLoading } = useQuery({
     queryKey: ["veiculos"],
