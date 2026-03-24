@@ -17,6 +17,38 @@ export default function CadastrosPage() {
   const queryClient = useQueryClient();
   const [fornOpen, setFornOpen] = useState(false);
   const [fornForm, setFornForm] = useState({ nome: "", tipo: "recapadora", cnpj: "", contato: "" });
+  const [clienteOpen, setClienteOpen] = useState(false);
+  const [clienteForm, setClienteForm] = useState({ nome: "", nome_fantasia: "", responsavel: "", telefone: "", email: "", cidade: "", observacoes: "" });
+
+  const { data: clientesData } = useQuery({
+    queryKey: ["clientes"],
+    queryFn: async () => {
+      const { data } = await supabase.from("clientes").select("*").order("created_at", { ascending: false });
+      return data || [];
+    },
+  });
+
+  const createCliente = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("clientes").insert({
+        nome: clienteForm.nome,
+        nome_fantasia: clienteForm.nome_fantasia || null,
+        responsavel: clienteForm.responsavel || null,
+        telefone: clienteForm.telefone || null,
+        email: clienteForm.email || null,
+        cidade: clienteForm.cidade || null,
+        observacoes: clienteForm.observacoes || null,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      toast.success("Cliente cadastrado!");
+      setClienteOpen(false);
+      setClienteForm({ nome: "", nome_fantasia: "", responsavel: "", telefone: "", email: "", cidade: "", observacoes: "" });
+    },
+    onError: () => toast.error("Erro ao cadastrar cliente"),
+  });
 
   const { data: fornecedores } = useQuery({
     queryKey: ["fornecedores"],
