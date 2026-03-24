@@ -44,11 +44,70 @@ export default function CadastrosPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Cadastros</h1>
 
-      <Tabs defaultValue="fornecedores">
+      <Tabs defaultValue="clientes">
         <TabsList>
+          <TabsTrigger value="clientes">Clientes</TabsTrigger>
           <TabsTrigger value="fornecedores">Fornecedores</TabsTrigger>
           <TabsTrigger value="empresas">Empresa</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="clientes" className="space-y-4">
+          <div className="flex justify-end">
+            <Dialog open={clienteOpen} onOpenChange={setClienteOpen}>
+              <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo Cliente</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Novo Cliente</DialogTitle></DialogHeader>
+                <div className="grid gap-4">
+                  <div><Label>Nome *</Label><Input value={clienteForm.nome} onChange={e => setClienteForm({ ...clienteForm, nome: e.target.value })} /></div>
+                  <div><Label>Nome Fantasia</Label><Input value={clienteForm.nome_fantasia} onChange={e => setClienteForm({ ...clienteForm, nome_fantasia: e.target.value })} /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label>Responsável</Label><Input value={clienteForm.responsavel} onChange={e => setClienteForm({ ...clienteForm, responsavel: e.target.value })} /></div>
+                    <div><Label>Telefone</Label><Input value={clienteForm.telefone} onChange={e => setClienteForm({ ...clienteForm, telefone: e.target.value })} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label>Email</Label><Input value={clienteForm.email} onChange={e => setClienteForm({ ...clienteForm, email: e.target.value })} /></div>
+                    <div><Label>Cidade</Label><Input value={clienteForm.cidade} onChange={e => setClienteForm({ ...clienteForm, cidade: e.target.value })} /></div>
+                  </div>
+                  <div><Label>Observações</Label><Input value={clienteForm.observacoes} onChange={e => setClienteForm({ ...clienteForm, observacoes: e.target.value })} /></div>
+                  <Button onClick={() => createCliente.mutate()} disabled={!clienteForm.nome || createCliente.isPending}>
+                    {createCliente.isPending ? "Salvando..." : "Cadastrar"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {!clientesData?.length ? (
+            <EmptyState icon={Users} title="Nenhum cliente" description="Cadastre o primeiro cliente para vincular veículos." actionLabel="Cadastrar Cliente" onAction={() => setClienteOpen(true)} />
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Fantasia</TableHead>
+                      <TableHead>Responsável</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Cidade</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {clientesData.map(c => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium">{c.nome}</TableCell>
+                        <TableCell>{c.nome_fantasia || "—"}</TableCell>
+                        <TableCell>{c.responsavel || "—"}</TableCell>
+                        <TableCell>{c.telefone || "—"}</TableCell>
+                        <TableCell>{c.cidade || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         <TabsContent value="fornecedores" className="space-y-4">
           <div className="flex justify-end">
@@ -71,7 +130,7 @@ export default function CadastrosPage() {
                   <div><Label>CNPJ</Label><Input value={fornForm.cnpj} onChange={e => setFornForm({ ...fornForm, cnpj: e.target.value })} /></div>
                   <div><Label>Contato</Label><Input value={fornForm.contato} onChange={e => setFornForm({ ...fornForm, contato: e.target.value })} /></div>
                   <Button onClick={() => createFornecedor.mutate()} disabled={!fornForm.nome || createFornecedor.isPending}>
-                    {createFornecedor.isPending ? "Salvando..." : "Cadastrar"}
+                    {createFornecedor.isPending ? "Cadastrar"}
                   </Button>
                 </div>
               </DialogContent>
