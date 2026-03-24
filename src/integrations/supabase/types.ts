@@ -118,22 +118,40 @@ export type Database = {
       }
       clientes: {
         Row: {
+          cidade: string | null
           contato: string | null
           created_at: string
+          email: string | null
           id: string
           nome: string
+          nome_fantasia: string | null
+          observacoes: string | null
+          responsavel: string | null
+          telefone: string | null
         }
         Insert: {
+          cidade?: string | null
           contato?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           nome: string
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          responsavel?: string | null
+          telefone?: string | null
         }
         Update: {
+          cidade?: string | null
           contato?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           nome?: string
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          responsavel?: string | null
+          telefone?: string | null
         }
         Relationships: []
       }

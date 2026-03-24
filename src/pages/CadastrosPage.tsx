@@ -17,6 +17,38 @@ export default function CadastrosPage() {
   const queryClient = useQueryClient();
   const [fornOpen, setFornOpen] = useState(false);
   const [fornForm, setFornForm] = useState({ nome: "", tipo: "recapadora", cnpj: "", contato: "" });
+  const [clienteOpen, setClienteOpen] = useState(false);
+  const [clienteForm, setClienteForm] = useState({ nome: "", nome_fantasia: "", responsavel: "", telefone: "", email: "", cidade: "", observacoes: "" });
+
+  const { data: clientesData } = useQuery({
+    queryKey: ["clientes"],
+    queryFn: async () => {
+      const { data } = await supabase.from("clientes").select("*").order("created_at", { ascending: false });
+      return data || [];
+    },
+  });
+
+  const createCliente = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("clientes").insert({
+        nome: clienteForm.nome,
+        nome_fantasia: clienteForm.nome_fantasia || null,
+        responsavel: clienteForm.responsavel || null,
+        telefone: clienteForm.telefone || null,
+        email: clienteForm.email || null,
+        cidade: clienteForm.cidade || null,
+        observacoes: clienteForm.observacoes || null,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      toast.success("Cliente cadastrado!");
+      setClienteOpen(false);
+      setClienteForm({ nome: "", nome_fantasia: "", responsavel: "", telefone: "", email: "", cidade: "", observacoes: "" });
+    },
+    onError: () => toast.error("Erro ao cadastrar cliente"),
+  });
 
   const { data: fornecedores } = useQuery({
     queryKey: ["fornecedores"],
@@ -44,11 +76,70 @@ export default function CadastrosPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Cadastros</h1>
 
-      <Tabs defaultValue="fornecedores">
+      <Tabs defaultValue="clientes">
         <TabsList>
+          <TabsTrigger value="clientes">Clientes</TabsTrigger>
           <TabsTrigger value="fornecedores">Fornecedores</TabsTrigger>
           <TabsTrigger value="empresas">Empresa</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="clientes" className="space-y-4">
+          <div className="flex justify-end">
+            <Dialog open={clienteOpen} onOpenChange={setClienteOpen}>
+              <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo Cliente</Button></DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Novo Cliente</DialogTitle></DialogHeader>
+                <div className="grid gap-4">
+                  <div><Label>Nome *</Label><Input value={clienteForm.nome} onChange={e => setClienteForm({ ...clienteForm, nome: e.target.value })} /></div>
+                  <div><Label>Nome Fantasia</Label><Input value={clienteForm.nome_fantasia} onChange={e => setClienteForm({ ...clienteForm, nome_fantasia: e.target.value })} /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label>Responsável</Label><Input value={clienteForm.responsavel} onChange={e => setClienteForm({ ...clienteForm, responsavel: e.target.value })} /></div>
+                    <div><Label>Telefone</Label><Input value={clienteForm.telefone} onChange={e => setClienteForm({ ...clienteForm, telefone: e.target.value })} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><Label>Email</Label><Input value={clienteForm.email} onChange={e => setClienteForm({ ...clienteForm, email: e.target.value })} /></div>
+                    <div><Label>Cidade</Label><Input value={clienteForm.cidade} onChange={e => setClienteForm({ ...clienteForm, cidade: e.target.value })} /></div>
+                  </div>
+                  <div><Label>Observações</Label><Input value={clienteForm.observacoes} onChange={e => setClienteForm({ ...clienteForm, observacoes: e.target.value })} /></div>
+                  <Button onClick={() => createCliente.mutate()} disabled={!clienteForm.nome || createCliente.isPending}>
+                    {createCliente.isPending ? "Salvando..." : "Cadastrar"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {!clientesData?.length ? (
+            <EmptyState icon={Users} title="Nenhum cliente" description="Cadastre o primeiro cliente para vincular veículos." actionLabel="Cadastrar Cliente" onAction={() => setClienteOpen(true)} />
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Fantasia</TableHead>
+                      <TableHead>Responsável</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Cidade</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {clientesData.map(c => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium">{c.nome}</TableCell>
+                        <TableCell>{c.nome_fantasia || "—"}</TableCell>
+                        <TableCell>{c.responsavel || "—"}</TableCell>
+                        <TableCell>{c.telefone || "—"}</TableCell>
+                        <TableCell>{c.cidade || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         <TabsContent value="fornecedores" className="space-y-4">
           <div className="flex justify-end">

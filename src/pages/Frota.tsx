@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { VehicleDetailPanel } from "@/components/frota/VehicleDetailPanel";
 import { toast } from "sonner";
-import { Truck, Plus, AlertTriangle, Eye, Gauge, Ruler, ShieldCheck, Trash2, Route } from "lucide-react";
+import { Truck, Plus, AlertTriangle, Eye, Gauge, Ruler, ShieldCheck, Trash2, Route, Building2 } from "lucide-react";
 
 const TIPOS_VEICULO = [
   { label: "Carro / SUV / Van", value: "Carro", pneus: 4 },
@@ -35,7 +35,17 @@ export default function Frota() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedVeiculo, setSelectedVeiculo] = useState<string | null>(null);
+  const [selectedClienteId, setSelectedClienteId] = useState<string>("todos");
+  const [formClienteId, setFormClienteId] = useState<string>("");
   const [form, setForm] = useState({ placa: "", tipo_veiculo: "", modelo: "", marca: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
+
+  const { data: clientes } = useQuery({
+    queryKey: ["clientes"],
+    queryFn: async () => {
+      const { data } = await supabase.from("clientes").select("id, nome, nome_fantasia").order("nome");
+      return data || [];
+    },
+  });
 
   const { data: veiculos, isLoading } = useQuery({
     queryKey: ["veiculos"],
@@ -92,7 +102,7 @@ export default function Frota() {
         quantidade_estepes: form.quantidade_estepes,
         total_pneus_rodantes: totalRodantes,
         total_pneus: totalRodantes + form.quantidade_estepes,
-        cliente_id: clienteId,
+        cliente_id: formClienteId,
       });
       if (error) throw error;
     },
@@ -101,9 +111,16 @@ export default function Frota() {
       toast.success("Veículo cadastrado com sucesso!");
       setOpen(false);
       setForm({ placa: "", tipo_veiculo: "", modelo: "", marca: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
+      setFormClienteId("");
     },
     onError: () => toast.error("Erro ao cadastrar veículo"),
   });
+
+  const veiculosFiltrados = useMemo(() => {
+    if (!veiculos) return [];
+    if (selectedClienteId === "todos") return veiculos;
+    return veiculos.filter(v => v.cliente_id === selectedClienteId);
+  }, [veiculos, selectedClienteId]);
 
   const selectedV = veiculos?.find(v => v.id === selectedVeiculo);
   const selectedPneus = pneus?.filter(p => p.veiculo_id === selectedVeiculo) || [];
@@ -121,8 +138,24 @@ export default function Frota() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Frota</h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Frota</h1>
+          {clientes && clientes.length > 0 && (
+            <Select value={selectedClienteId} onValueChange={setSelectedClienteId}>
+              <SelectTrigger className="w-[220px]">
+                <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Filtrar por cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os clientes</SelectItem>
+                {clientes.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Cadastrar Veículo</Button>
@@ -130,6 +163,17 @@ export default function Frota() {
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Novo Veículo</DialogTitle></DialogHeader>
             <div className="grid gap-4">
+              <div>
+                <Label>Cliente *</Label>
+                <Select value={formClienteId} onValueChange={setFormClienteId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
+                  <SelectContent>
+                    {clientes?.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>Placa</Label><Input placeholder="ABC-1234" value={form.placa} onChange={e => setForm({ ...form, placa: e.target.value })} /></div>
                 <div><Label>Modelo</Label><Input placeholder="Scania P310" value={form.modelo} onChange={e => setForm({ ...form, modelo: e.target.value })} /></div>
@@ -174,7 +218,7 @@ export default function Frota() {
                   <div><Label>Qtd. Estepes</Label><Input type="number" value={form.quantidade_estepes} onChange={e => setForm({ ...form, quantidade_estepes: Number(e.target.value) })} /></div>
                 )}
               </div>
-              <Button onClick={() => createMutation.mutate()} disabled={!form.placa || !form.tipo_veiculo || createMutation.isPending}>
+              <Button onClick={() => createMutation.mutate()} disabled={!form.placa || !form.tipo_veiculo || !formClienteId || createMutation.isPending}>
                 {createMutation.isPending ? "Salvando..." : "Cadastrar"}
               </Button>
             </div>
@@ -191,11 +235,11 @@ export default function Frota() {
         </DialogContent>
       </Dialog>
 
-      {!veiculos?.length ? (
+      {!veiculosFiltrados?.length ? (
         <EmptyState icon={Truck} title="Nenhum veículo cadastrado" description="Cadastre o primeiro veículo da sua frota para começar a gestão dos pneus." actionLabel="Cadastrar Veículo" onAction={() => setOpen(true)} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {veiculos.map((v) => {
+          {veiculosFiltrados.map((v) => {
             const pneusVeiculo = pneus?.filter(p => p.veiculo_id === v.id) || [];
             const pneuIds = new Set(pneusVeiculo.map(p => p.id));
             const alertasVeiculo = (alertasAtivos || []).filter(a =>
