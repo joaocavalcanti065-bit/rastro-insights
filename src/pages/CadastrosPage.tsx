@@ -130,7 +130,7 @@ export default function CadastrosPage() {
                   <div><Label>CNPJ</Label><Input value={fornForm.cnpj} onChange={e => setFornForm({ ...fornForm, cnpj: e.target.value })} /></div>
                   <div><Label>Contato</Label><Input value={fornForm.contato} onChange={e => setFornForm({ ...fornForm, contato: e.target.value })} /></div>
                   <Button onClick={() => createFornecedor.mutate()} disabled={!fornForm.nome || createFornecedor.isPending}>
-                    {createFornecedor.isPending ? "Cadastrar"}
+                    {createFornecedor.isPending ? "Salvando..." : "Cadastrar"}
                   </Button>
                 </div>
               </DialogContent>
