@@ -30,6 +30,39 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("resumo");
 
+  // ---- Drag-and-drop tire move handler ----
+  const handleTireMove = async (tireId: string, fromPosition: string, toPosition: string, swapTireId?: string) => {
+    try {
+      // If there's a tire at the target position, swap them
+      if (swapTireId) {
+        const { error: e1 } = await supabase.from("pneus").update({ posicao_atual: toPosition }).eq("id", tireId);
+        if (e1) throw e1;
+        const { error: e2 } = await supabase.from("pneus").update({ posicao_atual: fromPosition }).eq("id", swapTireId);
+        if (e2) throw e2;
+
+        await supabase.from("movimentacoes_pneus").insert([
+          { pneu_id: tireId, tipo_movimentacao: "rodizio", origem: fromPosition, destino: toPosition, posicao_destino: toPosition, veiculo_origem_id: veiculo.id, veiculo_destino_id: veiculo.id, observacoes: `Rodízio: ${fromPosition} → ${toPosition} (troca)` },
+          { pneu_id: swapTireId, tipo_movimentacao: "rodizio", origem: toPosition, destino: fromPosition, posicao_destino: fromPosition, veiculo_origem_id: veiculo.id, veiculo_destino_id: veiculo.id, observacoes: `Rodízio: ${toPosition} → ${fromPosition} (troca)` },
+        ]);
+        toast.success(`Pneus trocados: ${fromPosition} ↔ ${toPosition}`);
+      } else {
+        // Simple move to empty slot
+        const { error } = await supabase.from("pneus").update({ posicao_atual: toPosition }).eq("id", tireId);
+        if (error) throw error;
+
+        await supabase.from("movimentacoes_pneus").insert({
+          pneu_id: tireId, tipo_movimentacao: "rodizio", origem: fromPosition, destino: toPosition, posicao_destino: toPosition, veiculo_origem_id: veiculo.id, veiculo_destino_id: veiculo.id, observacoes: `Movido: ${fromPosition} → ${toPosition}`,
+        });
+        toast.success(`Pneu movido: ${fromPosition} → ${toPosition}`);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["pneus-veiculo", veiculo.id] });
+      queryClient.invalidateQueries({ queryKey: ["pneus-frota-map", veiculo.id] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao mover pneu");
+    }
+  };
+
   // ---- Pneus do veículo ----
   const { data: pneus = [] } = useQuery({
     queryKey: ["pneus-veiculo", veiculo.id],
@@ -143,6 +176,8 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
                 possuiEstepe={veiculo.possui_estepe || false}
                 quantidadeEstepes={veiculo.quantidade_estepes || 0}
                 pneus={pneusMap}
+                editable
+                onTireMove={handleTireMove}
               />
             </CardContent>
           </Card>

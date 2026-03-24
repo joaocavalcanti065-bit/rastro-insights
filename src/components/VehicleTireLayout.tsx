@@ -1,5 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface TireData {
   id: string;
@@ -20,6 +22,8 @@ interface VehicleTireLayoutProps {
   possuiEstepe: boolean;
   quantidadeEstepes: number;
   pneus: TireData[];
+  onTireMove?: (tireId: string, fromPosition: string, toPosition: string, swapTireId?: string) => void;
+  editable?: boolean;
 }
 
 type AxleType = "direcional" | "tracao" | "livre";
@@ -39,7 +43,6 @@ function getAxleConfigs(tipo: string, eixos: number): AxleConfig[] {
     return configs;
   }
 
-  // First axle is always direcional (single)
   configs.push({ type: "direcional", label: "Eixo 1 (Direcional)", dual: false });
 
   if (tipo === "Toco" || tipo === "Caminhão 3/4") {
@@ -53,7 +56,6 @@ function getAxleConfigs(tipo: string, eixos: number): AxleConfig[] {
     configs.push({ type: "livre", label: "Eixo 4 (Livre)", dual: true });
   } else if (tipo === "Cavalo Mecânico") {
     configs.push({ type: "tracao", label: "Eixo 2 (Tração)", dual: true });
-    // If more than 2 axles, add trailer/extra axles
     for (let i = 3; i <= eixos; i++) {
       configs.push({ type: "livre", label: `Eixo ${i} (Livre)`, dual: true });
     }
@@ -75,12 +77,7 @@ function generatePositionCodes(axles: AxleConfig[]): string[][] {
     const num = idx + 1;
     const prefix = axle.type === "direcional" ? "D" : axle.type === "tracao" ? "T" : "L";
     if (axle.dual) {
-      return [
-        `${prefix}${num}EE`,
-        `${prefix}${num}EI`,
-        `${prefix}${num}DI`,
-        `${prefix}${num}DE`,
-      ];
+      return [`${prefix}${num}EE`, `${prefix}${num}EI`, `${prefix}${num}DI`, `${prefix}${num}DE`];
     }
     return [`${prefix}${num}E`, `${prefix}${num}D`];
   });
@@ -108,10 +105,24 @@ function TireSlot({
   positionCode,
   tire,
   side,
+  editable,
+  isDragOver,
+  draggedTireId,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: {
   positionCode: string;
   tire: TireData | undefined;
   side: "left" | "right";
+  editable?: boolean;
+  isDragOver: boolean;
+  draggedTireId: string | null;
+  onDragStart: (e: React.DragEvent, tire: TireData) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: () => void;
+  onDrop: (e: React.DragEvent) => void;
 }) {
   const sulcoColor = tire ? getSulcoColor(tire.sulco_atual, tire.sulco_inicial) : "";
   const pressaoColor = tire ? getPressaoColor(tire.pressao_atual, tire.pressao_ideal) : "";
@@ -119,11 +130,24 @@ function TireSlot({
     ? Math.round(((tire.sulco_atual || 0) / tire.sulco_inicial) * 100)
     : tire?.sulco_atual != null ? Math.round(((tire.sulco_atual) / 16) * 100) : null;
 
+  const isDragging = draggedTireId === tire?.id;
+
   if (!tire) {
     return (
-      <div className={`w-14 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 ${side === "right" ? "ml-1" : "mr-1"}`}>
+      <div
+        onDragOver={editable ? onDragOver : undefined}
+        onDragLeave={editable ? onDragLeave : undefined}
+        onDrop={editable ? onDrop : undefined}
+        className={cn(
+          "w-14 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 transition-all",
+          side === "right" ? "ml-1" : "mr-1",
+          isDragOver && "ring-2 ring-primary border-primary bg-primary/10 scale-105",
+        )}
+      >
         <span className="text-[9px] text-muted-foreground/50 font-mono">{positionCode}</span>
-        <span className="text-[8px] text-muted-foreground/40">Vazio</span>
+        <span className="text-[8px] text-muted-foreground/40">
+          {isDragOver ? "Soltar" : "Vazio"}
+        </span>
       </div>
     );
   }
@@ -132,14 +156,26 @@ function TireSlot({
     <Tooltip>
       <TooltipTrigger asChild>
         <div
-          className={`w-14 h-24 rounded-lg border-2 flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-all hover:scale-105 ${sulcoColor} ${side === "right" ? "ml-1" : "mr-1"}`}
+          draggable={editable}
+          onDragStart={editable ? (e) => onDragStart(e, tire) : undefined}
+          onDragOver={editable ? onDragOver : undefined}
+          onDragLeave={editable ? onDragLeave : undefined}
+          onDrop={editable ? onDrop : undefined}
+          className={cn(
+            "w-14 h-24 rounded-lg border-2 flex flex-col items-center justify-center gap-0.5 transition-all",
+            sulcoColor,
+            side === "right" ? "ml-1" : "mr-1",
+            editable && "cursor-grab active:cursor-grabbing",
+            isDragging && "opacity-40 scale-95",
+            isDragOver && !isDragging && "ring-2 ring-primary scale-105 brightness-125",
+            editable && !isDragging && "hover:scale-105",
+          )}
         >
-          <span className="text-[9px] font-mono font-bold truncate w-full text-center">{tire.id_unico.split('-').pop()}</span>
+          <span className="text-[9px] font-mono font-bold truncate w-full text-center">
+            {tire.id_unico.split('-').pop()}
+          </span>
           <div className="w-10 h-1.5 rounded-full bg-background/50 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-current"
-              style={{ width: `${sulcoPct ?? 0}%` }}
-            />
+            <div className="h-full rounded-full bg-current" style={{ width: `${sulcoPct ?? 0}%` }} />
           </div>
           <span className="text-[10px] font-semibold">{tire.sulco_atual ?? "—"}mm</span>
           <span className={`text-[9px] font-medium ${pressaoColor}`}>
@@ -155,21 +191,23 @@ function TireSlot({
           <p>Sulco: {tire.sulco_atual ?? "—"} / {tire.sulco_inicial ?? "—"} mm ({sulcoPct ?? "—"}%)</p>
           <p>Pressão: {tire.pressao_atual ?? "—"} / {tire.pressao_ideal ?? "—"} PSI</p>
           <p>Status: {tire.status}</p>
+          {editable && <p className="text-primary font-medium">↔ Arraste para trocar de posição</p>}
         </div>
       </TooltipContent>
     </Tooltip>
   );
 }
 
-export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, quantidadeEstepes, pneus }: VehicleTireLayoutProps) {
+export function VehicleTireLayout({
+  tipoVeiculo, quantidadeEixos, possuiEstepe, quantidadeEstepes, pneus,
+  onTireMove, editable = false,
+}: VehicleTireLayoutProps) {
   const axleConfigs = useMemo(() => getAxleConfigs(tipoVeiculo, quantidadeEixos), [tipoVeiculo, quantidadeEixos]);
   const positionGrid = useMemo(() => generatePositionCodes(axleConfigs), [axleConfigs]);
 
   const tireMap = useMemo(() => {
     const map: Record<string, TireData> = {};
-    pneus.forEach((p) => {
-      if (p.posicao_atual) map[p.posicao_atual] = p;
-    });
+    pneus.forEach((p) => { if (p.posicao_atual) map[p.posicao_atual] = p; });
     return map;
   }, [pneus]);
 
@@ -186,11 +224,51 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
   }, [pneus, allPositionCodes]);
 
   const spareTires = pneus.filter(p => p.posicao_atual?.startsWith("EST"));
-
   const totalSlots = positionGrid.flat().length + (possuiEstepe ? quantidadeEstepes : 0);
 
+  // Drag state
+  const [draggedTire, setDraggedTire] = useState<{ tire: TireData; fromPosition: string } | null>(null);
+  const [dropTargetPos, setDropTargetPos] = useState<string | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent, tire: TireData) => {
+    setDraggedTire({ tire, fromPosition: tire.posicao_atual || "" });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", tire.id);
+  }, []);
+
+  const handleDragOverSlot = useCallback((e: React.DragEvent, posCode: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDropTargetPos(posCode);
+  }, []);
+
+  const handleDragLeaveSlot = useCallback(() => {
+    setDropTargetPos(null);
+  }, []);
+
+  const handleDropOnSlot = useCallback((e: React.DragEvent, targetPos: string) => {
+    e.preventDefault();
+    setDropTargetPos(null);
+    if (!draggedTire || !onTireMove) return;
+
+    const fromPos = draggedTire.fromPosition;
+    if (fromPos === targetPos) {
+      setDraggedTire(null);
+      return;
+    }
+
+    const targetTire = tireMap[targetPos];
+    onTireMove(draggedTire.tire.id, fromPos, targetPos, targetTire?.id);
+    setDraggedTire(null);
+  }, [draggedTire, tireMap, onTireMove]);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedTire(null);
+    setDropTargetPos(null);
+  }, []);
+
   return (
-    <div className="flex flex-col items-center gap-2 py-4">
+    <div className="flex flex-col items-center gap-2 py-4" onDragEnd={handleDragEnd}>
       {/* Legend */}
       <div className="flex flex-wrap gap-3 text-[10px] mb-2 justify-center">
         <div className="flex items-center gap-1">
@@ -209,6 +287,11 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
           <div className="w-3 h-3 rounded border-2 border-dashed border-muted-foreground/30" />
           <span className="text-muted-foreground">Vazio</span>
         </div>
+        {editable && (
+          <div className="flex items-center gap-1">
+            <span className="text-primary font-medium">↔ Arraste para trocar posições</span>
+          </div>
+        )}
       </div>
 
       {/* Vehicle body */}
@@ -235,13 +318,37 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
                   <div className="flex items-center gap-0">
                     <div className="flex gap-0.5">
                       {leftPositions.map((pos) => (
-                        <TireSlot key={pos} positionCode={pos} tire={tireMap[pos]} side="left" />
+                        <TireSlot
+                          key={pos}
+                          positionCode={pos}
+                          tire={tireMap[pos]}
+                          side="left"
+                          editable={editable}
+                          isDragOver={dropTargetPos === pos}
+                          draggedTireId={draggedTire?.tire.id ?? null}
+                          onDragStart={handleDragStart}
+                          onDragOver={(e) => handleDragOverSlot(e, pos)}
+                          onDragLeave={handleDragLeaveSlot}
+                          onDrop={(e) => handleDropOnSlot(e, pos)}
+                        />
                       ))}
                     </div>
                     <div className="w-16 h-1 bg-muted-foreground/30 rounded-full" />
                     <div className="flex gap-0.5">
                       {rightPositions.map((pos) => (
-                        <TireSlot key={pos} positionCode={pos} tire={tireMap[pos]} side="right" />
+                        <TireSlot
+                          key={pos}
+                          positionCode={pos}
+                          tire={tireMap[pos]}
+                          side="right"
+                          editable={editable}
+                          isDragOver={dropTargetPos === pos}
+                          draggedTireId={draggedTire?.tire.id ?? null}
+                          onDragStart={handleDragStart}
+                          onDragOver={(e) => handleDragOverSlot(e, pos)}
+                          onDragLeave={handleDragLeaveSlot}
+                          onDrop={(e) => handleDropOnSlot(e, pos)}
+                        />
                       ))}
                     </div>
                   </div>
@@ -259,7 +366,21 @@ export function VehicleTireLayout({ tipoVeiculo, quantidadeEixos, possuiEstepe, 
               {Array.from({ length: quantidadeEstepes }).map((_, i) => {
                 const code = `EST${i + 1}`;
                 const tire = spareTires[i];
-                return <TireSlot key={code} positionCode={code} tire={tire} side="left" />;
+                return (
+                  <TireSlot
+                    key={code}
+                    positionCode={code}
+                    tire={tire}
+                    side="left"
+                    editable={editable}
+                    isDragOver={dropTargetPos === code}
+                    draggedTireId={draggedTire?.tire.id ?? null}
+                    onDragStart={handleDragStart}
+                    onDragOver={(e) => handleDragOverSlot(e, code)}
+                    onDragLeave={handleDragLeaveSlot}
+                    onDrop={(e) => handleDropOnSlot(e, code)}
+                  />
+                );
               })}
             </div>
           </div>
