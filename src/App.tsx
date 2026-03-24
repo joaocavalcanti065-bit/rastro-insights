@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { PageHeader } from "@/components/PageHeader";
+import { AlertaRealtimeListener } from "@/components/AlertaRealtimeListener";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
@@ -41,6 +42,7 @@ const ProtectedLayout = ({ children, session }: { children: React.ReactNode; ses
           <PageHeader />
           <main className="flex-1 p-6 overflow-auto">{children}</main>
         </div>
+        <AlertaRealtimeListener />
       </div>
     </SidebarProvider>
   );
