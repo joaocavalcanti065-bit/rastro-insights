@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VehicleTireLayout } from "@/components/VehicleTireLayout";
+import { RotationSuggestionPanel } from "@/components/frota/RotationSuggestionPanel";
 import { RetroactiveDatePicker } from "@/components/RetroactiveDatePicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -181,6 +182,11 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
               />
             </CardContent>
           </Card>
+
+          <RotationSuggestionPanel
+            pneus={pneusMap}
+            onApplySuggestion={handleTireMove}
+          />
 
           {pneus.length > 0 && (
             <Card>
