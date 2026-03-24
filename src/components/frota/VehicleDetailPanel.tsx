@@ -183,6 +183,11 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
             </CardContent>
           </Card>
 
+          <RotationSuggestionPanel
+            pneus={pneusMap}
+            onApplySuggestion={handleTireMove}
+          />
+
           {pneus.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
