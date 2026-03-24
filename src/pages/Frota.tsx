@@ -102,7 +102,7 @@ export default function Frota() {
         quantidade_estepes: form.quantidade_estepes,
         total_pneus_rodantes: totalRodantes,
         total_pneus: totalRodantes + form.quantidade_estepes,
-        cliente_id: clienteId,
+        cliente_id: formClienteId,
       });
       if (error) throw error;
     },
@@ -111,9 +111,16 @@ export default function Frota() {
       toast.success("Veículo cadastrado com sucesso!");
       setOpen(false);
       setForm({ placa: "", tipo_veiculo: "", modelo: "", marca: "", categoria: "Pesado", quantidade_eixos: 3, possui_estepe: false, quantidade_estepes: 0 });
+      setFormClienteId("");
     },
     onError: () => toast.error("Erro ao cadastrar veículo"),
   });
+
+  const veiculosFiltrados = useMemo(() => {
+    if (!veiculos) return [];
+    if (selectedClienteId === "todos") return veiculos;
+    return veiculos.filter(v => v.cliente_id === selectedClienteId);
+  }, [veiculos, selectedClienteId]);
 
   const selectedV = veiculos?.find(v => v.id === selectedVeiculo);
   const selectedPneus = pneus?.filter(p => p.veiculo_id === selectedVeiculo) || [];
