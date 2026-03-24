@@ -235,11 +235,11 @@ export default function Frota() {
         </DialogContent>
       </Dialog>
 
-      {!veiculos?.length ? (
+      {!veiculosFiltrados?.length ? (
         <EmptyState icon={Truck} title="Nenhum veículo cadastrado" description="Cadastre o primeiro veículo da sua frota para começar a gestão dos pneus." actionLabel="Cadastrar Veículo" onAction={() => setOpen(true)} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {veiculos.map((v) => {
+          {veiculosFiltrados.map((v) => {
             const pneusVeiculo = pneus?.filter(p => p.veiculo_id === v.id) || [];
             const pneuIds = new Set(pneusVeiculo.map(p => p.id));
             const alertasVeiculo = (alertasAtivos || []).filter(a =>
