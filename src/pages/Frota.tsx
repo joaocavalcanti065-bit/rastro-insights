@@ -138,8 +138,24 @@ export default function Frota() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Frota</h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Frota</h1>
+          {clientes && clientes.length > 0 && (
+            <Select value={selectedClienteId} onValueChange={setSelectedClienteId}>
+              <SelectTrigger className="w-[220px]">
+                <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Filtrar por cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os clientes</SelectItem>
+                {clientes.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Cadastrar Veículo</Button>
@@ -147,6 +163,17 @@ export default function Frota() {
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Novo Veículo</DialogTitle></DialogHeader>
             <div className="grid gap-4">
+              <div>
+                <Label>Cliente *</Label>
+                <Select value={formClienteId} onValueChange={setFormClienteId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o cliente" /></SelectTrigger>
+                  <SelectContent>
+                    {clientes?.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome_fantasia || c.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div><Label>Placa</Label><Input placeholder="ABC-1234" value={form.placa} onChange={e => setForm({ ...form, placa: e.target.value })} /></div>
                 <div><Label>Modelo</Label><Input placeholder="Scania P310" value={form.modelo} onChange={e => setForm({ ...form, modelo: e.target.value })} /></div>
