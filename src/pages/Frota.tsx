@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { VehicleTireLayout } from "@/components/VehicleTireLayout";
 import { VehicleDetailPanel } from "@/components/frota/VehicleDetailPanel";
 import { toast } from "sonner";
-import { Truck, Plus, AlertTriangle, Eye, Gauge, Ruler, ShieldCheck, Trash2, Route } from "lucide-react";
+import { Truck, Plus, AlertTriangle, Eye, Gauge, Ruler, ShieldCheck, Trash2, Route, Building2 } from "lucide-react";
 
 const TIPOS_VEICULO = [
   { label: "Carro / SUV / Van", value: "Carro", pneus: 4 },
