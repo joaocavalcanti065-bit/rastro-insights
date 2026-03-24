@@ -218,7 +218,7 @@ export default function Frota() {
                   <div><Label>Qtd. Estepes</Label><Input type="number" value={form.quantidade_estepes} onChange={e => setForm({ ...form, quantidade_estepes: Number(e.target.value) })} /></div>
                 )}
               </div>
-              <Button onClick={() => createMutation.mutate()} disabled={!form.placa || !form.tipo_veiculo || createMutation.isPending}>
+              <Button onClick={() => createMutation.mutate()} disabled={!form.placa || !form.tipo_veiculo || !formClienteId || createMutation.isPending}>
                 {createMutation.isPending ? "Salvando..." : "Cadastrar"}
               </Button>
             </div>
