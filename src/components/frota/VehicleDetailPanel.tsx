@@ -176,6 +176,8 @@ export function VehicleDetailPanel({ veiculo, onClose }: VehicleDetailPanelProps
                 possuiEstepe={veiculo.possui_estepe || false}
                 quantidadeEstepes={veiculo.quantidade_estepes || 0}
                 pneus={pneusMap}
+                editable
+                onTireMove={handleTireMove}
               />
             </CardContent>
           </Card>
