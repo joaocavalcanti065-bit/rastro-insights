@@ -40,8 +40,8 @@ export function AlertaRealtimeListener() {
             });
           }
 
-          // Invalidate alerts query
           queryClient.invalidateQueries({ queryKey: ["alertas"] });
+          queryClient.invalidateQueries({ queryKey: ["alertas-count"] });
         }
       )
       .subscribe();

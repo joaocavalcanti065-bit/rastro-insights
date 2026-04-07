@@ -5,6 +5,7 @@ import {
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import logoRastro from "@/assets/logo-rastro.jpg";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -32,6 +33,18 @@ const navItems = [
 export function AppSidebar() {
   const { open } = useSidebar();
   const navigate = useNavigate();
+
+  const { data: alertasAtivos = 0 } = useQuery({
+    queryKey: ["alertas-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("alertas")
+        .select("*", { count: "exact", head: true })
+        .eq("ativo", true);
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -71,7 +84,14 @@ export function AppSidebar() {
                         }`
                       }
                     >
-                      <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                      <div className="relative shrink-0">
+                        <item.icon className="h-4 w-4" strokeWidth={1.5} />
+                        {item.title === "Alertas" && alertasAtivos > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold leading-none">
+                            {alertasAtivos > 99 ? "99+" : alertasAtivos}
+                          </span>
+                        )}
+                      </div>
                       {open && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
