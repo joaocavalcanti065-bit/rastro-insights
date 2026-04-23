@@ -444,6 +444,36 @@ export type Database = {
           },
         ]
       }
+      layouts_pneus_veiculo: {
+        Row: {
+          created_at: string
+          id: string
+          layout_json: Json
+          nome_exibicao: string
+          qtd_eixos: number
+          qtd_pneus: number
+          tipo_veiculo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          layout_json: Json
+          nome_exibicao: string
+          qtd_eixos: number
+          qtd_pneus: number
+          tipo_veiculo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          layout_json?: Json
+          nome_exibicao?: string
+          qtd_eixos?: number
+          qtd_pneus?: number
+          tipo_veiculo?: string
+        }
+        Relationships: []
+      }
       locais_estoque: {
         Row: {
           almoxarifado: string
@@ -646,6 +676,125 @@ export type Database = {
             columns: ["veiculo_origem_id"]
             isOneToOne: false
             referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordens_servico: {
+        Row: {
+          aberta_em: string
+          concluida_em: string | null
+          created_at: string
+          custo_total: number
+          empresa_id: string | null
+          hodometro_km: number | null
+          id: string
+          local_execucao: string
+          numero_os: string
+          observacoes: string | null
+          responsavel: string | null
+          status: string
+          tempo_total_minutos: number
+          tipo_os: string
+          updated_at: string
+          veiculo_id: string
+        }
+        Insert: {
+          aberta_em?: string
+          concluida_em?: string | null
+          created_at?: string
+          custo_total?: number
+          empresa_id?: string | null
+          hodometro_km?: number | null
+          id?: string
+          local_execucao?: string
+          numero_os?: string
+          observacoes?: string | null
+          responsavel?: string | null
+          status?: string
+          tempo_total_minutos?: number
+          tipo_os?: string
+          updated_at?: string
+          veiculo_id: string
+        }
+        Update: {
+          aberta_em?: string
+          concluida_em?: string | null
+          created_at?: string
+          custo_total?: number
+          empresa_id?: string | null
+          hodometro_km?: number | null
+          id?: string
+          local_execucao?: string
+          numero_os?: string
+          observacoes?: string | null
+          responsavel?: string | null
+          status?: string
+          tempo_total_minutos?: number
+          tipo_os?: string
+          updated_at?: string
+          veiculo_id?: string
+        }
+        Relationships: []
+      }
+      ordens_servico_itens: {
+        Row: {
+          categoria_servico: string
+          concluido: boolean
+          concluido_em: string | null
+          created_at: string
+          custo_unitario: number
+          id: string
+          observacoes_tecnicas: string | null
+          ordem_servico_id: string
+          pneu_id: string | null
+          pneu_novo_id: string | null
+          posicao_codigo: string
+          posicao_destino: string | null
+          tecnico_responsavel: string | null
+          tempo_estimado_minutos: number
+          tipo_servico: string
+        }
+        Insert: {
+          categoria_servico?: string
+          concluido?: boolean
+          concluido_em?: string | null
+          created_at?: string
+          custo_unitario?: number
+          id?: string
+          observacoes_tecnicas?: string | null
+          ordem_servico_id: string
+          pneu_id?: string | null
+          pneu_novo_id?: string | null
+          posicao_codigo: string
+          posicao_destino?: string | null
+          tecnico_responsavel?: string | null
+          tempo_estimado_minutos?: number
+          tipo_servico: string
+        }
+        Update: {
+          categoria_servico?: string
+          concluido?: boolean
+          concluido_em?: string | null
+          created_at?: string
+          custo_unitario?: number
+          id?: string
+          observacoes_tecnicas?: string | null
+          ordem_servico_id?: string
+          pneu_id?: string | null
+          pneu_novo_id?: string | null
+          posicao_codigo?: string
+          posicao_destino?: string | null
+          tecnico_responsavel?: string | null
+          tempo_estimado_minutos?: number
+          tipo_servico?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_servico_itens_ordem_servico_id_fkey"
+            columns: ["ordem_servico_id"]
+            isOneToOne: false
+            referencedRelation: "ordens_servico"
             referencedColumns: ["id"]
           },
         ]
@@ -1179,7 +1328,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      gerar_numero_os: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
