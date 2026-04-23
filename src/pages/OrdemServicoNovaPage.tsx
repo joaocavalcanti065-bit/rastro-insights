@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { ArrowLeft, FileDown, Save, Trash2, Truck, Wrench } from "lucide-react";
-import { TIPOS_OS, LOCAIS_EXECUCAO, STATUS_OS } from "@/lib/os-catalogo-servicos";
+import { TIPOS_OS, LOCAIS_EXECUCAO, STATUS_OS, CATALOGO_SERVICOS } from "@/lib/os-catalogo-servicos";
 import { VeiculoTopDownLayout, LayoutPneus, PneuStatus } from "@/components/os/VeiculoTopDownLayout";
 import { ServicosDrawer, ServicoSelecionado } from "@/components/os/ServicosDrawer";
 import { gerarPDFOrdemServico } from "@/lib/os-pdf";
@@ -115,35 +115,47 @@ export default function OrdemServicoNovaPage() {
     (async () => {
       const { data: os } = await (supabase as any).from("ordens_servico").select("*").eq("id", editId).maybeSingle();
       if (os) {
+        setOsId(os.id);
         setVeiculoId(os.veiculo_id);
         setTipoOs(os.tipo_os);
         setLocalExec(os.local_execucao);
         setResponsavel(os.responsavel || "");
         setHodometro(os.hodometro_km || 0);
         setObservacoes(os.observacoes || "");
-        setStatus(os.status);
+        setStatus(os.status as OsStatus);
         setNumeroOs(os.numero_os);
+      } else {
+        toast.error("Ordem de Serviço não encontrada");
+        navigate("/manutencao");
+        return;
       }
-      const { data: itens } = await (supabase as any).from("ordens_servico_itens").select("*").eq("ordem_servico_id", editId);
+      const { data: itens } = await (supabase as any)
+        .from("ordens_servico_itens")
+        .select("*")
+        .eq("ordem_servico_id", editId)
+        .order("created_at", { ascending: true });
       if (itens) {
         setItensPendentes(
-          itens.map((it: any) => ({
-            tempId: it.id,
-            codigo: it.tipo_servico,
-            nome: it.tipo_servico,
-            categoria: it.categoria_servico,
-            custoUnitario: Number(it.custo_unitario),
-            tempoMinutos: it.tempo_estimado_minutos,
-            tecnico: it.tecnico_responsavel,
-            observacoes: it.observacoes_tecnicas,
-            posicaoDestino: it.posicao_destino,
-            pneuNovoId: it.pneu_novo_id,
-            posicao_codigo: it.posicao_codigo,
-          })),
+          itens.map((it: any) => {
+            const cat = CATALOGO_SERVICOS.find((c) => c.codigo === it.tipo_servico);
+            return {
+              tempId: it.id,
+              codigo: it.tipo_servico,
+              nome: cat?.nome || it.tipo_servico,
+              categoria: it.categoria_servico,
+              custoUnitario: Number(it.custo_unitario),
+              tempoMinutos: it.tempo_estimado_minutos,
+              tecnico: it.tecnico_responsavel || "",
+              observacoes: it.observacoes_tecnicas || "",
+              posicaoDestino: it.posicao_destino || undefined,
+              pneuNovoId: it.pneu_novo_id || undefined,
+              posicao_codigo: it.posicao_codigo,
+            };
+          }),
         );
       }
     })();
-  }, [editId]);
+  }, [editId, navigate]);
 
   // Map pneus por posição
   const pneusPorPosicao = useMemo(() => {
