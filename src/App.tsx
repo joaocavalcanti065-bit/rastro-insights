@@ -24,6 +24,7 @@ import CadastrosPage from "./pages/CadastrosPage";
 import IntegracoesPage from "./pages/IntegracoesPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./pages/ForgotPassword";
 import PneuProfilePage from "./pages/PneuProfilePage";
 import EficienciaPage from "./pages/EficienciaPage";
 import AssistenteIAPage from "./pages/AssistenteIAPage";
@@ -85,6 +86,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/auth" element={session ? <Navigate to="/dashboard" replace /> : <Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/forgot-password" element={session ? <Navigate to="/dashboard" replace /> : <ForgotPassword />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<ProtectedLayout session={session}><Dashboard /></ProtectedLayout>} />
       <Route path="/frota" element={<ProtectedLayout session={session}><Frota /></ProtectedLayout>} />
