@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { ArrowLeft, FileDown, Save, Trash2, Truck, Wrench } from "lucide-react";
-import { TIPOS_OS, LOCAIS_EXECUCAO, STATUS_OS } from "@/lib/os-catalogo-servicos";
+import { TIPOS_OS, LOCAIS_EXECUCAO, STATUS_OS, CATALOGO_SERVICOS } from "@/lib/os-catalogo-servicos";
 import { VeiculoTopDownLayout, LayoutPneus, PneuStatus } from "@/components/os/VeiculoTopDownLayout";
 import { ServicosDrawer, ServicoSelecionado } from "@/components/os/ServicosDrawer";
 import { gerarPDFOrdemServico } from "@/lib/os-pdf";
@@ -115,35 +115,47 @@ export default function OrdemServicoNovaPage() {
     (async () => {
       const { data: os } = await (supabase as any).from("ordens_servico").select("*").eq("id", editId).maybeSingle();
       if (os) {
+        setOsId(os.id);
         setVeiculoId(os.veiculo_id);
         setTipoOs(os.tipo_os);
         setLocalExec(os.local_execucao);
         setResponsavel(os.responsavel || "");
         setHodometro(os.hodometro_km || 0);
         setObservacoes(os.observacoes || "");
-        setStatus(os.status);
+        setStatus(os.status as OsStatus);
         setNumeroOs(os.numero_os);
+      } else {
+        toast.error("Ordem de Serviço não encontrada");
+        navigate("/manutencao");
+        return;
       }
-      const { data: itens } = await (supabase as any).from("ordens_servico_itens").select("*").eq("ordem_servico_id", editId);
+      const { data: itens } = await (supabase as any)
+        .from("ordens_servico_itens")
+        .select("*")
+        .eq("ordem_servico_id", editId)
+        .order("created_at", { ascending: true });
       if (itens) {
         setItensPendentes(
-          itens.map((it: any) => ({
-            tempId: it.id,
-            codigo: it.tipo_servico,
-            nome: it.tipo_servico,
-            categoria: it.categoria_servico,
-            custoUnitario: Number(it.custo_unitario),
-            tempoMinutos: it.tempo_estimado_minutos,
-            tecnico: it.tecnico_responsavel,
-            observacoes: it.observacoes_tecnicas,
-            posicaoDestino: it.posicao_destino,
-            pneuNovoId: it.pneu_novo_id,
-            posicao_codigo: it.posicao_codigo,
-          })),
+          itens.map((it: any) => {
+            const cat = CATALOGO_SERVICOS.find((c) => c.codigo === it.tipo_servico);
+            return {
+              tempId: it.id,
+              codigo: it.tipo_servico,
+              nome: cat?.nome || it.tipo_servico,
+              categoria: it.categoria_servico,
+              custoUnitario: Number(it.custo_unitario),
+              tempoMinutos: it.tempo_estimado_minutos,
+              tecnico: it.tecnico_responsavel || "",
+              observacoes: it.observacoes_tecnicas || "",
+              posicaoDestino: it.posicao_destino || undefined,
+              pneuNovoId: it.pneu_novo_id || undefined,
+              posicao_codigo: it.posicao_codigo,
+            };
+          }),
         );
       }
     })();
-  }, [editId]);
+  }, [editId, navigate]);
 
   // Map pneus por posição
   const pneusPorPosicao = useMemo(() => {
@@ -222,6 +234,10 @@ export default function OrdemServicoNovaPage() {
 
   const removerItem = (tempId: string) => {
     setItensPendentes((prev) => prev.filter((i) => i.tempId !== tempId));
+  };
+
+  const atualizarItem = (tempId: string, patch: Partial<ItemPendente>) => {
+    setItensPendentes((prev) => prev.map((i) => (i.tempId === tempId ? { ...i, ...patch } : i)));
   };
 
   const totais = useMemo(() => {
@@ -570,24 +586,81 @@ export default function OrdemServicoNovaPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {itensPendentes.map((it) => (
-                  <TableRow key={it.tempId}>
-                    <TableCell className="font-mono text-xs">{it.posicao_codigo}</TableCell>
-                    <TableCell>
-                      {it.nome}
-                      {it.posicaoDestino && <span className="text-xs text-muted-foreground ml-1">→ {it.posicaoDestino}</span>}
-                    </TableCell>
-                    <TableCell><Badge variant="outline">{it.categoria}</Badge></TableCell>
-                    <TableCell className="text-sm">{it.tecnico || "—"}</TableCell>
-                    <TableCell className="text-sm">{it.tempoMinutos}min</TableCell>
-                    <TableCell className="text-sm">R$ {it.custoUnitario.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" onClick={() => removerItem(it.tempId)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {itensPendentes.map((it) => {
+                  const cat = CATALOGO_SERVICOS.find((c) => c.codigo === it.codigo);
+                  return (
+                    <TableRow key={it.tempId}>
+                      <TableCell className="font-mono text-xs align-top pt-3">{it.posicao_codigo}</TableCell>
+                      <TableCell className="align-top pt-3">
+                        <div className="text-sm">{it.nome}</div>
+                        {cat?.exigeDestino && (
+                          <Select
+                            value={it.posicaoDestino || ""}
+                            onValueChange={(v) => atualizarItem(it.tempId, { posicaoDestino: v })}
+                            disabled={isFinal}
+                          >
+                            <SelectTrigger className="h-7 mt-1 text-xs w-32">
+                              <SelectValue placeholder="→ destino" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {todasPosicoes
+                                .filter((p) => p !== it.posicao_codigo)
+                                .map((p) => (
+                                  <SelectItem key={p} value={p}>
+                                    {p}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {!cat?.exigeDestino && it.posicaoDestino && (
+                          <span className="text-xs text-muted-foreground">→ {it.posicaoDestino}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="align-top pt-3">
+                        <Badge variant="outline">{it.categoria}</Badge>
+                      </TableCell>
+                      <TableCell className="align-top pt-2">
+                        <Input
+                          value={it.tecnico || ""}
+                          onChange={(e) => atualizarItem(it.tempId, { tecnico: e.target.value })}
+                          placeholder="—"
+                          className="h-8 text-sm w-32"
+                          disabled={isFinal}
+                        />
+                      </TableCell>
+                      <TableCell className="align-top pt-2">
+                        <Input
+                          type="number"
+                          value={it.tempoMinutos || 0}
+                          onChange={(e) => atualizarItem(it.tempId, { tempoMinutos: Number(e.target.value) })}
+                          className="h-8 text-sm w-20"
+                          disabled={isFinal}
+                        />
+                      </TableCell>
+                      <TableCell className="align-top pt-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={it.custoUnitario || 0}
+                          onChange={(e) => atualizarItem(it.tempId, { custoUnitario: Number(e.target.value) })}
+                          className="h-8 text-sm w-24"
+                          disabled={isFinal}
+                        />
+                      </TableCell>
+                      <TableCell className="align-top pt-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removerItem(it.tempId)}
+                          disabled={isFinal}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
