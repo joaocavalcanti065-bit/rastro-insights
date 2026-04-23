@@ -254,8 +254,10 @@ export default function ManutencaoPage() {
             </div>
           </DialogContent>
         </Dialog>
-        </div>
       </div>
+
+      {/* Dashboard de gastos e economia */}
+      <ManutencaoDashboard ordens={ordens || []} manutencoes={manutencoes || []} />
 
       {/* Lista de Ordens de Serviço */}
       {ordens && ordens.length > 0 && (
