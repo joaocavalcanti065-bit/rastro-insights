@@ -236,6 +236,10 @@ export default function OrdemServicoNovaPage() {
     setItensPendentes((prev) => prev.filter((i) => i.tempId !== tempId));
   };
 
+  const atualizarItem = (tempId: string, patch: Partial<ItemPendente>) => {
+    setItensPendentes((prev) => prev.map((i) => (i.tempId === tempId ? { ...i, ...patch } : i)));
+  };
+
   const totais = useMemo(() => {
     const custo = itensPendentes.reduce((s, x) => s + (x.custoUnitario || 0), 0);
     const tempo = itensPendentes.reduce((s, x) => s + (x.tempoMinutos || 0), 0);
