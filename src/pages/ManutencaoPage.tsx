@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,12 +14,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Wrench, Plus, Truck } from "lucide-react";
+import { Wrench, Plus, Truck, FileText, ClipboardList } from "lucide-react";
+import { STATUS_OS } from "@/lib/os-catalogo-servicos";
 
 const TIPOS = ["alinhamento", "balanceamento", "rodizio", "calibragem", "troca", "inspecao", "reparo"];
 const CAUSAS = ["desgaste_irregular", "pressao_inadequada", "falha_mecanica", "impacto", "preventivo"];
 
 export default function ManutencaoPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
@@ -29,6 +32,19 @@ export default function ManutencaoPage() {
     custo: 0,
     km: 0,
     obs: "",
+  });
+
+  // Lista de Ordens de Serviço
+  const { data: ordens } = useQuery({
+    queryKey: ["ordens-servico-list"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("ordens_servico")
+        .select("*, veiculos:veiculo_id(placa, modelo)")
+        .order("aberta_em", { ascending: false })
+        .limit(50);
+      return data || [];
+    },
   });
 
   const { data: manutencoes, isLoading } = useQuery({
@@ -97,15 +113,20 @@ export default function ManutencaoPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-2xl font-bold text-foreground">Manutenção</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Registrar Serviço
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => navigate("/manutencao/os/nova")} className="bg-primary">
+            <ClipboardList className="h-4 w-4 mr-2" />
+            Nova Ordem de Serviço
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Serviço Avulso
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Nova Manutenção</DialogTitle>
@@ -232,7 +253,52 @@ export default function ManutencaoPage() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {/* Lista de Ordens de Serviço */}
+      {ordens && ordens.length > 0 && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="p-4 border-b border-border flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-semibold">Ordens de Serviço</h2>
+              <Badge variant="outline" className="ml-auto">{ordens.length}</Badge>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nº OS</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Veículo</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Itens</TableHead>
+                  <TableHead className="text-right">Custo</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ordens.map((os: any) => {
+                  const stInfo = STATUS_OS.find((s) => s.value === os.status);
+                  return (
+                    <TableRow key={os.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/manutencao/os/${os.id}`)}>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">{os.numero_os}</TableCell>
+                      <TableCell className="text-xs">{new Date(os.aberta_em).toLocaleDateString("pt-BR")}</TableCell>
+                      <TableCell className="font-mono text-sm">{os.veiculos?.placa || "—"}</TableCell>
+                      <TableCell><Badge variant="outline">{os.tipo_os}</Badge></TableCell>
+                      <TableCell>{stInfo && <Badge className={stInfo.cor}>{stInfo.label}</Badge>}</TableCell>
+                      <TableCell className="text-sm">{os.tempo_total_minutos}min</TableCell>
+                      <TableCell className="text-right text-sm font-semibold">R$ {Number(os.custo_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell><Button variant="ghost" size="sm">Abrir</Button></TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {!manutencoes?.length ? (
         <EmptyState

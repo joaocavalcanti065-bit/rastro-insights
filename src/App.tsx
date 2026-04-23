@@ -34,6 +34,7 @@ import Telemetria from "./pages/Telemetria";
 import Diagnostico from "./pages/Diagnostico";
 import Analise from "./pages/Analise";
 import Circular from "./pages/Circular";
+import OrdemServicoNovaPage from "./pages/OrdemServicoNovaPage";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,8 @@ const AppRoutes = () => {
       <Route path="/enderecamento" element={<ProtectedLayout session={session}><EnderecamentoPage /></ProtectedLayout>} />
       <Route path="/recapagem" element={<ProtectedLayout session={session}><RecapagemPage /></ProtectedLayout>} />
       <Route path="/manutencao" element={<ProtectedLayout session={session}><ManutencaoPage /></ProtectedLayout>} />
+      <Route path="/manutencao/os/nova" element={<ProtectedLayout session={session}><OrdemServicoNovaPage /></ProtectedLayout>} />
+      <Route path="/manutencao/os/:id" element={<ProtectedLayout session={session}><OrdemServicoNovaPage /></ProtectedLayout>} />
       <Route path="/alertas" element={<ProtectedLayout session={session}><AlertasPage /></ProtectedLayout>} />
       <Route path="/eficiencia" element={<ProtectedLayout session={session}><EficienciaPage /></ProtectedLayout>} />
       <Route path="/assistente-ia" element={<ProtectedLayout session={session}><AssistenteIAPage /></ProtectedLayout>} />
