@@ -21,6 +21,7 @@ const TIPOS = ["alinhamento", "balanceamento", "rodizio", "calibragem", "troca",
 const CAUSAS = ["desgaste_irregular", "pressao_inadequada", "falha_mecanica", "impacto", "preventivo"];
 
 export default function ManutencaoPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
@@ -31,6 +32,19 @@ export default function ManutencaoPage() {
     custo: 0,
     km: 0,
     obs: "",
+  });
+
+  // Lista de Ordens de Serviço
+  const { data: ordens } = useQuery({
+    queryKey: ["ordens-servico-list"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("ordens_servico")
+        .select("*, veiculos:veiculo_id(placa, modelo)")
+        .order("aberta_em", { ascending: false })
+        .limit(50);
+      return data || [];
+    },
   });
 
   const { data: manutencoes, isLoading } = useQuery({
@@ -99,15 +113,20 @@ export default function ManutencaoPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-2xl font-bold text-foreground">Manutenção</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Registrar Serviço
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => navigate("/manutencao/os/nova")} className="bg-primary">
+            <ClipboardList className="h-4 w-4 mr-2" />
+            Nova Ordem de Serviço
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Serviço Avulso
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Nova Manutenção</DialogTitle>
