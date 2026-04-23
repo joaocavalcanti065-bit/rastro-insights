@@ -391,6 +391,27 @@ export default function OrdemServicoNovaPage() {
   };
 
   const statusInfo = STATUS_OS.find((s) => s.value === status);
+  const acoes = acoesDisponiveis(status);
+  const isFinal = status === "CONCLUIDA" || status === "CANCELADA";
+
+  // Avalia transição com state machine + limite de aprovação, e dispara mutation correta
+  const transicionar = async (destino: OsStatus) => {
+    if (!veiculoId) return toast.error("Selecione um veículo");
+    const r = avaliarTransicao(status, destino, {
+      custoTotal: totais.custo,
+      limiteAprovacao: limiteAprovacao,
+      temItens: itensPendentes.length > 0,
+    });
+    if (!r.ok) return toast.error(r.mensagem || "Transição inválida");
+    if (r.exigiuAprovacao && r.mensagem) toast.info(r.mensagem);
+
+    // Quando o destino efetivo for CONCLUIDA, aplica integrações; caso contrário, só salva
+    if (r.proximoStatus === "CONCLUIDA") {
+      await concluirMutation.mutateAsync();
+    } else {
+      await salvarMutation.mutateAsync(r.proximoStatus);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -410,15 +431,36 @@ export default function OrdemServicoNovaPage() {
           <Button variant="outline" onClick={baixarPDF} disabled={itensPendentes.length === 0}>
             <FileDown className="h-4 w-4 mr-2" /> PDF
           </Button>
-          <Button variant="outline" onClick={() => salvarMutation.mutate("RASCUNHO")} disabled={salvarMutation.isPending}>
-            <Save className="h-4 w-4 mr-2" /> Rascunho
-          </Button>
-          <Button onClick={() => salvarMutation.mutate("ABERTA")} disabled={!veiculoId || salvarMutation.isPending}>
-            Abrir OS
-          </Button>
-          <Button variant="default" className="bg-chart-1 hover:bg-chart-1/90" onClick={() => concluirMutation.mutate()} disabled={!veiculoId || concluirMutation.isPending || itensPendentes.length === 0}>
-            <Send className="h-4 w-4 mr-2" /> Concluir
-          </Button>
+          {!isFinal && (
+            <Button
+              variant="outline"
+              onClick={() => salvarMutation.mutate(status)}
+              disabled={!veiculoId || salvarMutation.isPending}
+            >
+              <Save className="h-4 w-4 mr-2" /> Salvar
+            </Button>
+          )}
+          {acoes.map((a) => (
+            <Button
+              key={a.status}
+              variant={a.variant}
+              className={a.status === "CONCLUIDA" ? "bg-chart-1 hover:bg-chart-1/90" : ""}
+              onClick={() => transicionar(a.status)}
+              disabled={
+                !veiculoId ||
+                salvarMutation.isPending ||
+                concluirMutation.isPending ||
+                (a.status === "CONCLUIDA" && itensPendentes.length === 0)
+              }
+            >
+              {a.label}
+            </Button>
+          ))}
+          {limiteAprovacao > 0 && totais.custo > limiteAprovacao && status !== "AGUARDANDO_APROVACAO" && !isFinal && (
+            <Badge variant="outline" className="self-center text-chart-4 border-chart-4/40">
+              ⚠ Acima do limite (R$ {limiteAprovacao.toLocaleString("pt-BR")})
+            </Badge>
+          )}
         </div>
       </div>
 
