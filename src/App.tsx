@@ -33,8 +33,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const ProtectedLayout = ({ children, session }: { children: React.ReactNode; session: Session | null }) => {
-  if (!session) return <Navigate to="/auth" replace />;
-
+  // Auth temporariamente desabilitado — acesso aberto
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
