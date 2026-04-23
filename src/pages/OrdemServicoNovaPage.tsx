@@ -12,11 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { ArrowLeft, FileDown, Save, Send, Trash2, Truck, Wrench } from "lucide-react";
+import { ArrowLeft, FileDown, Save, Trash2, Truck, Wrench } from "lucide-react";
 import { TIPOS_OS, LOCAIS_EXECUCAO, STATUS_OS } from "@/lib/os-catalogo-servicos";
 import { VeiculoTopDownLayout, LayoutPneus, PneuStatus } from "@/components/os/VeiculoTopDownLayout";
 import { ServicosDrawer, ServicoSelecionado } from "@/components/os/ServicosDrawer";
 import { gerarPDFOrdemServico } from "@/lib/os-pdf";
+import { acoesDisponiveis, avaliarTransicao, OsStatus } from "@/lib/os-state-machine";
 
 type ItemPendente = ServicoSelecionado & {
   posicao_codigo: string;
