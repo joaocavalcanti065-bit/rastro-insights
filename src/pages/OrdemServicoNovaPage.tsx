@@ -43,6 +43,7 @@ export default function OrdemServicoNovaPage() {
   const [itensPendentes, setItensPendentes] = useState<ItemPendente[]>([]);
   const [status, setStatus] = useState<OsStatus>("RASCUNHO");
   const [numeroOs, setNumeroOs] = useState<string>("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Limite de aprovação configurável (R$)
   const { data: limiteAprovacao = 0 } = useQuery({
