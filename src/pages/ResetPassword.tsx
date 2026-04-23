@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import logoRastro from "@/assets/logo-rastro.jpg";
@@ -87,6 +88,18 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Progress phases
+  type Phase = "validating" | "updating" | "confirming" | "done";
+  const [phase, setPhase] = useState<Phase | null>(null);
+  const [progress, setProgress] = useState(0);
+
+  const PHASE_META: Record<Phase, { label: string; target: number }> = {
+    validating: { label: "Validando dados...", target: 25 },
+    updating: { label: "Atualizando senha...", target: 70 },
+    confirming: { label: "Confirmando alteração...", target: 95 },
+    done: { label: "Concluído!", target: 100 },
+  };
+
   // Detect link validity from URL hash / query and PASSWORD_RECOVERY event
   useEffect(() => {
     let resolved = false;
@@ -158,6 +171,11 @@ export default function ResetPassword() {
   const allValid =
     checks.length && checks.upper && checks.lower && checks.number && checks.match;
 
+  const runPhase = (next: Phase) => {
+    setPhase(next);
+    setProgress(PHASE_META[next].target);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFieldErrors({});
@@ -175,10 +193,21 @@ export default function ResetPassword() {
     }
 
     setIsLoading(true);
+    setProgress(0);
+    runPhase("validating");
+
+    // brief visual delay so users perceive the validation step
+    await new Promise((r) => setTimeout(r, 300));
+    runPhase("updating");
+
     const { error } = await supabase.auth.updateUser({ password });
-    setIsLoading(false);
 
     if (error) {
+      // reset progress UI on failure
+      setPhase(null);
+      setProgress(0);
+      setIsLoading(false);
+
       const msg = error.message?.toLowerCase() ?? "";
       if (msg.includes("same") || msg.includes("different from the old")) {
         toast.error("A nova senha deve ser diferente da anterior.");
@@ -196,9 +225,15 @@ export default function ResetPassword() {
       return;
     }
 
+    runPhase("confirming");
+    await new Promise((r) => setTimeout(r, 350));
+    runPhase("done");
+    await new Promise((r) => setTimeout(r, 250));
+
+    setIsLoading(false);
     setSuccess(true);
     toast.success("Senha atualizada com sucesso!");
-    setTimeout(() => navigate("/dashboard"), 2000);
+    setTimeout(() => navigate("/dashboard"), 1500);
   };
 
   // ---------- Render: success ----------
@@ -426,6 +461,30 @@ export default function ResetPassword() {
               </ul>
             </div>
 
+            {/* Progress panel during submit */}
+            {isLoading && phase && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2"
+              >
+                <div className="flex items-center gap-2">
+                  {phase === "done" ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                  )}
+                  <p className="text-xs font-medium text-foreground">
+                    {PHASE_META[phase].label}
+                  </p>
+                  <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
+                    {progress}%
+                  </span>
+                </div>
+                <Progress value={progress} className="h-1.5" />
+              </div>
+            )}
+
             <Button
               type="submit"
               className="w-full h-9 text-sm font-medium"
@@ -434,7 +493,7 @@ export default function ResetPassword() {
               {isLoading ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                  Atualizando...
+                  {phase ? PHASE_META[phase].label : "Atualizando senha..."}
                 </>
               ) : (
                 "Atualizar senha"
