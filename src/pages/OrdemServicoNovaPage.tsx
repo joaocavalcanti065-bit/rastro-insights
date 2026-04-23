@@ -12,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { ArrowLeft, FileDown, Save, Trash2, Truck, Wrench } from "lucide-react";
+import { ArrowLeft, Eye, FileDown, Save, Trash2, Truck, Wrench } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { TIPOS_OS, LOCAIS_EXECUCAO, STATUS_OS, CATALOGO_SERVICOS } from "@/lib/os-catalogo-servicos";
 import { VeiculoTopDownLayout, LayoutPneus, PneuStatus } from "@/components/os/VeiculoTopDownLayout";
 import { ServicosDrawer, ServicoSelecionado } from "@/components/os/ServicosDrawer";
