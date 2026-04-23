@@ -29,6 +29,11 @@ import PneuProfilePage from "./pages/PneuProfilePage";
 import EficienciaPage from "./pages/EficienciaPage";
 import AssistenteIAPage from "./pages/AssistenteIAPage";
 import NotFound from "./pages/NotFound";
+import Home from "./pages/Home";
+import Telemetria from "./pages/Telemetria";
+import Diagnostico from "./pages/Diagnostico";
+import Analise from "./pages/Analise";
+import Circular from "./pages/Circular";
 
 const queryClient = new QueryClient();
 
@@ -86,7 +91,11 @@ const AppRoutes = () => {
       <Route path="/auth" element={session ? <Navigate to="/dashboard" replace /> : <Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/forgot-password" element={session ? <Navigate to="/dashboard" replace /> : <ForgotPassword />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/telemetria" element={<ProtectedLayout session={session}><Telemetria /></ProtectedLayout>} />
+      <Route path="/diagnostico" element={<ProtectedLayout session={session}><Diagnostico /></ProtectedLayout>} />
+      <Route path="/analise" element={<ProtectedLayout session={session}><Analise /></ProtectedLayout>} />
+      <Route path="/circular" element={<ProtectedLayout session={session}><Circular /></ProtectedLayout>} />
       <Route path="/dashboard" element={<ProtectedLayout session={session}><Dashboard /></ProtectedLayout>} />
       <Route path="/frota" element={<ProtectedLayout session={session}><Frota /></ProtectedLayout>} />
       <Route path="/pneus" element={<ProtectedLayout session={session}><PneusPage /></ProtectedLayout>} />
