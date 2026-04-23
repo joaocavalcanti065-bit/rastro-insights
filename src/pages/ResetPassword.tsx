@@ -171,6 +171,11 @@ export default function ResetPassword() {
   const allValid =
     checks.length && checks.upper && checks.lower && checks.number && checks.match;
 
+  const runPhase = (next: Phase) => {
+    setPhase(next);
+    setProgress(PHASE_META[next].target);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFieldErrors({});
@@ -188,10 +193,21 @@ export default function ResetPassword() {
     }
 
     setIsLoading(true);
+    setProgress(0);
+    runPhase("validating");
+
+    // brief visual delay so users perceive the validation step
+    await new Promise((r) => setTimeout(r, 300));
+    runPhase("updating");
+
     const { error } = await supabase.auth.updateUser({ password });
-    setIsLoading(false);
 
     if (error) {
+      // reset progress UI on failure
+      setPhase(null);
+      setProgress(0);
+      setIsLoading(false);
+
       const msg = error.message?.toLowerCase() ?? "";
       if (msg.includes("same") || msg.includes("different from the old")) {
         toast.error("A nova senha deve ser diferente da anterior.");
@@ -209,9 +225,15 @@ export default function ResetPassword() {
       return;
     }
 
+    runPhase("confirming");
+    await new Promise((r) => setTimeout(r, 350));
+    runPhase("done");
+    await new Promise((r) => setTimeout(r, 250));
+
+    setIsLoading(false);
     setSuccess(true);
     toast.success("Senha atualizada com sucesso!");
-    setTimeout(() => navigate("/dashboard"), 2000);
+    setTimeout(() => navigate("/dashboard"), 1500);
   };
 
   // ---------- Render: success ----------
