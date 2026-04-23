@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Wrench, Plus, Truck } from "lucide-react";
+import { Wrench, Plus, Truck, FileText, ClipboardList } from "lucide-react";
+import { STATUS_OS } from "@/lib/os-catalogo-servicos";
 
 const TIPOS = ["alinhamento", "balanceamento", "rodizio", "calibragem", "troca", "inspecao", "reparo"];
 const CAUSAS = ["desgaste_irregular", "pressao_inadequada", "falha_mecanica", "impacto", "preventivo"];
