@@ -447,6 +447,13 @@ export default function OrdemServicoNovaPage() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => setPreviewOpen(true)}
+            disabled={itensPendentes.length === 0}
+          >
+            <Eye className="h-4 w-4 mr-2" /> Pré-visualizar
+          </Button>
           <Button variant="outline" onClick={baixarPDF} disabled={itensPendentes.length === 0}>
             <FileDown className="h-4 w-4 mr-2" /> PDF
           </Button>
