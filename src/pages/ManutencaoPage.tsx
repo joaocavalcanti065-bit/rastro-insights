@@ -252,6 +252,7 @@ export default function ManutencaoPage() {
                 {createMutation.isPending ? "Salvando..." : "Registrar"}
               </Button>
             </div>
+          </DialogContent>
         </Dialog>
         </div>
       </div>
