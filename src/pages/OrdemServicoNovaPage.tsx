@@ -685,6 +685,77 @@ export default function OrdemServicoNovaPage() {
         pneusEstoque={pneusEstoque || []}
         onConfirmar={onConfirmarServicos}
       />
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Pré-visualização — {numeroOs || "Nova OS"}</DialogTitle>
+            <DialogDescription>
+              Confira a ordem antes de salvar. Nada foi gravado ainda.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] pr-3">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                <div><div className="text-xs text-muted-foreground">Veículo</div><div className="font-medium">{veiculo ? `${veiculo.placa} — ${veiculo.modelo || ""}` : "—"}</div></div>
+                <div><div className="text-xs text-muted-foreground">Tipo</div><div className="font-medium">{TIPOS_OS.find(t => t.value === tipoOs)?.label}</div></div>
+                <div><div className="text-xs text-muted-foreground">Local</div><div className="font-medium">{LOCAIS_EXECUCAO.find(l => l.value === localExec)?.label}</div></div>
+                <div><div className="text-xs text-muted-foreground">Responsável</div><div className="font-medium">{responsavel || "—"}</div></div>
+                <div><div className="text-xs text-muted-foreground">Hodômetro</div><div className="font-medium">{hodometro ? `${hodometro.toLocaleString("pt-BR")} km` : "—"}</div></div>
+                <div><div className="text-xs text-muted-foreground">Status</div><div className="font-medium">{statusInfo?.label}</div></div>
+              </div>
+
+              {observacoes && (
+                <div className="text-sm">
+                  <div className="text-xs text-muted-foreground mb-1">Observações</div>
+                  <div className="p-2 rounded bg-muted/40">{observacoes}</div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-3 gap-3">
+                <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">Pneus</div><div className="text-lg font-bold">{totais.pneus}</div></CardContent></Card>
+                <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">Tempo total</div><div className="text-lg font-bold">{totais.tempo} min</div></CardContent></Card>
+                <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">Custo total</div><div className="text-lg font-bold text-primary">R$ {totais.custo.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div></CardContent></Card>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Serviços ({totais.count})</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Pos.</TableHead>
+                      <TableHead>Serviço</TableHead>
+                      <TableHead>Técnico</TableHead>
+                      <TableHead className="text-right">Tempo</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {itensPendentes.map((it) => (
+                      <TableRow key={it.tempId}>
+                        <TableCell className="font-mono text-xs">{it.posicao_codigo}{it.posicaoDestino ? ` → ${it.posicaoDestino}` : ""}</TableCell>
+                        <TableCell className="text-sm">{it.nome} <Badge variant="outline" className="ml-1 text-[10px]">{it.categoria}</Badge></TableCell>
+                        <TableCell className="text-sm">{it.tecnico || "—"}</TableCell>
+                        <TableCell className="text-right text-sm">{it.tempoMinutos}min</TableCell>
+                        <TableCell className="text-right text-sm">R$ {(it.custoUnitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </ScrollArea>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>Fechar</Button>
+            <Button
+              onClick={() => { setPreviewOpen(false); salvarMutation.mutate(status); }}
+              disabled={!veiculoId || salvarMutation.isPending}
+            >
+              <Save className="h-4 w-4 mr-2" /> Confirmar e salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
