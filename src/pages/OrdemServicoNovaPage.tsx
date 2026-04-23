@@ -233,7 +233,7 @@ export default function OrdemServicoNovaPage() {
 
   // Salvar
   const salvarMutation = useMutation({
-    mutationFn: async (statusFinal: string) => {
+    mutationFn: async (statusFinal: OsStatus) => {
       if (!veiculoId) throw new Error("Selecione um veículo");
       let id = osId;
 
@@ -255,7 +255,7 @@ export default function OrdemServicoNovaPage() {
         id = data.id;
         setOsId(id);
         setNumeroOs(data.numero_os);
-        setStatus(data.status);
+        setStatus(data.status as OsStatus);
       } else {
         const { error } = await (supabase as any)
           .from("ordens_servico")
@@ -270,7 +270,7 @@ export default function OrdemServicoNovaPage() {
           })
           .eq("id", id);
         if (error) throw error;
-        setStatus(statusFinal);
+        setStatus(statusFinal as OsStatus);
         // Limpa itens antigos para reinserir
         await (supabase as any).from("ordens_servico_itens").delete().eq("ordem_servico_id", id);
       }
