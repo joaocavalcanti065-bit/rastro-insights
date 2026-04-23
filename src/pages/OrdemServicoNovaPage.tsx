@@ -12,11 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { ArrowLeft, FileDown, Save, Send, Trash2, Truck, Wrench } from "lucide-react";
+import { ArrowLeft, FileDown, Save, Trash2, Truck, Wrench } from "lucide-react";
 import { TIPOS_OS, LOCAIS_EXECUCAO, STATUS_OS } from "@/lib/os-catalogo-servicos";
 import { VeiculoTopDownLayout, LayoutPneus, PneuStatus } from "@/components/os/VeiculoTopDownLayout";
 import { ServicosDrawer, ServicoSelecionado } from "@/components/os/ServicosDrawer";
 import { gerarPDFOrdemServico } from "@/lib/os-pdf";
+import { acoesDisponiveis, avaliarTransicao, OsStatus } from "@/lib/os-state-machine";
 
 type ItemPendente = ServicoSelecionado & {
   posicao_codigo: string;
@@ -38,8 +39,21 @@ export default function OrdemServicoNovaPage() {
   const [posicoesSelecionadas, setPosicoesSelecionadas] = useState<string[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [itensPendentes, setItensPendentes] = useState<ItemPendente[]>([]);
-  const [status, setStatus] = useState("RASCUNHO");
+  const [status, setStatus] = useState<OsStatus>("RASCUNHO");
   const [numeroOs, setNumeroOs] = useState<string>("");
+
+  // Limite de aprovação configurável (R$)
+  const { data: limiteAprovacao = 0 } = useQuery({
+    queryKey: ["os-limite-aprovacao"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("configuracoes")
+        .select("valor")
+        .eq("chave", "os_limite_aprovacao")
+        .maybeSingle();
+      return Number(data?.valor || 0);
+    },
+  });
 
   // Veículos
   const { data: veiculos } = useQuery({
@@ -219,7 +233,7 @@ export default function OrdemServicoNovaPage() {
 
   // Salvar
   const salvarMutation = useMutation({
-    mutationFn: async (statusFinal: string) => {
+    mutationFn: async (statusFinal: OsStatus) => {
       if (!veiculoId) throw new Error("Selecione um veículo");
       let id = osId;
 
@@ -241,7 +255,7 @@ export default function OrdemServicoNovaPage() {
         id = data.id;
         setOsId(id);
         setNumeroOs(data.numero_os);
-        setStatus(data.status);
+        setStatus(data.status as OsStatus);
       } else {
         const { error } = await (supabase as any)
           .from("ordens_servico")
@@ -256,7 +270,7 @@ export default function OrdemServicoNovaPage() {
           })
           .eq("id", id);
         if (error) throw error;
-        setStatus(statusFinal);
+        setStatus(statusFinal as OsStatus);
         // Limpa itens antigos para reinserir
         await (supabase as any).from("ordens_servico_itens").delete().eq("ordem_servico_id", id);
       }
@@ -377,6 +391,27 @@ export default function OrdemServicoNovaPage() {
   };
 
   const statusInfo = STATUS_OS.find((s) => s.value === status);
+  const acoes = acoesDisponiveis(status);
+  const isFinal = status === "CONCLUIDA" || status === "CANCELADA";
+
+  // Avalia transição com state machine + limite de aprovação, e dispara mutation correta
+  const transicionar = async (destino: OsStatus) => {
+    if (!veiculoId) return toast.error("Selecione um veículo");
+    const r = avaliarTransicao(status, destino, {
+      custoTotal: totais.custo,
+      limiteAprovacao: limiteAprovacao,
+      temItens: itensPendentes.length > 0,
+    });
+    if (!r.ok) return toast.error(r.mensagem || "Transição inválida");
+    if (r.exigiuAprovacao && r.mensagem) toast.info(r.mensagem);
+
+    // Quando o destino efetivo for CONCLUIDA, aplica integrações; caso contrário, só salva
+    if (r.proximoStatus === "CONCLUIDA") {
+      await concluirMutation.mutateAsync();
+    } else {
+      await salvarMutation.mutateAsync(r.proximoStatus);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -396,15 +431,36 @@ export default function OrdemServicoNovaPage() {
           <Button variant="outline" onClick={baixarPDF} disabled={itensPendentes.length === 0}>
             <FileDown className="h-4 w-4 mr-2" /> PDF
           </Button>
-          <Button variant="outline" onClick={() => salvarMutation.mutate("RASCUNHO")} disabled={salvarMutation.isPending}>
-            <Save className="h-4 w-4 mr-2" /> Rascunho
-          </Button>
-          <Button onClick={() => salvarMutation.mutate("ABERTA")} disabled={!veiculoId || salvarMutation.isPending}>
-            Abrir OS
-          </Button>
-          <Button variant="default" className="bg-chart-1 hover:bg-chart-1/90" onClick={() => concluirMutation.mutate()} disabled={!veiculoId || concluirMutation.isPending || itensPendentes.length === 0}>
-            <Send className="h-4 w-4 mr-2" /> Concluir
-          </Button>
+          {!isFinal && (
+            <Button
+              variant="outline"
+              onClick={() => salvarMutation.mutate(status)}
+              disabled={!veiculoId || salvarMutation.isPending}
+            >
+              <Save className="h-4 w-4 mr-2" /> Salvar
+            </Button>
+          )}
+          {acoes.map((a) => (
+            <Button
+              key={a.status}
+              variant={a.variant}
+              className={a.status === "CONCLUIDA" ? "bg-chart-1 hover:bg-chart-1/90" : ""}
+              onClick={() => transicionar(a.status)}
+              disabled={
+                !veiculoId ||
+                salvarMutation.isPending ||
+                concluirMutation.isPending ||
+                (a.status === "CONCLUIDA" && itensPendentes.length === 0)
+              }
+            >
+              {a.label}
+            </Button>
+          ))}
+          {limiteAprovacao > 0 && totais.custo > limiteAprovacao && status !== "AGUARDANDO_APROVACAO" && !isFinal && (
+            <Badge variant="outline" className="self-center text-chart-4 border-chart-4/40">
+              ⚠ Acima do limite (R$ {limiteAprovacao.toLocaleString("pt-BR")})
+            </Badge>
+          )}
         </div>
       </div>
 
