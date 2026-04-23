@@ -14,19 +14,57 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
+  const handleResendConfirmation = async (email: string) => {
+    if (!email) {
+      toast.error("Digite seu email primeiro.");
+      return;
+    }
+    setIsLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (error) {
+      toast.error(`Erro ao reenviar: ${error.message}`);
+    } else {
+      toast.success("Email de confirmação reenviado!");
+    }
+    setIsLoading(false);
+  };
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
+    const email = (formData.get("email") as string)?.trim().toLowerCase();
     const password = formData.get("password") as string;
 
+    if (!email || !password) {
+      toast.error("Preencha email e senha.");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    setIsLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (error.message.includes("Email not confirmed")) {
-        toast.error("Email ainda não confirmado. Verifique sua caixa de entrada.");
+        toast.error("Email ainda não confirmado.", {
+          description: "Verifique sua caixa de entrada e spam, ou reenvie o email.",
+          action: {
+            label: "Reenviar",
+            onClick: () => handleResendConfirmation(email),
+          },
+        });
+      } else if (error.message === "Invalid login credentials") {
+        toast.error("Email ou senha incorretos.", {
+          description: "Verifique os dados ou use 'Esqueci minha senha' para redefinir.",
+        });
       } else {
-        toast.error(error.message === "Invalid login credentials" ? "Email ou senha incorretos." : error.message);
+        toast.error(error.message);
       }
     } else {
       toast.success("Login realizado com sucesso!");
