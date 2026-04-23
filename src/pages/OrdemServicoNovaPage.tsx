@@ -39,8 +39,21 @@ export default function OrdemServicoNovaPage() {
   const [posicoesSelecionadas, setPosicoesSelecionadas] = useState<string[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [itensPendentes, setItensPendentes] = useState<ItemPendente[]>([]);
-  const [status, setStatus] = useState("RASCUNHO");
+  const [status, setStatus] = useState<OsStatus>("RASCUNHO");
   const [numeroOs, setNumeroOs] = useState<string>("");
+
+  // Limite de aprovação configurável (R$)
+  const { data: limiteAprovacao = 0 } = useQuery({
+    queryKey: ["os-limite-aprovacao"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("configuracoes")
+        .select("valor")
+        .eq("chave", "os_limite_aprovacao")
+        .maybeSingle();
+      return Number(data?.valor || 0);
+    },
+  });
 
   // Veículos
   const { data: veiculos } = useQuery({
