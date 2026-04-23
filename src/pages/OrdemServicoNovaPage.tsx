@@ -586,24 +586,81 @@ export default function OrdemServicoNovaPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {itensPendentes.map((it) => (
-                  <TableRow key={it.tempId}>
-                    <TableCell className="font-mono text-xs">{it.posicao_codigo}</TableCell>
-                    <TableCell>
-                      {it.nome}
-                      {it.posicaoDestino && <span className="text-xs text-muted-foreground ml-1">→ {it.posicaoDestino}</span>}
-                    </TableCell>
-                    <TableCell><Badge variant="outline">{it.categoria}</Badge></TableCell>
-                    <TableCell className="text-sm">{it.tecnico || "—"}</TableCell>
-                    <TableCell className="text-sm">{it.tempoMinutos}min</TableCell>
-                    <TableCell className="text-sm">R$ {it.custoUnitario.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" onClick={() => removerItem(it.tempId)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {itensPendentes.map((it) => {
+                  const cat = CATALOGO_SERVICOS.find((c) => c.codigo === it.codigo);
+                  return (
+                    <TableRow key={it.tempId}>
+                      <TableCell className="font-mono text-xs align-top pt-3">{it.posicao_codigo}</TableCell>
+                      <TableCell className="align-top pt-3">
+                        <div className="text-sm">{it.nome}</div>
+                        {cat?.exigeDestino && (
+                          <Select
+                            value={it.posicaoDestino || ""}
+                            onValueChange={(v) => atualizarItem(it.tempId, { posicaoDestino: v })}
+                            disabled={isFinal}
+                          >
+                            <SelectTrigger className="h-7 mt-1 text-xs w-32">
+                              <SelectValue placeholder="→ destino" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {todasPosicoes
+                                .filter((p) => p !== it.posicao_codigo)
+                                .map((p) => (
+                                  <SelectItem key={p} value={p}>
+                                    {p}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                        {!cat?.exigeDestino && it.posicaoDestino && (
+                          <span className="text-xs text-muted-foreground">→ {it.posicaoDestino}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="align-top pt-3">
+                        <Badge variant="outline">{it.categoria}</Badge>
+                      </TableCell>
+                      <TableCell className="align-top pt-2">
+                        <Input
+                          value={it.tecnico || ""}
+                          onChange={(e) => atualizarItem(it.tempId, { tecnico: e.target.value })}
+                          placeholder="—"
+                          className="h-8 text-sm w-32"
+                          disabled={isFinal}
+                        />
+                      </TableCell>
+                      <TableCell className="align-top pt-2">
+                        <Input
+                          type="number"
+                          value={it.tempoMinutos || 0}
+                          onChange={(e) => atualizarItem(it.tempId, { tempoMinutos: Number(e.target.value) })}
+                          className="h-8 text-sm w-20"
+                          disabled={isFinal}
+                        />
+                      </TableCell>
+                      <TableCell className="align-top pt-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={it.custoUnitario || 0}
+                          onChange={(e) => atualizarItem(it.tempId, { custoUnitario: Number(e.target.value) })}
+                          className="h-8 text-sm w-24"
+                          disabled={isFinal}
+                        />
+                      </TableCell>
+                      <TableCell className="align-top pt-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removerItem(it.tempId)}
+                          disabled={isFinal}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
