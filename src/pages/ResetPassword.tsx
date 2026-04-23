@@ -88,6 +88,18 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Progress phases
+  type Phase = "validating" | "updating" | "confirming" | "done";
+  const [phase, setPhase] = useState<Phase | null>(null);
+  const [progress, setProgress] = useState(0);
+
+  const PHASE_META: Record<Phase, { label: string; target: number }> = {
+    validating: { label: "Validando dados...", target: 25 },
+    updating: { label: "Atualizando senha...", target: 70 },
+    confirming: { label: "Confirmando alteração...", target: 95 },
+    done: { label: "Concluído!", target: 100 },
+  };
+
   // Detect link validity from URL hash / query and PASSWORD_RECOVERY event
   useEffect(() => {
     let resolved = false;
