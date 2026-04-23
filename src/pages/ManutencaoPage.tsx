@@ -253,7 +253,52 @@ export default function ManutencaoPage() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {/* Lista de Ordens de Serviço */}
+      {ordens && ordens.length > 0 && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="p-4 border-b border-border flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-semibold">Ordens de Serviço</h2>
+              <Badge variant="outline" className="ml-auto">{ordens.length}</Badge>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nº OS</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Veículo</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Itens</TableHead>
+                  <TableHead className="text-right">Custo</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ordens.map((os: any) => {
+                  const stInfo = STATUS_OS.find((s) => s.value === os.status);
+                  return (
+                    <TableRow key={os.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/manutencao/os/${os.id}`)}>
+                      <TableCell className="font-mono text-xs font-semibold text-primary">{os.numero_os}</TableCell>
+                      <TableCell className="text-xs">{new Date(os.aberta_em).toLocaleDateString("pt-BR")}</TableCell>
+                      <TableCell className="font-mono text-sm">{os.veiculos?.placa || "—"}</TableCell>
+                      <TableCell><Badge variant="outline">{os.tipo_os}</Badge></TableCell>
+                      <TableCell>{stInfo && <Badge className={stInfo.cor}>{stInfo.label}</Badge>}</TableCell>
+                      <TableCell className="text-sm">{os.tempo_total_minutos}min</TableCell>
+                      <TableCell className="text-right text-sm font-semibold">R$ {Number(os.custo_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell><Button variant="ghost" size="sm">Abrir</Button></TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {!manutencoes?.length ? (
         <EmptyState
